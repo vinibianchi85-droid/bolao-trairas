@@ -187,7 +187,10 @@ function App() {
           const g = guesses[game.id] || {}
           const pts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
           return <div className="game" key={game.id}>
-            <span className="fase">{game.phase}</span>
+            <span className="fase">
+            {game.phase}<br />
+            {game.starts_at ? new Date(game.starts_at).toLocaleString('pt-BR') : ''}
+          </span>
             <b className="team right">{game.home_team}</b>
             <input disabled={locked()} value={g.guess_home ?? ''} onChange={e => setGuess(game.id, 'guess_home', e.target.value)} />
             <span>x</span>
@@ -214,7 +217,10 @@ function App() {
       <h2>Lançar resultados oficiais</h2>
       <div className="games">
         {games.map(game => <div className="game" key={game.id}>
-          <span className="fase">{game.phase}</span>
+          <span className="fase">
+            {game.phase}<br />
+            {game.starts_at ? new Date(game.starts_at).toLocaleString('pt-BR') : ''}
+          </span>
           <b className="team right">{game.home_team}</b>
           <input value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
           <span>x</span>

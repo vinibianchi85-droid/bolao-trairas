@@ -55,6 +55,79 @@ function calcPoints(ha, hb, ga, gb) {
   return 0
 }
 
+function winnerFromScore(homeTeam, awayTeam, homeScore, awayScore) {
+  if ([homeScore, awayScore].some(v => v === null || v === undefined || v === '')) return null
+  const h = Number(homeScore)
+  const a = Number(awayScore)
+  if (h === a) return null
+  return h > a ? homeTeam : awayTeam
+}
+
+function loserFromScore(homeTeam, awayTeam, homeScore, awayScore) {
+  if ([homeScore, awayScore].some(v => v === null || v === undefined || v === '')) return null
+  const h = Number(homeScore)
+  const a = Number(awayScore)
+  if (h === a) return null
+  return h > a ? awayTeam : homeTeam
+}
+
+function normalizedPhase(phase = '') {
+  return String(phase)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function classificationBonusByPhase(phase) {
+  const p = normalizedPhase(phase)
+  if (p.includes('dezesseis')) return 10
+  if (p.includes('32 avos') || p.includes('32avos')) return 10
+  if (p.includes('oitavas')) return 20
+  if (p.includes('quartas')) return 40
+  if (p.includes('semi')) return 50
+  return 0
+}
+
+function specialBonusPoints(game, guess) {
+  if (!game || !guess) return 0
+  if ([game.home_score, game.away_score, guess.guess_home, guess.guess_away].some(v => v === null || v === undefined || v === '')) return 0
+
+  const phase = normalizedPhase(game.phase)
+  const actualWinner = winnerFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
+  const predictedWinner = winnerFromScore(game.home_team, game.away_team, guess.guess_home, guess.guess_away)
+  const actualLoser = loserFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
+  const predictedLoser = loserFromScore(game.home_team, game.away_team, guess.guess_home, guess.guess_away)
+
+  if (!actualWinner || !predictedWinner) return 0
+
+  // Final: aplica a melhor pontuação especial possível, conforme regulamento.
+  if (phase.includes('final') && !phase.includes('disputa')) {
+    const exactFinal = Number(game.home_score) === Number(guess.guess_home) && Number(game.away_score) === Number(guess.guess_away)
+    const championOk = predictedWinner === actualWinner
+    const viceOk = predictedLoser === actualLoser
+
+    if (championOk && viceOk && exactFinal) return 300
+    if (championOk && viceOk) return 200
+    if (championOk) return 150
+    if (viceOk) return 100
+    return 0
+  }
+
+  // Terceiro lugar: quem vencer a disputa do 3º lugar.
+  if (phase.includes('disputa') || phase.includes('terceiro') || phase.includes('3')) {
+    return predictedWinner === actualWinner ? 100 : 0
+  }
+
+  // Fases eliminatórias: acerto da seleção classificada.
+  const bonus = classificationBonusByPhase(game.phase)
+  return predictedWinner === actualWinner ? bonus : 0
+}
+
+function totalPointsForGame(game, guess) {
+  if (!game || !guess) return 0
+  return calcPoints(game.home_score, game.away_score, guess.guess_home, guess.guess_away) + specialBonusPoints(game, guess)
+}
+
 function locked() { return new Date() > LOCK_AT }
 
 function gameLocked(game) {
@@ -201,13 +274,16 @@ function App() {
       ;(allGuesses || []).filter(g => g.user_id === p.id).forEach(g => {
         const game = (gameData || []).find(x => x.id === g.game_id)
         if (!game || game.home_score === null || game.away_score === null) return
-        const pts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
-        pontos += pts
-        if (pts === 5) exatos += 1
-        if (pts > 0) acertos += 1
+
+        const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
+        const bonusPts = specialBonusPoints(game, g)
+        pontos += basePts + bonusPts
+
+        if (basePts === 10) exatos += 1
+        if (basePts > 0 || bonusPts > 0) acertos += 1
       })
       return { nome: p.nome || 'Sem nome', pontos, exatos, acertos }
-    }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos)
+    }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
 
     setRanking(rows)
   }
@@ -421,7 +497,7 @@ function App() {
             <div className="posterMatches">
               {phaseGames.map(game => {
                 const g = guesses[game.id] || {}
-                const pts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
+                const pts = totalPointsForGame(game, g)
                 const isLocked = gameLocked(game)
 
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
@@ -575,6 +651,7 @@ function App() {
 
       <div className="regSection">
         <h3>5. Pontuação</h3>
+        <p><b>O ranking do app agora soma automaticamente:</b> placar exato, resultado correto, classificados do mata-mata, campeão, vice e terceiro lugar.</p>
         <ul>
           <li><b>5 pontos:</b> acerto do vencedor da partida ou empate.</li>
           <li><b>10 pontos:</b> acerto do placar exato da partida.</li>

@@ -221,6 +221,38 @@ function App() {
     loadAll()
   }, [session])
 
+  useEffect(() => {
+    if (!session) return
+    if (tab === 'ranking') loadRanking()
+  }, [tab, session])
+
+  useEffect(() => {
+    if (!session) return
+
+    const channel = supabase
+      .channel('ranking-auto-refresh')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, () => {
+        loadAll()
+        loadRanking()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'guesses' }, () => {
+        loadRanking()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        loadRanking()
+      })
+      .subscribe()
+
+    const timer = setInterval(() => {
+      loadRanking()
+    }, 15000)
+
+    return () => {
+      clearInterval(timer)
+      supabase.removeChannel(channel)
+    }
+  }, [session])
+
   async function signUp() {
     setMsg('')
     if (!nome || !whats || !email || !senha) return setMsg('Preencha nome, telefone, e-mail e senha.')
@@ -246,6 +278,13 @@ function App() {
     setSession(null)
   }
 
+  async function refreshAll() {
+    setMsg('Atualizando dados...')
+    await loadAll()
+    await loadRanking()
+    setMsg('Dados atualizados!')
+  }
+
   async function loadAll() {
     const uid = (await supabase.auth.getUser()).data.user.id
     const { data: prof } = await supabase.from('profiles').select('*').eq('id', uid).single()
@@ -263,26 +302,41 @@ function App() {
   }
 
   async function loadRanking() {
-    const { data: players } = await supabase.from('profiles').select('id,nome')
+    const { data: players } = await supabase.from('profiles').select('id,nome,email')
     const { data: allGuesses } = await supabase.from('guesses').select('*')
     const { data: gameData } = await supabase.from('games').select('*')
 
-    const rows = (players || []).map(p => {
+    const playerMap = new Map()
+    ;(players || []).forEach(p => playerMap.set(p.id, p))
+    ;(allGuesses || []).forEach(g => {
+      if (!playerMap.has(g.user_id)) {
+        playerMap.set(g.user_id, { id: g.user_id, nome: 'Participante', email: '' })
+      }
+    })
+
+    const rows = Array.from(playerMap.values()).map(p => {
       let pontos = 0
       let exatos = 0
       let acertos = 0
+
       ;(allGuesses || []).filter(g => g.user_id === p.id).forEach(g => {
         const game = (gameData || []).find(x => x.id === g.game_id)
         if (!game || game.home_score === null || game.away_score === null) return
 
         const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
         const bonusPts = specialBonusPoints(game, g)
-        pontos += basePts + bonusPts
 
+        pontos += basePts + bonusPts
         if (basePts === 10) exatos += 1
         if (basePts > 0 || bonusPts > 0) acertos += 1
       })
-      return { nome: p.nome || 'Sem nome', pontos, exatos, acertos }
+
+      return {
+        nome: p.nome || p.email || 'Participante',
+        pontos,
+        exatos,
+        acertos
+      }
     }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
 
     setRanking(rows)
@@ -305,15 +359,22 @@ function App() {
     }))
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
     if (error) setMsg(error.message)
-    else setMsg('Palpites salvos com sucesso!')
+    else setMsg('Palpites salvos e ranking atualizado!')
+    await loadAll()
     await loadRanking()
   }
 
   async function updateResult(game, side, value) {
     if (!profile?.is_admin) return
     const payload = side === 'home' ? { home_score: value === '' ? null : Number(value) } : { away_score: value === '' ? null : Number(value) }
-    await supabase.from('games').update(payload).eq('id', game.id)
+    const { error } = await supabase.from('games').update(payload).eq('id', game.id)
+    if (error) {
+      setMsg(error.message)
+      return
+    }
     await loadAll()
+    await loadRanking()
+    setMsg('Resultado salvo e ranking recalculado!')
   }
 
   function shareRanking() {
@@ -412,7 +473,7 @@ function App() {
         </div>
       </div>
       <div className="topActions">
-        <button className="secondary small" onClick={loadAll}><RefreshCw/> Atualizar</button>
+        <button className="secondary small" onClick={refreshAll}><RefreshCw/> Atualizar</button>
         <button className="secondary small" onClick={logout}><LogOut/> Sair</button>
       </div>
     </header>
@@ -570,6 +631,7 @@ function App() {
     {tab === 'ranking' && <section className="card">
       <div className="cardTitle">
         <h2>Ranking ao vivo</h2>
+        <button className="miniRefresh" type="button" onClick={refreshAll}><RefreshCw/> Atualizar agora</button>
         <button className="whats" onClick={shareRanking}><Share2/> Compartilhar no WhatsApp</button>
       </div>
       <div className="podium">

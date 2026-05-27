@@ -349,14 +349,87 @@ function App() {
     }
   }, [session])
 
+
+  function displayPlayerName(p) {
+    return (
+      p?.nome ||
+      p?.name ||
+      p?.full_name ||
+      p?.display_name ||
+      p?.username ||
+      (p?.email ? String(p.email).split('@')[0] : '') ||
+      `Jogador ${String(p?.id || '').slice(0, 4)}`
+    )
+  }
+
+  async function ensureProfileForCurrentUser() {
+    const { data } = await supabase.auth.getUser()
+    const user = data?.user
+    if (!user) return null
+
+    const authEmail = user.email || ''
+    const metadataName =
+      user.user_metadata?.nome ||
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      nome ||
+      (authEmail ? authEmail.split('@')[0] : 'Jogador')
+
+    const baseProfile = {
+      id: user.id,
+      nome: metadataName,
+      whatsapp: whats || '',
+      is_admin: false
+    }
+
+    // Tenta salvar com e-mail/username se existirem essas colunas.
+    // Se a tabela profiles não tiver essas colunas, cai no modelo simples.
+    let saved = null
+    let res = await supabase
+      .from('profiles')
+      .upsert({ ...baseProfile, email: authEmail, username: authEmail }, { onConflict: 'id' })
+      .select('*')
+      .single()
+
+    if (res.error) {
+      res = await supabase
+        .from('profiles')
+        .upsert(baseProfile, { onConflict: 'id' })
+        .select('*')
+        .single()
+    }
+
+    if (!res.error) saved = res.data
+    return saved
+  }
+
+
   async function signUp() {
     setMsg('')
     if (!nome || !whats || !email || !senha) return setMsg('Preencha nome, telefone, e-mail e senha.')
     const authEmail = email.trim().toLowerCase()
-    const { data, error } = await supabase.auth.signUp({ email: authEmail, password: senha })
+    const { data, error } = await supabase.auth.signUp({
+      email: authEmail,
+      password: senha,
+      options: { data: { nome, name: nome, full_name: nome, whatsapp: whats } }
+    })
     if (error) return setMsg(error.message)
+
     if (data.user) {
-      await supabase.from('profiles').upsert({ id: data.user.id, nome, whatsapp: whats, email: authEmail, username: authEmail, is_admin: false })
+      const baseProfile = { id: data.user.id, nome, whatsapp: whats, is_admin: false }
+
+      let res = await supabase
+        .from('profiles')
+        .upsert({ ...baseProfile, email: authEmail, username: authEmail }, { onConflict: 'id' })
+
+      if (res.error) {
+        res = await supabase
+          .from('profiles')
+          .upsert(baseProfile, { onConflict: 'id' })
+      }
+
+      if (res.error) return setMsg(res.error.message)
+
       setModo('login')
       setMsg(`Cadastro criado! Seu e-mail de acesso é: ${authEmail}`)
     }
@@ -382,8 +455,16 @@ function App() {
   }
 
   async function loadAll() {
-    const uid = (await supabase.auth.getUser()).data.user.id
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', uid).single()
+    const { data } = await supabase.auth.getUser()
+    const uid = data?.user?.id
+    if (!uid) return
+
+    let { data: prof } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle()
+
+    if (!prof) {
+      prof = await ensureProfileForCurrentUser()
+    }
+
     setProfile(prof)
 
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
@@ -398,15 +479,26 @@ function App() {
   }
 
   async function loadRanking() {
-    const { data: players } = await supabase.from('profiles').select('id,nome,email')
+    const { data: players } = await supabase.from('profiles').select('*')
     const { data: allGuesses } = await supabase.from('guesses').select('*')
     const { data: gameData } = await supabase.from('games').select('*')
 
     const playerMap = new Map()
-    ;(players || []).forEach(p => playerMap.set(p.id, p))
+
+    ;(players || []).forEach(p => {
+      playerMap.set(p.id, {
+        ...p,
+        nome: displayPlayerName(p)
+      })
+    })
+
     ;(allGuesses || []).forEach(g => {
       if (!playerMap.has(g.user_id)) {
-        playerMap.set(g.user_id, { id: g.user_id, nome: 'Usuário', email: '' })
+        playerMap.set(g.user_id, {
+          id: g.user_id,
+          nome: `Jogador ${String(g.user_id || '').slice(0, 4)}`,
+          email: ''
+        })
       }
     })
 
@@ -428,7 +520,7 @@ function App() {
       })
 
       return {
-        nome: p.nome || p.email || 'Usuário',
+        nome: displayPlayerName(p),
         pontos,
         exatos,
         acertos
@@ -445,6 +537,7 @@ function App() {
   }
 
   async function saveGuesses() {
+    await ensureProfileForCurrentUser()
     if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
     const uid = session.user.id
     const rows = Object.entries(guesses).map(([game_id, g]) => ({

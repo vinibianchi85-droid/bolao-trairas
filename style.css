@@ -1446,3 +1446,194 @@ body{
   .tabs{position:static !important;overflow-x:auto !important;flex-wrap:nowrap !important}
   .tabs button{white-space:nowrap !important;flex:0 0 auto !important}
 }
+
+
+/* ==========================================================
+   AJUSTE FINAL SOLICITADO
+   - bandeiras por imagem no computador
+   - iniciais/siglas na aba admin
+   - logo da tela inicial sem ficar gigante
+   ========================================================== */
+
+/* mata a logo gigante que vinha do :before do formulário */
+.form:before,
+.login:before,
+.login:after,
+.hero:after,
+.page:after {
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
+}
+
+/* limita qualquer logo da tela inicial */
+.login .fishMark {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  max-height: 68px !important;
+  overflow: hidden !important;
+}
+
+.login .fishLogo,
+.login .logoTrairasHero,
+.login .loginLogoTrairas,
+.login img[alt="Traíras F.C."] {
+  object-fit: contain !important;
+  max-width: 110px !important;
+  max-height: 110px !important;
+}
+
+.login .fishMark img,
+.login .fishLogo {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* bandeiras confiáveis no desktop */
+.flagImg {
+  display: inline-block !important;
+  width: 24px !important;
+  height: 16px !important;
+  min-width: 24px !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.16) !important;
+  vertical-align: middle !important;
+}
+
+.emojiFlag {
+  display: inline-block !important;
+  font-family: "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+/* topo de cada grupo: bandeira + sigla */
+.posterTeamFlag {
+  flex-direction: row !important;
+  gap: 6px !important;
+  min-height: 34px !important;
+  font-family: system-ui, Arial, sans-serif !important;
+}
+
+.posterTeamFlag .flagImg {
+  width: 24px !important;
+  height: 16px !important;
+}
+
+.posterTeamFlag small {
+  color: inherit !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .04em !important;
+}
+
+/* linhas de jogos: bandeira + nome */
+.teamNameFlag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.teamNameFlag.right {
+  justify-content: flex-end !important;
+}
+
+.teamNameFlag .teamText {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.posterSide {
+  min-width: 0 !important;
+}
+
+.posterSide.right .teamNameFlag {
+  margin-left: auto !important;
+}
+
+/* admin: mostrar bandeira + sigla + nome */
+.adminGame {
+  grid-template-columns: 145px minmax(150px,1fr) 58px 20px 58px minmax(150px,1fr) 170px !important;
+}
+
+.adminTeamCell {
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.adminTeam {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  color: #0f172a !important;
+  max-width: 100% !important;
+}
+
+.adminTeam.right {
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.adminTeamCode {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 34px !important;
+  padding: 3px 5px !important;
+  border-radius: 6px !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .04em !important;
+}
+
+.adminTeamName {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-weight: 900 !important;
+}
+
+.adminScoreInput {
+  text-align: center !important;
+  font-weight: 1000 !important;
+}
+
+/* no celular, mantém nomes no admin, mas compacta */
+@media(max-width:1000px) {
+  .adminGame {
+    grid-template-columns: 1fr 48px 20px 48px 1fr !important;
+  }
+
+  .adminGame .fase,
+  .adminGame .official {
+    grid-column: 1 / -1 !important;
+  }
+
+  .adminTeam {
+    gap: 5px !important;
+  }
+
+  .adminTeamCode {
+    min-width: 30px !important;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+  }
+
+  .adminTeamName {
+    font-size: 12px !important;
+  }
+
+  .flagImg {
+    width: 22px !important;
+    height: 15px !important;
+    min-width: 22px !important;
+  }
+}

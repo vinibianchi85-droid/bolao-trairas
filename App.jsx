@@ -48,6 +48,76 @@ function teamCode(team) {
 }
 
 
+
+
+const FLAG_CODES = {
+  'Brasil':'br','México':'mx','África do Sul':'za','Coreia do Sul':'kr','Tchéquia':'cz',
+  'Canadá':'ca','Bósnia-Herzegovina':'ba','Estados Unidos':'us','Paraguai':'py',
+  'Austrália':'au','Turquia':'tr','Catar':'qa','Suíça':'ch','Haiti':'ht',
+  'Escócia':'gb-sct','Alemanha':'de','Curaçao':'cw','Holanda':'nl','Japão':'jp',
+  'Costa do Marfim':'ci','Equador':'ec','Suécia':'se','Tunísia':'tn',
+  'Arábia Saudita':'sa','Uruguai':'uy','Espanha':'es','Cabo Verde':'cv',
+  'Irã':'ir','Nova Zelândia':'nz','Bélgica':'be','Egito':'eg','França':'fr',
+  'Senegal':'sn','Iraque':'iq','Noruega':'no','Argentina':'ar','Argélia':'dz',
+  'Áustria':'at','Jordânia':'jo','Gana':'gh','Panamá':'pa','Inglaterra':'gb-eng',
+  'Croácia':'hr','Portugal':'pt','RD Congo':'cd','Uzbequistão':'uz','Colômbia':'co',
+  'Marrocos':'ma','Bahamas':'bs','Itália':'it','Chile':'cl','Peru':'pe',
+  'Polônia':'pl','Dinamarca':'dk','Camarões':'cm'
+}
+
+function flagCode(team) {
+  return FLAG_CODES[team] || ''
+}
+
+function FlagImg({ team, className = '' }) {
+  const code = flagCode(team)
+  if (!code) return <span className={`emojiFlag ${className}`}>{flag(team)}</span>
+  return (
+    <img
+      className={`flagImg ${className}`}
+      src={`https://flagcdn.com/w40/${code}.png`}
+      srcSet={`https://flagcdn.com/w80/${code}.png 2x`}
+      alt={team}
+      loading="lazy"
+      onError={e => {
+        e.currentTarget.style.display = 'none'
+        const fallback = document.createElement('span')
+        fallback.className = `emojiFlag ${className}`
+        fallback.textContent = flag(team)
+        e.currentTarget.parentNode && e.currentTarget.parentNode.insertBefore(fallback, e.currentTarget.nextSibling)
+      }}
+    />
+  )
+}
+
+function TeamCodeFlag({ team }) {
+  return (
+    <>
+      <FlagImg team={team} />
+      <small>{teamCode(team)}</small>
+    </>
+  )
+}
+
+function TeamNameFlag({ team, side = '' }) {
+  return (
+    <span className={`teamNameFlag ${side}`}>
+      <FlagImg team={team} />
+      <span className="teamText">{team}</span>
+    </span>
+  )
+}
+
+function TeamAdmin({ team, side = '' }) {
+  return (
+    <span className={`adminTeam ${side}`}>
+      <FlagImg team={team} />
+      <span className="adminTeamCode">{teamCode(team)}</span>
+      <span className="adminTeamName">{team}</span>
+    </span>
+  )
+}
+
 function LogoTrairas({ className = '' }) {
   return <img src={LOGO_TRAIRAS} alt="Traíras F.C." className={className} />
 }
@@ -577,7 +647,7 @@ function App() {
 
             <div className="posterTeams">
               {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                <div className="posterTeamFlag" key={team}><span className="flagEmoji">{flag(team)}</span><small>{teamCode(team)}</small></div>
+                <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
               ))}
             </div>
 
@@ -590,11 +660,11 @@ function App() {
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
-                  <span className="posterSide right"><span className="inlineFlag">{flag(game.home_team)}</span><span>{game.home_team}</span></span>
+                  <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_home ?? ''} onChange={e => setGuess(game, 'guess_home', e.target.value)} />
                   <b>x</b>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_away ?? ''} onChange={e => setGuess(game, 'guess_away', e.target.value)} />
-                  <span className="posterSide"><span className="inlineFlag">{flag(game.away_team)}</span><span>{game.away_team}</span></span>
+                  <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
                   <span className="posterPts">{isLocked ? '🔒 ' : ''}{pts} pts</span>
                 </div>
               })}
@@ -631,7 +701,7 @@ function App() {
 
             <div className="posterTeams">
               {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                <div className="posterTeamFlag" key={team}><span className="flagEmoji">{flag(team)}</span><small>{teamCode(team)}</small></div>
+                <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
               ))}
             </div>
 
@@ -640,11 +710,11 @@ function App() {
                 <div className="posterMatch" key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
-                  <span className="posterSide right"><span className="inlineFlag">{flag(game.home_team)}</span><span>{game.home_team}</span></span>
+                  <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
                   <span className="posterScore">{game.home_score ?? ''}</span>
                   <b>x</b>
                   <span className="posterScore">{game.away_score ?? ''}</span>
-                  <span className="posterSide"><span className="inlineFlag">{flag(game.away_team)}</span><span>{game.away_team}</span></span>
+                  <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
                 </div>
               ))}
             </div>
@@ -804,11 +874,11 @@ function App() {
       <div className="games">
         {filteredGames.map(game => <div className="game adminGame" key={game.id}>
           <span className="fase">Jogo {game.game_no}<br />{game.phase}<br />{formatLongDate(game.starts_at)}</span>
-          <b className="team right">{flag(game.home_team)} {game.home_team}</b>
-          <input className=\"adminScoreInput\"  value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+          <b className="team right adminTeamCell"><TeamAdmin team={game.home_team} side="right" /></b>
+          <input className="adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
           <span className="versus">x</span>
-          <input className=\"adminScoreInput\"  value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
-          <b className="team">{flag(game.away_team)} {game.away_team}</b>
+          <input className="adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+          <b className="team adminTeamCell"><TeamAdmin team={game.away_team} /></b>
           <span className="official">Resultado oficial</span>
         </div>)}
       </div>

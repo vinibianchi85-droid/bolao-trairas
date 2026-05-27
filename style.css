@@ -341,3 +341,13 @@
   color:transparent !important;
   font-size:0 !important;
 }
+.crestCard img{
+  display:block !important;
+  width:90px !important;
+  height:90px !important;
+  object-fit:contain !important;
+}
+
+.crestCard{
+  overflow:hidden;
+}

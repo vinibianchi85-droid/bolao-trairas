@@ -268,8 +268,8 @@ function App() {
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
 
   if (!session) {
-    return <main className="page login">
-      <section className="hero heroStadium">
+    return <main className="page login mockLoginExact">
+      <section className="hero mockHeroExact">
         <div className="shine"></div>
         <div className="crestCard premiumCrest">
           <div className="fishMark"><LogoTrairas className="fishLogo" /></div>
@@ -285,8 +285,8 @@ function App() {
           <span>📱 Feito para celular</span>
         </div>
       </section>
-      <section className="card form formPremium">
-        <div className="loginLogoWrap"><LogoTrairas className="loginLogoTrairas" /></div>
+      <section className="card form formMockExact">
+        <div className="loginLogoExactWrap"><LogoTrairas className="loginLogoExact" /></div>
         <h2>Entrar ou cadastrar</h2>
         <p className="loginHint">Use o e-mail cadastrado como usuário de acesso.</p>
         <input placeholder="Nome completo" value={nome} onChange={e => setNome(e.target.value)} />
@@ -303,7 +303,7 @@ function App() {
     </main>
   }
 
-  return <main className="page">
+  return <main className="page mockAppExact">
     <header className="top premiumTop">
       <div className="topBrand">
         <LogoTrairas className="topLogoTrairas" />
@@ -473,7 +473,7 @@ function App() {
       <div className="cardTitle rankingTitlePremium">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
-          <div className="premiumSectionTitle"><LogoTrairas className="miniLogo" /><h2>Ranking ao vivo</h2></div>
+          <h2>Ranking ao vivo</h2>
         </div>
         <button className="whats" onClick={shareRanking}><Share2/> Compartilhar no WhatsApp</button>
       </div>

@@ -137,7 +137,7 @@ function App() {
   const [msg, setMsg] = useState('')
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState('Todos')
-
+  const [modo, setModo] = useState('login')
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))

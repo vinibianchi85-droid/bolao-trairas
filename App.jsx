@@ -557,3 +557,8 @@ createRoot(document.getElementById('root')).render(<App />)
   background-repeat:no-repeat !important;
   color:transparent !important;
 }
+document.querySelectorAll('img').forEach(img => {
+  if(img.alt === 'Traíras'){
+    img.src = '/logo-trairas.png'
+  }
+})

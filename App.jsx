@@ -375,8 +375,7 @@ function App() {
       <button onClick={() => setTab('ranking')} className={tab==='ranking'?'active':''}><Trophy/> Ranking</button>
       <button onClick={() => setTab('grupos')} className={tab==='grupos'?'active':''}><CalendarDays/> Grupos</button>
       <button onClick={() => setTab('mata')} className={tab==='mata'?'active':''}><Crown/> Mata-mata</button>
-      <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regras</button>
-      <button onClick={() => setTab('regulamento')} className={tab==='regulamento'?'active':''}><Shield/> Regulamento</button>
+      <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
       {profile?.is_admin && <button onClick={() => setTab('admin')} className={tab==='admin'?'active':''}><Shield/> Admin</button>}
     </nav>
 
@@ -542,30 +541,17 @@ function App() {
       </div>
     </section>}
 
-    {tab === 'regras' && <section className="card">
-      <h2>Regras oficiais do bolão</h2>
-      <div className="rules">
-        <div><b>10 pontos</b><span>Placar exato.</span></div>
-        <div><b>5 pontos</b><span>Acertou vencedor ou empate.</span></div>
-        <div><b>Extras</b><span>Campeão, vice, terceiro e classificados somam pontos extras conforme regulamento.</span></div>
-        <div><b>0 ponto</b><span>Errou resultado e placar.</span></div>
-        <div><b>Desempate</b><span>Mais placares exatos, depois mais acertos.</span></div>
-        <div><b>Bloqueio</b><span>Após o prazo geral ou horário do jogo, ninguém altera.</span></div>
-      </div>
-    </section>}
-
-
-    {tab === 'regulamento' && <section className="card regulamentoBox">
+    {tab === 'regras' && <section className="card regulamentoBox">
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Regulamento Oficial</h2>
+          <h2>Regulamento Oficial do Bolão</h2>
         </div>
       </div>
 
       <div className="regSection">
         <h3>1. Da organização</h3>
-        <p>O BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026 é uma ação recreativa e contributiva organizada pelo TRAÍRAS Futebol Clube, com sede em Tupanciretã/RS.</p>
+        <p>O <b>BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026</b> é uma ação recreativa e contributiva organizada pelo TRAÍRAS Futebol Clube, com sede em Tupanciretã/RS.</p>
         <p>A participação será feita mediante cota individual no valor de <b>R$ 30,00</b>.</p>
       </div>
 
@@ -576,7 +562,7 @@ function App() {
 
       <div className="regSection">
         <h3>3. Quem pode participar</h3>
-        <p>Podem participar atletas ativos, aposentados, simpatizantes e convidados do TRAÍRAS F.C.</p>
+        <p>Podem participar atletas ativos, atletas aposentados, simpatizantes e convidados do TRAÍRAS F.C.</p>
         <p>Não poderão participar atletas oficialmente convocados por qualquer seleção participante da Copa do Mundo 2026.</p>
       </div>
 
@@ -584,7 +570,7 @@ function App() {
         <h3>4. Das apostas</h3>
         <p>Os participantes poderão dar palpites nos resultados dos jogos, placares, classificados das fases eliminatórias, campeão, vice-campeão e terceiro colocado.</p>
         <p>Os palpites da fase de grupos poderão ser alterados até às <b>23h59min do dia anterior ao início da Copa do Mundo 2026</b>.</p>
-        <p>As fases eliminatórias serão liberadas após a definição oficial dos confrontos.</p>
+        <p>As fases eliminatórias serão liberadas para palpites após a definição oficial dos confrontos.</p>
       </div>
 
       <div className="regSection">
@@ -609,7 +595,7 @@ function App() {
         <ol>
           <li>Maior número de placares exatos na fase de grupos;</li>
           <li>Maior número de acertos de resultados;</li>
-          <li>Persistindo empate, divisão proporcional da premiação.</li>
+          <li>Persistindo o empate, divisão proporcional da premiação.</li>
         </ol>
       </div>
 
@@ -634,9 +620,10 @@ function App() {
 
       <div className="regSection">
         <h3>9. Disposições finais</h3>
-        <p>Ao participar do bolão, o participante concorda integralmente com este regulamento. Os casos omissos serão resolvidos pela organização do BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026.</p>
+        <p>Ao participar do bolão, o participante concorda integralmente com este regulamento. Os casos omissos serão resolvidos pela organização do <b>BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026</b>.</p>
       </div>
     </section>}
+
 
     {tab === 'admin' && <section className="card">
       <div className="cardTitle">

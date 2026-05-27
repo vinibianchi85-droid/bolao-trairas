@@ -1024,3 +1024,140 @@ button:not(.secondary):not(.iconBtn) {
     grid-template-columns: 30px 64px 1fr 34px 10px 34px 1fr !important;
   }
 }
+
+
+/* ===== AJUSTES FINAIS PEDIDOS ===== */
+
+/* Logo com partes brancas internas preservadas */
+img[alt="Traíras F.C."] {
+  object-fit: contain !important;
+}
+
+/* Separar login/cadastro */
+.authCardSplit {
+  display:flex !important;
+  flex-direction:column !important;
+  gap:13px !important;
+}
+
+.authModeButtons {
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  border-radius:17px !important;
+  padding:6px !important;
+  position:relative !important;
+  z-index:2 !important;
+}
+
+.authModeButtons button {
+  min-height:42px !important;
+  border-radius:13px !important;
+  background:transparent !important;
+  color:#cbd5e1 !important;
+  border:0 !important;
+  box-shadow:none !important;
+  font-size:12px !important;
+}
+
+.authModeButtons button.active {
+  background:linear-gradient(135deg,#e50914,#8f050b) !important;
+  color:white !important;
+  box-shadow:0 10px 22px rgba(229,9,20,.28) !important;
+}
+
+.authCardSplit h2 {
+  margin-top:4px !important;
+}
+
+.passBox {
+  display:flex !important;
+  gap:8px !important;
+}
+
+.passBox input {
+  flex:1 !important;
+  min-width:0 !important;
+}
+
+.iconBtn {
+  width:54px !important;
+  flex-shrink:0 !important;
+}
+
+/* Aba Grupos: escrita e cores padronizadas com o app */
+.groupsGrid {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:14px !important;
+}
+
+.groupBox {
+  background:linear-gradient(180deg,rgba(10,18,24,.98),rgba(2,6,9,.99)) !important;
+  color:#fff !important;
+  border:1px solid rgba(229,9,20,.42) !important;
+  border-radius:20px !important;
+  overflow:hidden !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.48) !important;
+}
+
+.groupBox h3 {
+  margin:-14px -14px 10px !important;
+  padding:11px 14px !important;
+  background:linear-gradient(90deg,#8f050b,#e50914,#081116) !important;
+  color:#fff !important;
+  text-transform:uppercase !important;
+  letter-spacing:.05em !important;
+  font-size:18px !important;
+}
+
+.groupBox table {
+  width:100% !important;
+  border-collapse:collapse !important;
+  color:#fff !important;
+}
+
+.groupBox th {
+  color:#facc15 !important;
+  text-transform:uppercase !important;
+  font-size:11px !important;
+  letter-spacing:.04em !important;
+  border-bottom:1px solid rgba(255,255,255,.14) !important;
+}
+
+.groupBox td {
+  color:#f8fafc !important;
+  border-bottom:1px solid rgba(255,255,255,.08) !important;
+}
+
+.groupBox tr {
+  background:transparent !important;
+}
+
+.groupBox tr.qualified {
+  background:linear-gradient(90deg,rgba(229,9,20,.30),rgba(255,255,255,.035)) !important;
+}
+
+.groupBox tr.qualified td:first-child::before {
+  content:"★ ";
+  color:#facc15;
+}
+
+.muted {
+  color:#cbd5e1 !important;
+}
+
+.sectionTitleWithLogo h2,
+.premiumSectionTitle h2 {
+  color:#fff !important;
+  text-transform:uppercase !important;
+  letter-spacing:.03em !important;
+}
+
+@media(max-width:900px){
+  .groupsGrid {
+    grid-template-columns:1fr !important;
+  }
+}

@@ -805,9 +805,9 @@ function App() {
         {filteredGames.map(game => <div className="game adminGame" key={game.id}>
           <span className="fase">Jogo {game.game_no}<br />{game.phase}<br />{formatLongDate(game.starts_at)}</span>
           <b className="team right">{flag(game.home_team)} {game.home_team}</b>
-          <input value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+          <input className=\"adminScoreInput\"  value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
           <span className="versus">x</span>
-          <input value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+          <input className=\"adminScoreInput\"  value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
           <b className="team">{flag(game.away_team)} {game.away_team}</b>
           <span className="official">Resultado oficial</span>
         </div>)}

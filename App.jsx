@@ -550,3 +550,10 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(<App />)
+.fishMark{
+  background-image:url('/logo-trairas.png') !important;
+  background-size:contain !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  color:transparent !important;
+}

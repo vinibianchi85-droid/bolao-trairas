@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import './style.css'
 
+const LOGO_TRAIRAS = '/logo-trairas.png'
+
 const FLAGS = {
   'Brasil':'🇧🇷','México':'🇲🇽','África do Sul':'🇿🇦','Coreia do Sul':'🇰🇷','Tchéquia':'🇨🇿','Canadá':'🇨🇦',
   'Bósnia-Herzegovina':'🇧🇦','Estados Unidos':'🇺🇸','Paraguai':'🇵🇾','Austrália':'🇦🇺','Turquia':'🇹🇷',
@@ -265,7 +267,7 @@ function App() {
       <section className="hero">
         <div className="shine"></div>
         <div className="crestCard">
-          <div className="fishMark">🐟</div>
+          <img className="logoTrairasHero" src={LOGO_TRAIRAS} alt="Traíras F.C." />
           <span>Traíras F.C.</span>
         </div>
         <div className="badge"><Trophy/> Copa do Mundo 2026</div>
@@ -355,9 +357,8 @@ function App() {
           <h2>Meus Palpites</h2>
           <p>Preencha os placares direto na tabela da Copa 2026</p>
         </div>
-        <div className="posterLogo">
-          <span>🐟</span>
-          <b>TRAÍRAS<br/>F.C.</b>
+        <div className="posterLogo logoBox">
+          <img src={LOGO_TRAIRAS} alt="Traíras F.C." />
         </div>
       </div>
 
@@ -372,6 +373,7 @@ function App() {
         <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar palpites</button>
       </div>
 
+      <img className="logoWatermarkTrairas" src={LOGO_TRAIRAS} alt="" />
       <div className="posterGrid palpitesPosterGrid">
         {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
           <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
@@ -421,9 +423,8 @@ function App() {
           <h2>Tabela de Jogos</h2>
           <p>Copa do Mundo 2026 • estilo chaveiro impresso • cores Traíras</p>
         </div>
-        <div className="posterLogo">
-          <span>🐟</span>
-          <b>TRAÍRAS<br/>F.C.</b>
+        <div className="posterLogo logoBox">
+          <img src={LOGO_TRAIRAS} alt="Traíras F.C." />
         </div>
       </div>
 

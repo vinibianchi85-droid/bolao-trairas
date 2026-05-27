@@ -289,3 +289,45 @@
     grid-column:1/-1;
   }
 }
+
+
+/* Logo real dos Traíras, sem distorcer */
+.logoTrairasHero{
+  width:110px;
+  height:110px;
+  object-fit:contain;
+  flex-shrink:0;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,.45));
+}
+.logoBox{
+  background:rgba(255,255,255,.96) !important;
+  padding:8px;
+  overflow:hidden;
+}
+.logoBox img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.22));
+}
+.logoWatermarkTrairas{
+  position:absolute;
+  right:18px;
+  top:145px;
+  width:190px;
+  max-width:35%;
+  opacity:.10;
+  object-fit:contain;
+  pointer-events:none;
+  z-index:0;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.35));
+}
+.palpitesPosterGrid{
+  position:relative;
+  z-index:1;
+}
+@media(max-width:900px){
+  .logoTrairasHero{width:92px;height:92px}
+  .logoWatermarkTrairas{width:135px;opacity:.08;right:10px;top:130px}
+}

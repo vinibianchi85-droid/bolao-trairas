@@ -291,63 +291,12 @@
 }
 
 
-/* Logo real dos Traíras, sem distorcer */
-.logoTrairasHero{
-  width:110px;
-  height:110px;
-  object-fit:contain;
-  flex-shrink:0;
-  filter:drop-shadow(0 12px 24px rgba(0,0,0,.45));
-}
-.logoBox{
-  background:rgba(255,255,255,.96) !important;
-  padding:8px;
-  overflow:hidden;
-}
+.fishMark img,
+.crestCard img,
+.posterLogo img,
 .logoBox img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  display:block;
-  filter:drop-shadow(0 6px 12px rgba(0,0,0,.22));
-}
-.logoWatermarkTrairas{
-  position:absolute;
-  right:18px;
-  top:145px;
-  width:190px;
-  max-width:35%;
-  opacity:.10;
-  object-fit:contain;
-  pointer-events:none;
-  z-index:0;
-  filter:drop-shadow(0 10px 20px rgba(0,0,0,.35));
-}
-.palpitesPosterGrid{
-  position:relative;
-  z-index:1;
-}
-@media(max-width:900px){
-  .logoTrairasHero{width:92px;height:92px}
-  .logoWatermarkTrairas{width:135px;opacity:.08;right:10px;top:130px}
-}
-.fishMark{
-  width:90px !important;
-  height:90px !important;
-  background-image:url('/logo-trairas.png') !important;
-  background-size:contain !important;
-  background-position:center !important;
-  background-repeat:no-repeat !important;
-  color:transparent !important;
-  font-size:0 !important;
-}
-.crestCard img{
-  display:block !important;
-  width:90px !important;
-  height:90px !important;
+  width:100% !important;
+  height:100% !important;
   object-fit:contain !important;
-}
-
-.crestCard{
-  overflow:hidden;
+  display:block !important;
 }

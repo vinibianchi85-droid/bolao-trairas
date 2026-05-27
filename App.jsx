@@ -19,11 +19,32 @@ const FLAGS = {
   'Irã':'🇮🇷','Nova Zelândia':'🇳🇿','Bélgica':'🇧🇪','Egito':'🇪🇬','França':'🇫🇷',
   'Senegal':'🇸🇳','Iraque':'🇮🇶','Noruega':'🇳🇴','Argentina':'🇦🇷','Argélia':'🇩🇿',
   'Áustria':'🇦🇹','Jordânia':'🇯🇴','Gana':'🇬🇭','Panamá':'🇵🇦','Inglaterra':'🏴',
-  'Croácia':'🇭🇷','Portugal':'🇵🇹','RD Congo':'🇨🇩','Uzbequistão':'🇺🇿','Colômbia':'🇨🇴'
+  'Croácia':'🇭🇷','Portugal':'🇵🇹','RD Congo':'🇨🇩','Uzbequistão':'🇺🇿','Colômbia':'🇨🇴',
+  'Marrocos':'🇲🇦','Bahamas':'🇧🇸','Itália':'🇮🇹','Chile':'🇨🇱','Peru':'🇵🇪',
+  'Polônia':'🇵🇱','Dinamarca':'🇩🇰','Camarões':'🇨🇲'
+}
+
+const TEAM_CODES = {
+  'Brasil':'BRA','México':'MEX','África do Sul':'RSA','Coreia do Sul':'KOR','Tchéquia':'CZE',
+  'Canadá':'CAN','Bósnia-Herzegovina':'BIH','Estados Unidos':'EUA','Paraguai':'PAR',
+  'Austrália':'AUS','Turquia':'TUR','Catar':'QAT','Suíça':'SUI','Haiti':'HAI',
+  'Escócia':'SCO','Alemanha':'ALE','Curaçao':'CUR','Holanda':'NED','Japão':'JPN',
+  'Costa do Marfim':'CIV','Equador':'ECU','Suécia':'SWE','Tunísia':'TUN',
+  'Arábia Saudita':'KSA','Uruguai':'URU','Espanha':'ESP','Cabo Verde':'CPV',
+  'Irã':'IRN','Nova Zelândia':'NZL','Bélgica':'BEL','Egito':'EGY','França':'FRA',
+  'Senegal':'SEN','Iraque':'IRQ','Noruega':'NOR','Argentina':'ARG','Argélia':'ALG',
+  'Áustria':'AUT','Jordânia':'JOR','Gana':'GHA','Panamá':'PAN','Inglaterra':'ING',
+  'Croácia':'CRO','Portugal':'POR','RD Congo':'COD','Uzbequistão':'UZB','Colômbia':'COL',
+  'Marrocos':'MAR','Bahamas':'BAH','Itália':'ITA','Chile':'CHI','Peru':'PER',
+  'Polônia':'POL','Dinamarca':'DEN','Camarões':'CMR'
 }
 
 function flag(team) {
   return FLAGS[team] || '🏳️'
+}
+
+function teamCode(team) {
+  return TEAM_CODES[team] || String(team || '').slice(0,3).toUpperCase()
 }
 
 
@@ -556,7 +577,7 @@ function App() {
 
             <div className="posterTeams">
               {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                <div className="posterTeamFlag" key={team}>{flag(team)}<small>{flag(team)} {team}</small></div>
+                <div className="posterTeamFlag" key={team}><span className="flagEmoji">{flag(team)}</span><small>{teamCode(team)}</small></div>
               ))}
             </div>
 
@@ -569,11 +590,11 @@ function App() {
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
-                  <span className="posterSide right">{flag(game.home_team)} {game.home_team}</span>
+                  <span className="posterSide right"><span className="inlineFlag">{flag(game.home_team)}</span><span>{game.home_team}</span></span>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_home ?? ''} onChange={e => setGuess(game, 'guess_home', e.target.value)} />
                   <b>x</b>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_away ?? ''} onChange={e => setGuess(game, 'guess_away', e.target.value)} />
-                  <span className="posterSide">{flag(game.away_team)} {game.away_team}</span>
+                  <span className="posterSide"><span className="inlineFlag">{flag(game.away_team)}</span><span>{game.away_team}</span></span>
                   <span className="posterPts">{isLocked ? '🔒 ' : ''}{pts} pts</span>
                 </div>
               })}
@@ -610,7 +631,7 @@ function App() {
 
             <div className="posterTeams">
               {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                <div className="posterTeamFlag" key={team}>{flag(team)}<small>{flag(team)} {team}</small></div>
+                <div className="posterTeamFlag" key={team}><span className="flagEmoji">{flag(team)}</span><small>{teamCode(team)}</small></div>
               ))}
             </div>
 
@@ -619,11 +640,11 @@ function App() {
                 <div className="posterMatch" key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
-                  <span className="posterSide right">{flag(game.home_team)} {game.home_team}</span>
+                  <span className="posterSide right"><span className="inlineFlag">{flag(game.home_team)}</span><span>{game.home_team}</span></span>
                   <span className="posterScore">{game.home_score ?? ''}</span>
                   <b>x</b>
                   <span className="posterScore">{game.away_score ?? ''}</span>
-                  <span className="posterSide">{flag(game.away_team)} {game.away_team}</span>
+                  <span className="posterSide"><span className="inlineFlag">{flag(game.away_team)}</span><span>{game.away_team}</span></span>
                 </div>
               ))}
             </div>

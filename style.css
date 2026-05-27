@@ -331,3 +331,13 @@
   .logoTrairasHero{width:92px;height:92px}
   .logoWatermarkTrairas{width:135px;opacity:.08;right:10px;top:130px}
 }
+.fishMark{
+  width:90px !important;
+  height:90px !important;
+  background-image:url('/logo-trairas.png') !important;
+  background-size:contain !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  color:transparent !important;
+  font-size:0 !important;
+}

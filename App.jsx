@@ -325,18 +325,13 @@ function App() {
 
         const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
         const bonusPts = specialBonusPoints(game, g)
-
         pontos += basePts + bonusPts
+
         if (basePts === 10) exatos += 1
         if (basePts > 0 || bonusPts > 0) acertos += 1
       })
 
-      return {
-        nome: p.nome || p.email || 'Participante',
-        pontos,
-        exatos,
-        acertos
-      }
+      return { nome: p.nome || p.email || 'Participante', pontos, exatos, acertos }
     }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
 
     setRanking(rows)

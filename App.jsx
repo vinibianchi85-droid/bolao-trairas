@@ -406,7 +406,7 @@ function App() {
     ;(players || []).forEach(p => playerMap.set(p.id, p))
     ;(allGuesses || []).forEach(g => {
       if (!playerMap.has(g.user_id)) {
-        playerMap.set(g.user_id, { id: g.user_id, nome: 'Participante', email: '' })
+        playerMap.set(g.user_id, { id: g.user_id, nome: 'Usuário', email: '' })
       }
     })
 
@@ -428,7 +428,7 @@ function App() {
       })
 
       return {
-        nome: p.nome || p.email || 'Participante',
+        nome: p.nome || p.email || 'Usuário',
         pontos,
         exatos,
         acertos
@@ -579,7 +579,7 @@ function App() {
         <div>
           <span>Meus pontos</span>
           <strong>{total}</strong>
-          <small>{profile?.nome || 'Participante'}</small>
+          <small>{profile?.nome || 'Usuário'}</small>
         </div>
         <ProgressRing value={filled}/>
       </div>

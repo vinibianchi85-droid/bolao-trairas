@@ -269,7 +269,7 @@ function App() {
 
   if (!session) {
     return <main className="page login">
-      <section className="hero">
+      <section className="hero heroStadium">
         <div className="shine"></div>
         <div className="crestCard premiumCrest">
           <div className="fishMark"><LogoTrairas className="fishLogo" /></div>
@@ -285,7 +285,8 @@ function App() {
           <span>📱 Feito para celular</span>
         </div>
       </section>
-      <section className="card form">
+      <section className="card form formPremium">
+        <div className="loginLogoWrap"><LogoTrairas className="loginLogoTrairas" /></div>
         <h2>Entrar ou cadastrar</h2>
         <p className="loginHint">Use o e-mail cadastrado como usuário de acesso.</p>
         <input placeholder="Nome completo" value={nome} onChange={e => setNome(e.target.value)} />
@@ -472,7 +473,7 @@ function App() {
       <div className="cardTitle rankingTitlePremium">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Ranking ao vivo</h2>
+          <div className="premiumSectionTitle"><LogoTrairas className="miniLogo" /><h2>Ranking ao vivo</h2></div>
         </div>
         <button className="whats" onClick={shareRanking}><Share2/> Compartilhar no WhatsApp</button>
       </div>

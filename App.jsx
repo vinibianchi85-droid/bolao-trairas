@@ -1011,10 +1011,19 @@ function App() {
       </div>
     </section>}
 
+    {tab === 'admin' && <section className="palpitesPoster adminPoster">
+      <div className="tablePosterHeader palpitesHeader">
+        <div>
+          <span>Painel Admin</span>
+          <h2>Resultados Oficiais</h2>
+          <p>Preencha as seleções oficiais do mata-mata e os placares finais.</p>
+        </div>
+        <div className="posterLogo logoBox">
+          <LogoTrairas className="posterLogoImg" />
+        </div>
+      </div>
 
-    {tab === 'admin' && <section className="card">
-      <div className="cardTitle">
-        <h2>Painel admin — resultados oficiais</h2>
+      <div className="posterControls">
         <div className="filters">
           <Search size={18}/>
           <input placeholder="Buscar jogo..." value={busca} onChange={e => setBusca(e.target.value)} />
@@ -1022,30 +1031,61 @@ function App() {
             {phases.map(p => <option key={p}>{p}</option>)}
           </select>
         </div>
+        <button type="button" onClick={refreshAll}><RefreshCw/> Atualizar ranking</button>
       </div>
-      <div className="games">
-        {filteredGames.map(game => {
-          const knockout = isKnockoutPhase(game.phase)
-          return <div className={`game adminGame ${knockout ? 'adminKnockout' : ''}`} key={game.id}>
-            <span className="fase">Jogo {game.game_no}<br />{game.phase}<br />{formatLongDate(game.starts_at)}</span>
 
-            {knockout
-              ? <input className="adminTeamInput right" value={game.home_team || ''} placeholder="Seleção oficial" onChange={e => updateGameTeam(game, 'home', e.target.value)} />
-              : <b className="team right adminTeamCell"><TeamAdmin team={game.home_team} side="right" /></b>
-            }
+      <div className="posterGrid palpitesPosterGrid adminPosterGrid">
+        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
+          <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
+            <div className="posterGroupTitle">
+              <strong>{phaseName}</strong>
+              <span>{phaseGames.length} jogos</span>
+            </div>
 
-            <input className="adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
-            <span className="versus">x</span>
-            <input className="adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+            <div className="posterTeams">
+              {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
+                <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
+              ))}
+            </div>
 
-            {knockout
-              ? <input className="adminTeamInput" value={game.away_team || ''} placeholder="Seleção oficial" onChange={e => updateGameTeam(game, 'away', e.target.value)} />
-              : <b className="team adminTeamCell"><TeamAdmin team={game.away_team} /></b>
-            }
+            <div className="posterMatches">
+              {phaseGames.map(game => {
+                const knockout = isKnockoutPhase(game.phase)
 
-            <span className="official">{knockout ? 'Seleções oficiais + resultado' : 'Resultado oficial'}</span>
+                return <div className={`posterMatch palpitesMatch adminPosterMatch ${knockout ? 'knockoutGuess' : ''}`} key={game.id}>
+                  <span className="posterNo">{game.game_no}</span>
+                  <span className="posterDate">{formatDate(game.starts_at)}</span>
+
+                  {knockout
+                    ? <input
+                        className="adminTeamInput right"
+                        value={game.home_team || ''}
+                        placeholder="Seleção oficial"
+                        onChange={e => updateGameTeam(game, 'home', e.target.value)}
+                      />
+                    : <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
+                  }
+
+                  <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+                  <b>x</b>
+                  <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+
+                  {knockout
+                    ? <input
+                        className="adminTeamInput"
+                        value={game.away_team || ''}
+                        placeholder="Seleção oficial"
+                        onChange={e => updateGameTeam(game, 'away', e.target.value)}
+                      />
+                    : <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
+                  }
+
+                  <span className="posterPts">Oficial</span>
+                </div>
+              })}
+            </div>
           </div>
-        })}
+        ))}
       </div>
     </section>}
   </main>

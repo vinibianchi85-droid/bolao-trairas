@@ -1637,3 +1637,59 @@ body{
     min-width: 22px !important;
   }
 }
+
+
+/* ===== CAMPOS ABERTOS PARA MATA-MATA ===== */
+.knockTeamInput,
+.adminTeamInput {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  background: #08131a !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  padding: 7px 8px !important;
+  font-size: 12px !important;
+}
+
+.knockTeamInput::placeholder,
+.adminTeamInput::placeholder {
+  color: #94a3b8 !important;
+}
+
+.knockTeamInput.right,
+.adminTeamInput.right {
+  text-align: right !important;
+}
+
+.knockoutGuess {
+  grid-template-columns: 34px 70px minmax(120px,1fr) 34px 14px 34px minmax(120px,1fr) 52px !important;
+}
+
+.adminKnockout .adminTeamInput {
+  background: #fff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+}
+
+.adminKnockout .adminTeamInput.right {
+  text-align: right !important;
+}
+
+@media(max-width:1000px){
+  .knockoutGuess {
+    grid-template-columns: 30px 58px minmax(80px,1fr) 32px 12px 32px minmax(80px,1fr) !important;
+  }
+
+  .knockoutGuess .posterPts {
+    grid-column: 1 / -1 !important;
+  }
+
+  .knockTeamInput {
+    font-size: 11px !important;
+    padding: 6px !important;
+  }
+}

@@ -174,6 +174,17 @@ function normalizedPhase(phase = '') {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
+function isKnockoutPhase(phase = '') {
+  const p = normalizedPhase(phase)
+  return !p.startsWith('grupo') && !p.includes('fase de grupos')
+}
+
+function guessedTeam(game, guess, side) {
+  const fallback = side === 'home' ? game?.home_team : game?.away_team
+  const value = side === 'home' ? guess?.guess_home_team : guess?.guess_away_team
+  return String(value || fallback || '').trim()
+}
+
 function classificationBonusByPhase(phase) {
   const p = normalizedPhase(phase)
   if (p.includes('dezesseis')) return 10
@@ -189,10 +200,16 @@ function specialBonusPoints(game, guess) {
   if ([game.home_score, game.away_score, guess.guess_home, guess.guess_away].some(v => v === null || v === undefined || v === '')) return 0
 
   const phase = normalizedPhase(game.phase)
+
+  // Nos mata-matas, o apostador pode escrever quais seleções chegam no confronto.
+  // A pontuação especial compara essas seleções escritas com as seleções oficiais cadastradas no Admin.
+  const predictedHomeTeam = guessedTeam(game, guess, 'home')
+  const predictedAwayTeam = guessedTeam(game, guess, 'away')
+
   const actualWinner = winnerFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
-  const predictedWinner = winnerFromScore(game.home_team, game.away_team, guess.guess_home, guess.guess_away)
+  const predictedWinner = winnerFromScore(predictedHomeTeam, predictedAwayTeam, guess.guess_home, guess.guess_away)
   const actualLoser = loserFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
-  const predictedLoser = loserFromScore(game.home_team, game.away_team, guess.guess_home, guess.guess_away)
+  const predictedLoser = loserFromScore(predictedHomeTeam, predictedAwayTeam, guess.guess_home, guess.guess_away)
 
   if (!actualWinner || !predictedWinner) return 0
 
@@ -532,7 +549,10 @@ function App() {
 
   function setGuess(game, field, value) {
     if (gameLocked(game)) return
-    if (value !== '' && (Number(value) < 0 || Number(value) > 30)) return
+
+    const numericFields = ['guess_home', 'guess_away']
+    if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
+
     setGuesses(old => ({ ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }))
   }
 
@@ -544,7 +564,9 @@ function App() {
       user_id: uid,
       game_id,
       guess_home: g.guess_home === '' ? null : Number(g.guess_home),
-      guess_away: g.guess_away === '' ? null : Number(g.guess_away)
+      guess_away: g.guess_away === '' ? null : Number(g.guess_away),
+      guess_home_team: (g.guess_home_team || '').trim() || null,
+      guess_away_team: (g.guess_away_team || '').trim() || null
     }))
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
     if (error) setMsg(error.message)
@@ -564,6 +586,19 @@ function App() {
     await loadAll()
     await loadRanking()
     setMsg('Resultado salvo e ranking recalculado!')
+  }
+
+  async function updateGameTeam(game, side, value) {
+    if (!profile?.is_admin) return
+    const payload = side === 'home' ? { home_team: value } : { away_team: value }
+    const { error } = await supabase.from('games').update(payload).eq('id', game.id)
+    if (error) {
+      setMsg(error.message)
+      return
+    }
+    await loadAll()
+    await loadRanking()
+    setMsg('Seleção oficial salva!')
   }
 
   function shareRanking() {
@@ -750,14 +785,38 @@ function App() {
                 const pts = totalPointsForGame(game, g)
                 const isLocked = gameLocked(game)
 
-                return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
+                const knockout = isKnockoutPhase(game.phase)
+
+                return <div className={`posterMatch palpitesMatch ${knockout ? 'knockoutGuess' : ''} ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
-                  <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
+
+                  {knockout
+                    ? <input
+                        className="knockTeamInput right"
+                        disabled={isLocked}
+                        placeholder="Seleção"
+                        value={g.guess_home_team ?? ''}
+                        onChange={e => setGuess(game, 'guess_home_team', e.target.value)}
+                      />
+                    : <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
+                  }
+
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_home ?? ''} onChange={e => setGuess(game, 'guess_home', e.target.value)} />
                   <b>x</b>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_away ?? ''} onChange={e => setGuess(game, 'guess_away', e.target.value)} />
-                  <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
+
+                  {knockout
+                    ? <input
+                        className="knockTeamInput"
+                        disabled={isLocked}
+                        placeholder="Seleção"
+                        value={g.guess_away_team ?? ''}
+                        onChange={e => setGuess(game, 'guess_away_team', e.target.value)}
+                      />
+                    : <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
+                  }
+
                   <span className="posterPts">{isLocked ? '🔒 ' : ''}{pts} pts</span>
                 </div>
               })}
@@ -965,15 +1024,28 @@ function App() {
         </div>
       </div>
       <div className="games">
-        {filteredGames.map(game => <div className="game adminGame" key={game.id}>
-          <span className="fase">Jogo {game.game_no}<br />{game.phase}<br />{formatLongDate(game.starts_at)}</span>
-          <b className="team right adminTeamCell"><TeamAdmin team={game.home_team} side="right" /></b>
-          <input className="adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
-          <span className="versus">x</span>
-          <input className="adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
-          <b className="team adminTeamCell"><TeamAdmin team={game.away_team} /></b>
-          <span className="official">Resultado oficial</span>
-        </div>)}
+        {filteredGames.map(game => {
+          const knockout = isKnockoutPhase(game.phase)
+          return <div className={`game adminGame ${knockout ? 'adminKnockout' : ''}`} key={game.id}>
+            <span className="fase">Jogo {game.game_no}<br />{game.phase}<br />{formatLongDate(game.starts_at)}</span>
+
+            {knockout
+              ? <input className="adminTeamInput right" value={game.home_team || ''} placeholder="Seleção oficial" onChange={e => updateGameTeam(game, 'home', e.target.value)} />
+              : <b className="team right adminTeamCell"><TeamAdmin team={game.home_team} side="right" /></b>
+            }
+
+            <input className="adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+            <span className="versus">x</span>
+            <input className="adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+
+            {knockout
+              ? <input className="adminTeamInput" value={game.away_team || ''} placeholder="Seleção oficial" onChange={e => updateGameTeam(game, 'away', e.target.value)} />
+              : <b className="team adminTeamCell"><TeamAdmin team={game.away_team} /></b>
+            }
+
+            <span className="official">{knockout ? 'Seleções oficiais + resultado' : 'Resultado oficial'}</span>
+          </div>
+        })}
       </div>
     </section>}
   </main>

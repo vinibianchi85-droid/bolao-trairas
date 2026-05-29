@@ -1782,40 +1782,43 @@ body{
 .teamNameFlag .teamText,.adminTeamName{max-width:100%!important}
 
 
-/* ===== CORREÇÃO VISUAL DO MATA-MATA AUTOMÁTICO ===== */
+/* ===== CORREÇÃO SEGURA DO LAYOUT DO MATA-MATA ===== */
 .isKnockout .posterTeams {
   display: none !important;
 }
 
 .isKnockout .posterMatch {
-  grid-template-columns: 34px 74px minmax(180px,1fr) 34px 14px 34px minmax(180px,1fr) 62px !important;
-}
-
-.isKnockout .posterSide {
-  min-width: 0 !important;
-  display: flex !important;
+  grid-template-columns: 34px 74px minmax(170px, 1fr) 34px 14px 34px minmax(170px, 1fr) 62px !important;
   align-items: center !important;
 }
 
-.placeholderTeam .teamText {
-  color: #94a3b8 !important;
-  font-style: italic !important;
-  font-weight: 800 !important;
+.isKnockout .posterSide {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  min-height: 30px !important;
 }
 
-.teamNameFlag {
+.isKnockout .posterSide.right {
+  justify-content: flex-end !important;
+}
+
+.isKnockout .teamNameFlag {
   width: 100% !important;
   min-width: 0 !important;
 }
 
-.teamNameFlag.right {
+.isKnockout .teamNameFlag.right {
   justify-content: flex-end !important;
 }
 
-.teamNameFlag .teamText {
+.isKnockout .teamNameFlag .teamText {
   display: inline-block !important;
-  min-width: 70px !important;
+  min-width: 92px !important;
   max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .isKnockout .posterScoreInput {
@@ -1824,7 +1827,75 @@ body{
 
 @media(max-width:1000px) {
   .isKnockout .posterMatch {
-    grid-template-columns: 30px 58px minmax(90px,1fr) 32px 12px 32px minmax(90px,1fr) !important;
+    grid-template-columns: 30px 58px minmax(85px,1fr) 32px 12px 32px minmax(85px,1fr) !important;
+  }
+
+  .isKnockout .posterPts {
+    grid-column: 1 / -1 !important;
+  }
+
+  .isKnockout .teamNameFlag .teamText {
+    min-width: 60px !important;
+  }
+}
+
+
+/* ===== CORREÇÃO FINAL DOS QUADRADOS SOLTOS NO MATA-MATA ===== */
+.isKnockout .posterTeams {
+  display: none !important;
+}
+
+.isKnockout .posterMatch {
+  grid-template-columns: 34px 74px minmax(160px,1fr) 34px 14px 34px minmax(160px,1fr) 62px !important;
+  align-items: center !important;
+}
+
+.isKnockout .posterSide {
+  min-height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.isKnockout .posterSide.right {
+  justify-content: flex-end !important;
+}
+
+.teamNameFlag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.teamNameFlag.right {
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.teamNameFlag .teamText {
+  display: inline-block !important;
+  min-width: 72px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.placeholderTeam .teamText {
+  color: #94a3b8 !important;
+  font-style: italic !important;
+  font-weight: 800 !important;
+}
+
+.isKnockout .posterScoreInput {
+  justify-self: center !important;
+}
+
+@media(max-width:1000px) {
+  .isKnockout .posterMatch {
+    grid-template-columns: 30px 58px minmax(82px,1fr) 32px 12px 32px minmax(82px,1fr) !important;
   }
 
   .isKnockout .posterPts {
@@ -1832,6 +1903,6 @@ body{
   }
 
   .teamNameFlag .teamText {
-    min-width: 55px !important;
+    min-width: 58px !important;
   }
 }

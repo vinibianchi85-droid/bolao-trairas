@@ -685,7 +685,7 @@ function App() {
   }
 
   function setGuess(game, field, value) {
-    if ((game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))) return
+    if (lockInfo(game).locked) return
 
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return

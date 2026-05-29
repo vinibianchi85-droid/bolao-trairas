@@ -1962,3 +1962,75 @@ body{
     font-size: 10px !important;
   }
 }
+
+
+/* ===== AJUSTE FINAL: STATUS MENOR E DATA/HORA ADMIN COMPACTA ===== */
+.palpitesStatusBox {
+  min-height: 48px !important;
+  gap: 3px !important;
+  padding: 0 !important;
+}
+
+.palpitesStatusBox strong {
+  font-size: 11px !important;
+  padding: 4px 3px !important;
+  border-radius: 7px !important;
+}
+
+.lockStatus {
+  min-height: 31px !important;
+  padding: 5px 3px !important;
+  border-radius: 8px !important;
+}
+
+.lockStatus b {
+  font-size: 9px !important;
+}
+
+.lockStatus small {
+  font-size: 8px !important;
+  margin-top: 2px !important;
+}
+
+.adminDateEdit {
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.adminDateEdit small {
+  font-size: 8px !important;
+  line-height: 1 !important;
+}
+
+.adminDateEdit input[type="datetime-local"] {
+  min-width: 96px !important;
+  max-width: 118px !important;
+  height: 22px !important;
+  padding: 1px 3px !important;
+  font-size: 8px !important;
+  border-radius: 5px !important;
+}
+
+@media(max-width:900px){
+  .palpitesStatusBox {
+    min-height: 50px !important;
+  }
+
+  .palpitesStatusBox strong {
+    font-size: 11px !important;
+  }
+
+  .lockStatus b {
+    font-size: 9px !important;
+  }
+
+  .lockStatus small {
+    font-size: 8px !important;
+  }
+
+  .adminDateEdit input[type="datetime-local"] {
+    min-width: 90px !important;
+    max-width: 105px !important;
+    font-size: 7px !important;
+  }
+}

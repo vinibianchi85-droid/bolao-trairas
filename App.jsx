@@ -70,25 +70,20 @@ function flagCode(team) {
 }
 
 function FlagImg({ team, className = '' }) {
-  const label = String(team || '').trim()
-  const isPlaceholder = !label || label.toLowerCase().includes('vencedor') || label.toLowerCase().includes('a definir')
-  const code = flagCode(label)
-
-  if (isPlaceholder) return null
-  if (!code) return <span className={`emojiFlag ${className}`}>{flag(label)}</span>
-
+  const code = flagCode(team)
+  if (!code) return <span className={`emojiFlag ${className}`}>{flag(team)}</span>
   return (
     <img
       className={`flagImg ${className}`}
       src={`https://flagcdn.com/w40/${code}.png`}
       srcSet={`https://flagcdn.com/w80/${code}.png 2x`}
-      alt={label}
+      alt={team}
       loading="lazy"
       onError={e => {
         e.currentTarget.style.display = 'none'
         const fallback = document.createElement('span')
         fallback.className = `emojiFlag ${className}`
-        fallback.textContent = flag(label)
+        fallback.textContent = flag(team)
         e.currentTarget.parentNode && e.currentTarget.parentNode.insertBefore(fallback, e.currentTarget.nextSibling)
       }}
     />
@@ -105,11 +100,10 @@ function TeamCodeFlag({ team }) {
 }
 
 function TeamNameFlag({ team, side = '' }) {
-  const label = String(team || '').trim() || 'A definir'
   return (
-    <span className={`teamNameFlag ${side} ${label === 'A definir' || label.toLowerCase().includes('vencedor') ? 'placeholderTeam' : ''}`}>
-      <FlagImg team={label} />
-      <span className="teamText">{label}</span>
+    <span className={`teamNameFlag ${side}`}>
+      <FlagImg team={team} />
+      <span className="teamText">{team}</span>
     </span>
   )
 }
@@ -238,8 +232,6 @@ function locked() {
   return false
 }
 
-
-
 function teamPoints(game, side) {
   if (game.home_score === null || game.away_score === null) return 0
   const r = resultOf(game.home_score, game.away_score)
@@ -276,41 +268,24 @@ function gameLoserTeam(game) {
   if (h === a) return ''
   return h > a ? game.away_team : game.home_team
 }
-function cleanTeamName(value) {
-  return String(value || '').trim()
-}
-
 function autoKnockoutTeams(game, allGames = []) {
-  if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
-
+  if (!isKnockoutPhase(game.phase)) return { home: game.home_team, away: game.away_team }
   const p = normalizedPhase(game.phase)
-  const fallbackHome = cleanTeamName(game.home_team)
-  const fallbackAway = cleanTeamName(game.away_team)
-
   if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-    return {
-      home: gameWinnerTeam(semis[0]) || fallbackHome || 'Vencedor semifinal 1',
-      away: gameWinnerTeam(semis[1]) || fallbackAway || 'Vencedor semifinal 2'
-    }
+    return { home: gameWinnerTeam(semis[0]) || game.home_team, away: gameWinnerTeam(semis[1]) || game.away_team }
   }
-
   if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-    return {
-      home: gameLoserTeam(semis[0]) || fallbackHome || 'Perdedor semifinal 1',
-      away: gameLoserTeam(semis[1]) || fallbackAway || 'Perdedor semifinal 2'
-    }
+    return { home: gameLoserTeam(semis[0]) || game.home_team, away: gameLoserTeam(semis[1]) || game.away_team }
   }
-
   const order = phaseOrderValue(game.phase)
   const prev = allGames.filter(g => phaseOrderValue(g.phase) === order - 1 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
   const same = allGames.filter(g => phaseOrderValue(g.phase) === order).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
   const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
-
   return {
-    home: gameWinnerTeam(prev[idxGame * 2]) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+    home: gameWinnerTeam(prev[idxGame * 2]) || game.home_team || `Vencedor ${idxGame * 2 + 1}`,
+    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || game.away_team || `Vencedor ${idxGame * 2 + 2}`
   }
 }
 function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
@@ -606,7 +581,7 @@ function App() {
   }
 
   function setGuess(game, field, value) {
-    if ((game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))) return
+    if (gameLocked(game)) return
 
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
@@ -839,7 +814,9 @@ function App() {
               {phaseGames.map(game => {
                 const g = guesses[game.id] || {}
                 const pts = totalPointsForGame(game, g)
-                const isLocked = (game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))
+                const isLocked = gameLocked(game)
+
+                const knockout = isKnockoutPhase(game.phase)
 
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>

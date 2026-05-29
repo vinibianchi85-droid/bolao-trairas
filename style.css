@@ -1771,3 +1771,12 @@ body{
     align-items: stretch !important;
   }
 }
+
+
+/* ===== NOVA REGRA: BLOQUEIO 1H E MATA-MATA AUTOMÁTICO ===== */
+.lockedGame{opacity:.72!important}
+.lockedGame input{cursor:not-allowed!important}
+.knockTeamInput{display:none!important}
+.adminTeamInput{display:none!important}
+.posterPts,.official{white-space:nowrap!important}
+.teamNameFlag .teamText,.adminTeamName{max-width:100%!important}

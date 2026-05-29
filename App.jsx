@@ -235,6 +235,22 @@ function totalPointsForGame(game, guess) {
 }
 
 
+
+function toDateTimeLocalValue(value) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fromDateTimeLocalValue(value) {
+  if (!value) return null
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toISOString()
+}
+
 function lockInfo(game) {
   if (!game?.starts_at) return { locked: false, text: 'Aberto', level: 'open' }
 
@@ -707,6 +723,24 @@ function App() {
     setMsg('Resultado salvo e ranking recalculado!')
   }
 
+
+  async function updateGameTime(game, value) {
+    if (!profile?.is_admin) return
+    const starts_at = fromDateTimeLocalValue(value)
+    if (!starts_at) {
+      setMsg('Horário inválido.')
+      return
+    }
+    const { error } = await supabase.from('games').update({ starts_at }).eq('id', game.id)
+    if (error) {
+      setMsg(error.message)
+      return
+    }
+    await loadAll()
+    setMsg('Horário do jogo atualizado!')
+  }
+
+
   async function updateGameTeam(game, side, value) {
     if (!profile?.is_admin) return
     const payload = side === 'home' ? { home_team: value } : { away_team: value }
@@ -919,7 +953,10 @@ function App() {
 
                   <span className="posterPts palpitesStatusBox">
                     <strong>{pts} pts</strong>
-                    <em className={`lockStatus ${lockData.level}`}>{isLocked ? '🔒 ' : '⏳ '}{lockData.text}</em>
+                    <em className={`lockStatus ${lockData.level}`}>
+                      <b>{isLocked ? '🔒 BLOQUEADO' : '🟢 ABERTO'}</b>
+                      {!isLocked && <small>{lockData.text}</small>}
+                    </em>
                   </span>
                 </div>
               })}
@@ -1155,7 +1192,14 @@ function App() {
               {phaseGames.map(game => {
                 return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
-                  <span className="posterDate">{formatDate(game.starts_at)}</span>
+                  <span className="posterDate adminDateEdit">
+                    <small>{formatDate(game.starts_at)}</small>
+                    <input
+                      type="datetime-local"
+                      value={toDateTimeLocalValue(game.starts_at)}
+                      onChange={e => updateGameTime(game, e.target.value)}
+                    />
+                  </span>
 
                   <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
 

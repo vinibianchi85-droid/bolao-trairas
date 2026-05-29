@@ -1939,3 +1939,122 @@ body{
     font-size: 9px !important;
   }
 }
+
+
+/* ===== STATUS DE BLOQUEIO MAIS VISÍVEL + HORÁRIO EDITÁVEL NO ADMIN ===== */
+.palpitesStatusBox {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  min-height: 48px !important;
+  line-height: 1.05 !important;
+  padding: 5px !important;
+  background: transparent !important;
+}
+
+.palpitesStatusBox strong {
+  display: block !important;
+  text-align: center !important;
+  font-size: 11px !important;
+  font-weight: 1000 !important;
+  color: #0b4b5d !important;
+  background: #dbeafe !important;
+  border-radius: 7px !important;
+  padding: 4px 3px !important;
+}
+
+.lockStatus {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  border-radius: 9px !important;
+  padding: 5px 4px !important;
+  font-style: normal !important;
+  white-space: nowrap !important;
+  min-height: 32px !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08) !important;
+}
+
+.lockStatus b {
+  font-size: 9px !important;
+  font-weight: 1000 !important;
+  line-height: 1 !important;
+}
+
+.lockStatus small {
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  margin-top: 2px !important;
+}
+
+.lockStatus.open {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.lockStatus.warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.lockStatus.danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.lockStatus.locked {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.adminDateEdit {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  align-items: stretch !important;
+  overflow: visible !important;
+}
+
+.adminDateEdit small {
+  font-size: 9px !important;
+  font-weight: 1000 !important;
+  color: #475569 !important;
+  text-align: center !important;
+}
+
+.adminDateEdit input[type="datetime-local"] {
+  width: 100% !important;
+  min-width: 120px !important;
+  height: 25px !important;
+  border-radius: 6px !important;
+  padding: 2px 4px !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #fff !important;
+  color: #0f172a !important;
+}
+
+@media(max-width:900px){
+  .palpitesStatusBox {
+    min-height: 52px !important;
+  }
+
+  .lockStatus b {
+    font-size: 10px !important;
+  }
+
+  .lockStatus small {
+    font-size: 9px !important;
+  }
+
+  .adminDateEdit input[type="datetime-local"] {
+    min-width: 105px !important;
+    font-size: 8px !important;
+  }
+}

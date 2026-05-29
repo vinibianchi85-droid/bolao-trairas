@@ -1067,88 +1067,11 @@ function App() {
       </div>
     </section>}
 
-    {tab === 'regras' && <section className="card regulamentoBox">
-      <div className="cardTitle">
-        <div className="sectionTitleWithLogo">
-          <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Regulamento Oficial do Bolão</h2>
-        </div>
-      </div>
-
-      <div className="regSection">
-        <h3>1. Da organização</h3>
-        <p>O <b>BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026</b> é uma ação recreativa e contributiva organizada pelo TRAÍRAS Futebol Clube, com sede em Tupanciretã/RS.</p>
-        <p>A participação será feita mediante cota individual no valor de <b>R$ 30,00</b>.</p>
-      </div>
-
-      <div className="regSection">
-        <h3>2. Do objetivo</h3>
-        <p>O bolão tem como objetivo promover entretenimento, integração e competitividade saudável entre atletas, ex-atletas, simpatizantes e convidados do clube.</p>
-      </div>
-
-      <div className="regSection">
-        <h3>3. Quem pode participar</h3>
-        <p>Podem participar atletas ativos, atletas aposentados, simpatizantes e convidados do TRAÍRAS F.C.</p>
-        <p>Não poderão participar atletas oficialmente convocados por qualquer seleção participante da Copa do Mundo 2026.</p>
-      </div>
-
-      <div className="regSection">
-        <h3>4. Das apostas</h3>
-        <p>Os participantes poderão dar palpites nos resultados dos jogos, placares, classificados das fases eliminatórias, campeão, vice-campeão e terceiro colocado.</p>
-        <p>Os palpites da fase de grupos poderão ser alterados até às <b>23h59min do dia anterior ao início da Copa do Mundo 2026</b>.</p>
-        <p>As fases eliminatórias serão liberadas para palpites após a definição oficial dos confrontos.</p>
-      </div>
-
-      <div className="regSection">
-        <h3>5. Pontuação</h3>
-        <p><b>O ranking do app agora soma automaticamente:</b> placar exato, resultado correto, classificados do mata-mata, campeão, vice e terceiro lugar.</p>
-        <ul>
-          <li><b>5 pontos:</b> acerto do vencedor da partida ou empate.</li>
-          <li><b>10 pontos:</b> acerto do placar exato da partida.</li>
-          <li><b>10 pontos:</b> acerto de cada seleção classificada aos dezesseis avos.</li>
-          <li><b>20 pontos:</b> acerto de cada seleção classificada às oitavas.</li>
-          <li><b>40 pontos:</b> acerto de cada seleção classificada às quartas.</li>
-          <li><b>50 pontos:</b> acerto de cada seleção classificada às semifinais.</li>
-          <li><b>150 pontos:</b> acerto do campeão.</li>
-          <li><b>100 pontos:</b> acerto do vice-campeão.</li>
-          <li><b>100 pontos:</b> acerto do terceiro colocado.</li>
-          <li><b>200 pontos:</b> acerto do campeão e vice-campeão.</li>
-          <li><b>300 pontos:</b> acerto do campeão e vice-campeão com placar exato da final.</li>
-        </ul>
-      </div>
-
-      <div className="regSection">
-        <h3>6. Desempate</h3>
-        <ol>
-          <li>Maior número de placares exatos na fase de grupos;</li>
-          <li>Maior número de acertos de resultados;</li>
-          <li>Persistindo o empate, divisão proporcional da premiação.</li>
-        </ol>
-      </div>
-
-      <div className="regSection">
-        <h3>7. Premiação</h3>
-        <ul>
-          <li><b>50%</b> — 1º lugar;</li>
-          <li><b>25%</b> — 2º lugar;</li>
-          <li><b>10%</b> — 3º lugar;</li>
-          <li><b>15%</b> — rateado entre o 5º, 6º, 7º e 8º lugares.</li>
-        </ul>
-      </div>
-
-      <div className="regSection destaqueReg">
-        <strong>Os participantes classificados no Z8 pagarão o chopp oficial da confraternização de entrega das premiações.</strong>
-      </div>
-
-      <div className="regSection">
-        <h3>8. Vigência</h3>
-        <p>O bolão terá início em <b>11 de junho de 2026</b> e encerramento na final da Copa do Mundo 2026, em <b>19 de julho de 2026</b>.</p>
-      </div>
-
-      <div className="regSection">
-        <h3>9. Disposições finais</h3>
-        <p>Ao participar do bolão, o participante concorda integralmente com este regulamento. Os casos omissos serão resolvidos pela organização do <b>BOLÃO TRAÍRAS F.C. COPA DO MUNDO 2026</b>.</p>
-      </div>
+    {tab === 'regras' && <section className="regulamentoImagem">
+      <img
+        src="/1000306435.png"
+        alt="Regulamento Bolão Traíras F.C. Copa do Mundo 2026"
+      />
     </section>}
 
     {tab === 'admin' && <section className="palpitesPoster adminPoster">

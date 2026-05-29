@@ -238,6 +238,8 @@ function locked() {
   return false
 }
 
+
+
 function teamPoints(game, side) {
   if (game.home_score === null || game.away_score === null) return 0
   const r = resultOf(game.home_score, game.away_score)
@@ -604,7 +606,7 @@ function App() {
   }
 
   function setGuess(game, field, value) {
-    if (gameLocked(game)) return
+    if ((game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))) return
 
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
@@ -837,7 +839,7 @@ function App() {
               {phaseGames.map(game => {
                 const g = guesses[game.id] || {}
                 const pts = totalPointsForGame(game, g)
-                const isLocked = gameLocked(game)
+                const isLocked = (game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))
 
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>

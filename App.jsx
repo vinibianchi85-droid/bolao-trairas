@@ -1122,35 +1122,17 @@ function App() {
 
             <div className="posterMatches">
               {phaseGames.map(game => {
-                const knockout = isKnockoutPhase(game.phase)
-
-                return <div className={`posterMatch palpitesMatch adminPosterMatch ${knockout ? 'knockoutGuess' : ''}`} key={game.id}>
+                return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
 
-                  {knockout
-                    ? <input
-                        className="adminTeamInput right"
-                        value={game.home_team || ''}
-                        placeholder="Seleção oficial"
-                        onChange={e => updateGameTeam(game, 'home', e.target.value)}
-                      />
-                    : <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
-                  }
+                  <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
 
                   <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
                   <b>x</b>
                   <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
 
-                  {knockout
-                    ? <input
-                        className="adminTeamInput"
-                        value={game.away_team || ''}
-                        placeholder="Seleção oficial"
-                        onChange={e => updateGameTeam(game, 'away', e.target.value)}
-                      />
-                    : <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
-                  }
+                  <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
 
                   <span className="posterPts">Oficial</span>
                 </div>

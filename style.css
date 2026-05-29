@@ -1835,3 +1835,45 @@ body{
     min-width: 55px !important;
   }
 }
+
+
+/* ===== ADMIN COM O MESMO VISUAL DA ABA PALPITES ===== */
+.adminPosterGrid .adminPosterMatch {
+  grid-template-columns: 32px 74px 1fr 36px 12px 36px 1fr 54px !important;
+}
+
+.adminPosterGrid .isKnockout .adminPosterMatch {
+  grid-template-columns: 34px 74px minmax(155px,1fr) 34px 14px 34px minmax(155px,1fr) 62px !important;
+  align-items: center !important;
+}
+
+.adminPosterGrid .posterSide {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.adminPosterGrid .posterSide.right {
+  justify-content: flex-end !important;
+}
+
+.adminPosterGrid .adminScoreInput {
+  justify-self: center !important;
+}
+
+.adminPosterGrid .adminTeamInput,
+.adminPosterGrid .knockTeamInput {
+  display: none !important;
+}
+
+@media(max-width:900px){
+  .adminPosterGrid .adminPosterMatch,
+  .adminPosterGrid .isKnockout .adminPosterMatch {
+    grid-template-columns:30px 62px 1fr 34px 10px 34px 1fr !important;
+    font-size:10px !important;
+  }
+
+  .adminPosterGrid .adminPosterMatch .posterPts {
+    grid-column:1/-1 !important;
+  }
+}

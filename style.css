@@ -1877,3 +1877,65 @@ body{
     grid-column:1/-1 !important;
   }
 }
+
+
+/* ===== STATUS DE BLOQUEIO NA ABA PALPITES ===== */
+.palpitesStatusBox {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 34px !important;
+  line-height: 1.05 !important;
+  padding: 4px !important;
+}
+
+.palpitesStatusBox strong {
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  color: inherit !important;
+}
+
+.lockStatus {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  border-radius: 999px !important;
+  padding: 3px 5px !important;
+  font-style: normal !important;
+  font-size: 8px !important;
+  font-weight: 1000 !important;
+  white-space: nowrap !important;
+}
+
+.lockStatus.open {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.lockStatus.warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.lockStatus.danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.lockStatus.locked {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+@media(max-width:900px){
+  .palpitesStatusBox {
+    align-items: stretch !important;
+  }
+
+  .lockStatus {
+    font-size: 9px !important;
+  }
+}

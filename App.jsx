@@ -144,12 +144,12 @@ function formatLongDate(date) {
 
 const SCORE_BY_PHASE = {
   grupos: { exact: 10, result: 5 },
-  dezesseis: { exact: 15, result: 8 },
-  oitavas: { exact: 20, result: 10 },
-  quartas: { exact: 30, result: 15 },
-  semi: { exact: 40, result: 20 },
-  terceiro: { exact: 50, result: 25 },
-  final: { exact: 60, result: 30 },
+  dezesseis: { exact: 20, result: 10 },
+  oitavas: { exact: 30, result: 15 },
+  quartas: { exact: 40, result: 20 },
+  semi: { exact: 50, result: 25 },
+  terceiro: { exact: 100, result: 50 },
+  final: { exact: 100, result: 50 },
   default: { exact: 10, result: 5 }
 }
 
@@ -232,6 +232,33 @@ function specialBonusPoints(game, guess) {
 function totalPointsForGame(game, guess) {
   if (!game || !guess) return 0
   return calcPoints(game.home_score, game.away_score, guess.guess_home, guess.guess_away, game.phase) + specialBonusPoints(game, guess)
+}
+
+
+function lockInfo(game) {
+  if (!game?.starts_at) return { locked: false, text: 'Aberto', level: 'open' }
+
+  const start = new Date(game.starts_at)
+  const lockTime = new Date(start.getTime() - 60 * 60 * 1000)
+  const diff = lockTime.getTime() - Date.now()
+
+  if (diff <= 0) return { locked: true, text: 'Bloqueado', level: 'locked' }
+
+  const totalMinutes = Math.ceil(diff / 60000)
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+
+  let text = 'Aberto'
+  if (days > 0) text = `Fecha em ${days}d ${hours}h`
+  else if (hours > 0) text = `Fecha em ${hours}h ${minutes}min`
+  else text = `Fecha em ${minutes}min`
+
+  let level = 'open'
+  if (totalMinutes <= 60) level = 'danger'
+  else if (totalMinutes <= 1440) level = 'warning'
+
+  return { locked: false, text, level }
 }
 
 function locked() {
@@ -875,7 +902,8 @@ function App() {
               {phaseGames.map(game => {
                 const g = guesses[game.id] || {}
                 const pts = totalPointsForGame(game, g)
-                const isLocked = (game?.starts_at && new Date() >= new Date(new Date(game.starts_at).getTime() - 60 * 60 * 1000))
+                const lockData = lockInfo(game)
+                const isLocked = lockData.locked
 
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
@@ -889,7 +917,10 @@ function App() {
 
                   <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
 
-                  <span className="posterPts">{isLocked ? '🔒 ' : ''}{pts} pts</span>
+                  <span className="posterPts palpitesStatusBox">
+                    <strong>{pts} pts</strong>
+                    <em className={`lockStatus ${lockData.level}`}>{isLocked ? '🔒 ' : '⏳ '}{lockData.text}</em>
+                  </span>
                 </div>
               })}
             </div>

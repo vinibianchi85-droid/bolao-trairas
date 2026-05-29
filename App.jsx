@@ -280,12 +280,48 @@ function cleanTeamName(value) {
   return String(value || '').trim()
 }
 
+
+const ROUND_32_FIXED_SLOTS = {
+  73: ['2º Grupo A', '2º Grupo B'],
+  74: ['1º Grupo E', 'Melhor 3º (A/B/D/F)'],
+  75: ['1º Grupo F', '2º Grupo C'],
+  76: ['1º Grupo C', '2º Grupo F'],
+  77: ['1º Grupo I', 'Melhor 3º (D/F/G/H)'],
+  78: ['2º Grupo E', '2º Grupo I'],
+  79: ['1º Grupo A', 'Melhor 3º (C/E/F/H/I)'],
+  80: ['1º Grupo L', 'Melhor 3º (E/H/I/J/K)'],
+  81: ['1º Grupo D', 'Melhor 3º (B/E/F/J)'],
+  82: ['1º Grupo G', 'Melhor 3º (A/E/H/J)'],
+  83: ['2º Grupo K', '2º Grupo L'],
+  84: ['1º Grupo H', '2º Grupo J'],
+  85: ['1º Grupo B', 'Melhor 3º (E/F/G/J)'],
+  86: ['1º Grupo J', '2º Grupo H'],
+  87: ['1º Grupo K', 'Melhor 3º (D/E/I/J)'],
+  88: ['2º Grupo D', '2º Grupo G']
+}
+
+function isRound32Game(game) {
+  const no = Number(game?.game_no)
+  return no >= 73 && no <= 88
+}
+
+function fixedRound32Teams(game) {
+  const slots = ROUND_32_FIXED_SLOTS[Number(game?.game_no)]
+  if (!slots) return null
+  return { home: slots[0], away: slots[1] }
+}
+
 function autoKnockoutTeams(game, allGames = []) {
   if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
 
   const p = normalizedPhase(game.phase)
   const fallbackHome = cleanTeamName(game.home_team)
   const fallbackAway = cleanTeamName(game.away_team)
+
+  if (isRound32Game(game)) {
+    const fixed = fixedRound32Teams(game)
+    if (fixed) return fixed
+  }
 
   if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))

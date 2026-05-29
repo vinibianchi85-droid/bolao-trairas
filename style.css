@@ -2034,3 +2034,105 @@ body{
     font-size: 7px !important;
   }
 }
+
+
+/* ===== ADMIN: DATA/HORA EDITÁVEL EM LINHA SEPARADA ===== */
+.adminPosterGrid .adminPosterMatch {
+  grid-template-columns: minmax(120px,1fr) 34px 14px 34px minmax(120px,1fr) 62px !important;
+  grid-template-rows: auto auto !important;
+  row-gap: 6px !important;
+  align-items: center !important;
+  min-height: 66px !important;
+}
+
+.adminMatchTop {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.adminMatchTop .posterNo {
+  flex: 0 0 auto !important;
+}
+
+.adminDateEdit {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.adminDateEdit small {
+  flex: 0 0 auto !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 1000 !important;
+  color: #cbd5e1 !important;
+  background: #020617 !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  border-radius: 6px !important;
+  padding: 4px 6px !important;
+}
+
+.adminDateEdit input[type="datetime-local"] {
+  flex: 0 1 170px !important;
+  width: 170px !important;
+  min-width: 150px !important;
+  max-width: 190px !important;
+  height: 25px !important;
+  padding: 2px 5px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  border-radius: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.adminPosterGrid .posterSide {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.adminPosterGrid .teamNameFlag .teamText {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+@media(max-width:900px){
+  .adminPosterGrid .adminPosterMatch {
+    grid-template-columns: minmax(80px,1fr) 32px 10px 32px minmax(80px,1fr) !important;
+    min-height: 72px !important;
+  }
+
+  .adminPosterGrid .adminPosterMatch .posterPts {
+    grid-column: 1 / -1 !important;
+  }
+
+  .adminMatchTop {
+    gap: 5px !important;
+  }
+
+  .adminDateEdit {
+    gap: 4px !important;
+  }
+
+  .adminDateEdit small {
+    font-size: 8px !important;
+    padding: 3px 4px !important;
+  }
+
+  .adminDateEdit input[type="datetime-local"] {
+    width: 145px !important;
+    min-width: 135px !important;
+    max-width: 155px !important;
+    height: 23px !important;
+    font-size: 8px !important;
+  }
+}

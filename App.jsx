@@ -1191,15 +1191,17 @@ function App() {
             <div className="posterMatches">
               {phaseGames.map(game => {
                 return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
-                  <span className="posterNo">{game.game_no}</span>
-                  <span className="posterDate adminDateEdit">
-                    <small>{formatDate(game.starts_at)}</small>
-                    <input
-                      type="datetime-local"
-                      value={toDateTimeLocalValue(game.starts_at)}
-                      onChange={e => updateGameTime(game, e.target.value)}
-                    />
-                  </span>
+                  <div className="adminMatchTop">
+                    <span className="posterNo">{game.game_no}</span>
+                    <span className="posterDate adminDateEdit">
+                      <small>{formatDate(game.starts_at)}</small>
+                      <input
+                        type="datetime-local"
+                        value={toDateTimeLocalValue(game.starts_at)}
+                        onChange={e => updateGameTime(game, e.target.value)}
+                      />
+                    </span>
+                  </div>
 
                   <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
 

@@ -1448,151 +1448,335 @@ body{
 }
 
 
-/* ===== CORREÇÃO: LOGO DA TELA INICIAL SEM ESTOURAR ===== */
-.login .crestCard,
-.login .premiumCrest {
-  max-width: 100% !important;
-  overflow: hidden !important;
+/* ==========================================================
+   AJUSTE FINAL SOLICITADO
+   - bandeiras por imagem no computador
+   - iniciais/siglas na aba admin
+   - logo da tela inicial sem ficar gigante
+   ========================================================== */
+
+/* mata a logo gigante que vinha do :before do formulário */
+.form:before,
+.login:before,
+.login:after,
+.hero:after,
+.page:after {
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
 }
 
+/* limita qualquer logo da tela inicial */
 .login .fishMark {
   width: 68px !important;
   height: 68px !important;
   min-width: 68px !important;
   max-width: 68px !important;
   max-height: 68px !important;
-  border-radius: 18px !important;
-  padding: 6px !important;
-  background: white !important;
+  overflow: hidden !important;
 }
 
+.login .fishLogo,
+.login .logoTrairasHero,
+.login .loginLogoTrairas,
+.login img[alt="Traíras F.C."] {
+  object-fit: contain !important;
+  max-width: 110px !important;
+  max-height: 110px !important;
+}
+
+.login .fishMark img,
 .login .fishLogo {
   width: 100% !important;
   height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
 }
 
-.login .logoTrairasHero,
-.login .loginLogoTrairas {
-  width: 96px !important;
-  height: 96px !important;
-  max-width: 96px !important;
-  max-height: 96px !important;
-  object-fit: contain !important;
+/* bandeiras confiáveis no desktop */
+.flagImg {
+  display: inline-block !important;
+  width: 24px !important;
+  height: 16px !important;
+  min-width: 24px !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.16) !important;
+  vertical-align: middle !important;
 }
 
-.login img[alt="Traíras F.C."] {
-  max-width: 120px !important;
-  max-height: 120px !important;
-  object-fit: contain !important;
-}
-
-.login .card.form img[alt="Traíras F.C."] {
-  width: 96px !important;
-  height: 96px !important;
-}
-
-/* se algum CSS antigo colocou imagem de fundo gigante, desliga */
-.login:before,
-.login:after,
-.hero:before,
-.hero:after,
-.form:before,
-.form:after {
-  pointer-events: none !important;
-}
-
-.hero:after,
-.form:before {
-  display: none !important;
-}
-
-
-/* ===== CORREÇÃO: BANDEIRAS NO COMPUTADOR ===== */
-.flagEmoji,
-.inlineFlag,
-.posterTeamFlag,
-.posterSide,
-.teamFlag,
-.adminTeamFlag {
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, Arial, sans-serif !important;
-}
-
-.flagEmoji,
-.inlineFlag,
-.adminTeamFlag {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+.emojiFlag {
+  display: inline-block !important;
+  font-family: "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif !important;
   font-size: 20px !important;
   line-height: 1 !important;
-  min-width: 24px !important;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
-/* Em desktop, deixa bandeira + nome sempre visível */
-.posterSide {
+/* topo de cada grupo: bandeira + sigla */
+.posterTeamFlag {
+  flex-direction: row !important;
   gap: 6px !important;
+  min-height: 34px !important;
+  font-family: system-ui, Arial, sans-serif !important;
 }
 
-.posterSide .inlineFlag {
-  flex: 0 0 24px !important;
+.posterTeamFlag .flagImg {
+  width: 24px !important;
+  height: 16px !important;
 }
 
-
-/* ===== CORREÇÃO: ABA ADMIN COM BANDEIRA + NOME ===== */
-.adminGameTeams,
-.adminTeams,
-.adminScoreLine {
-  display: grid !important;
-  grid-template-columns: 1fr 44px 18px 44px 1fr !important;
-  align-items: center !important;
-  gap: 8px !important;
-  width: 100% !important;
+.posterTeamFlag small {
+  color: inherit !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .04em !important;
 }
 
-.adminTeamName {
+/* linhas de jogos: bandeira + nome */
+.teamNameFlag {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  color: #0f172a !important;
-  font-weight: 900 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.teamNameFlag.right {
+  justify-content: flex-end !important;
+}
+
+.teamNameFlag .teamText {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.posterSide {
   min-width: 0 !important;
 }
 
-.adminTeamName.home {
+.posterSide.right .teamNameFlag {
+  margin-left: auto !important;
+}
+
+/* admin: mostrar bandeira + sigla + nome */
+.adminGame {
+  grid-template-columns: 145px minmax(150px,1fr) 58px 20px 58px minmax(150px,1fr) 170px !important;
+}
+
+.adminTeamCell {
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.adminTeam {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  color: #0f172a !important;
+  max-width: 100% !important;
+}
+
+.adminTeam.right {
   justify-content: flex-end !important;
   text-align: right !important;
 }
 
-.adminTeamName.away {
-  justify-content: flex-start !important;
-  text-align: left !important;
+.adminTeamCode {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 34px !important;
+  padding: 3px 5px !important;
+  border-radius: 6px !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .04em !important;
 }
 
-.adminTeamFlag {
-  font-size: 20px !important;
+.adminTeamName {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-weight: 900 !important;
 }
 
 .adminScoreInput {
-  width: 44px !important;
-  height: 42px !important;
   text-align: center !important;
   font-weight: 1000 !important;
 }
 
-@media(max-width:700px){
-  .adminGameTeams,
-  .adminTeams,
-  .adminScoreLine {
-    grid-template-columns: 1fr 42px 16px 42px 1fr !important;
-    gap: 6px !important;
+/* no celular, mantém nomes no admin, mas compacta */
+@media(max-width:1000px) {
+  .adminGame {
+    grid-template-columns: 1fr 48px 20px 48px 1fr !important;
+  }
+
+  .adminGame .fase,
+  .adminGame .official {
+    grid-column: 1 / -1 !important;
+  }
+
+  .adminTeam {
+    gap: 5px !important;
+  }
+
+  .adminTeamCode {
+    min-width: 30px !important;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
   }
 
   .adminTeamName {
     font-size: 12px !important;
   }
+
+  .flagImg {
+    width: 22px !important;
+    height: 15px !important;
+    min-width: 22px !important;
+  }
 }
+
+
+/* ===== CAMPOS ABERTOS PARA MATA-MATA ===== */
+.knockTeamInput,
+.adminTeamInput {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  background: #08131a !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  padding: 7px 8px !important;
+  font-size: 12px !important;
+}
+
+.knockTeamInput::placeholder,
+.adminTeamInput::placeholder {
+  color: #94a3b8 !important;
+}
+
+.knockTeamInput.right,
+.adminTeamInput.right {
+  text-align: right !important;
+}
+
+.knockoutGuess {
+  grid-template-columns: 34px 70px minmax(120px,1fr) 34px 14px 34px minmax(120px,1fr) 52px !important;
+}
+
+.adminKnockout .adminTeamInput {
+  background: #fff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+}
+
+.adminKnockout .adminTeamInput.right {
+  text-align: right !important;
+}
+
+@media(max-width:1000px){
+  .knockoutGuess {
+    grid-template-columns: 30px 58px minmax(80px,1fr) 32px 12px 32px minmax(80px,1fr) !important;
+  }
+
+  .knockoutGuess .posterPts {
+    grid-column: 1 / -1 !important;
+  }
+
+  .knockTeamInput {
+    font-size: 11px !important;
+    padding: 6px !important;
+  }
+}
+
+
+/* ===== ADMIN NO MESMO PADRÃO DA TABELA DE PALPITES ===== */
+.adminPoster {
+  margin-top: 18px !important;
+}
+
+.adminPoster .posterControls {
+  align-items: center !important;
+}
+
+.adminPoster .filters {
+  flex: 1 !important;
+}
+
+.adminPosterGrid {
+  margin-top: 0 !important;
+}
+
+.adminPosterMatch {
+  grid-template-columns: 34px 70px minmax(120px,1fr) 34px 14px 34px minmax(120px,1fr) 62px !important;
+}
+
+.adminPosterMatch .posterScoreInput,
+.adminPosterMatch .adminScoreInput {
+  width: 34px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-weight: 1000 !important;
+  border-radius: 6px !important;
+}
+
+.adminPosterMatch .adminTeamInput {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  border-radius: 7px !important;
+  padding: 5px 7px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  background: #08131a !important;
+  color: #fff !important;
+  border: 1px solid #475569 !important;
+}
+
+.adminPosterMatch .adminTeamInput.right {
+  text-align: right !important;
+}
+
+.adminPosterMatch .adminTeamInput::placeholder {
+  color: #94a3b8 !important;
+}
+
+.adminPosterMatch .posterPts {
+  background: #422006 !important;
+  color: #fde68a !important;
+}
+
+.adminPoster .isKnockout .posterTeams {
+  display: none !important;
+}
+
+@media(max-width:1000px){
+  .adminPosterMatch {
+    grid-template-columns: 30px 58px minmax(80px,1fr) 32px 12px 32px minmax(80px,1fr) !important;
+    font-size: 10px !important;
+  }
+
+  .adminPosterMatch .posterPts {
+    grid-column: 1 / -1 !important;
+  }
+
+  .adminPoster .posterControls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+
+/* ===== NOVA REGRA: BLOQUEIO 1H E MATA-MATA AUTOMÁTICO ===== */
+.lockedGame{opacity:.72!important}
+.lockedGame input{cursor:not-allowed!important}
+.knockTeamInput{display:none!important}
+.adminTeamInput{display:none!important}
+.posterPts,.official{white-space:nowrap!important}
+.teamNameFlag .teamText,.adminTeamName{max-width:100%!important}

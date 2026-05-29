@@ -136,6 +136,29 @@ function formatLongDate(date) {
   })
 }
 
+const SCORE_BY_PHASE = {
+  grupos: { exact: 10, result: 5 },
+  dezesseis: { exact: 15, result: 8 },
+  oitavas: { exact: 20, result: 10 },
+  quartas: { exact: 30, result: 15 },
+  semi: { exact: 40, result: 20 },
+  terceiro: { exact: 50, result: 25 },
+  final: { exact: 60, result: 30 },
+  default: { exact: 10, result: 5 }
+}
+
+function phaseScoreConfig(phase = '') {
+  const p = normalizedPhase(phase)
+  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) return SCORE_BY_PHASE.final
+  if (p.includes('disputa') || p.includes('terceiro') || p.includes('3')) return SCORE_BY_PHASE.terceiro
+  if (p.includes('semi')) return SCORE_BY_PHASE.semi
+  if (p.includes('quartas')) return SCORE_BY_PHASE.quartas
+  if (p.includes('oitavas')) return SCORE_BY_PHASE.oitavas
+  if (p.includes('dezesseis') || p.includes('32 avos') || p.includes('32avos') || p.includes('1/16')) return SCORE_BY_PHASE.dezesseis
+  if (p.includes('grupo')) return SCORE_BY_PHASE.grupos
+  return SCORE_BY_PHASE.default
+}
+
 function resultOf(a, b) {
   if (a === null || b === null || a === undefined || b === undefined || a === '' || b === '') return null
   a = Number(a); b = Number(b)
@@ -143,11 +166,12 @@ function resultOf(a, b) {
   return a > b ? 'A' : 'B'
 }
 
-function calcPoints(ha, hb, ga, gb) {
+function calcPoints(ha, hb, ga, gb, phase = '') {
   if ([ha, hb, ga, gb].some(v => v === null || v === undefined || v === '')) return 0
   ha = Number(ha); hb = Number(hb); ga = Number(ga); gb = Number(gb)
-  if (ga === ha && gb === hb) return 10
-  if (resultOf(ga, gb) === resultOf(ha, hb)) return 5
+  const cfg = phaseScoreConfig(phase)
+  if (ga === ha && gb === hb) return cfg.exact
+  if (resultOf(ga, gb) === resultOf(ha, hb)) return cfg.result
   return 0
 }
 
@@ -196,57 +220,16 @@ function classificationBonusByPhase(phase) {
 }
 
 function specialBonusPoints(game, guess) {
-  if (!game || !guess) return 0
-  if ([game.home_score, game.away_score, guess.guess_home, guess.guess_away].some(v => v === null || v === undefined || v === '')) return 0
-
-  const phase = normalizedPhase(game.phase)
-
-  // Nos mata-matas, o apostador pode escrever quais seleções chegam no confronto.
-  // A pontuação especial compara essas seleções escritas com as seleções oficiais cadastradas no Admin.
-  const predictedHomeTeam = guessedTeam(game, guess, 'home')
-  const predictedAwayTeam = guessedTeam(game, guess, 'away')
-
-  const actualWinner = winnerFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
-  const predictedWinner = winnerFromScore(predictedHomeTeam, predictedAwayTeam, guess.guess_home, guess.guess_away)
-  const actualLoser = loserFromScore(game.home_team, game.away_team, game.home_score, game.away_score)
-  const predictedLoser = loserFromScore(predictedHomeTeam, predictedAwayTeam, guess.guess_home, guess.guess_away)
-
-  if (!actualWinner || !predictedWinner) return 0
-
-  // Final: aplica a melhor pontuação especial possível, conforme regulamento.
-  if (phase.includes('final') && !phase.includes('disputa')) {
-    const exactFinal = Number(game.home_score) === Number(guess.guess_home) && Number(game.away_score) === Number(guess.guess_away)
-    const championOk = predictedWinner === actualWinner
-    const viceOk = predictedLoser === actualLoser
-
-    if (championOk && viceOk && exactFinal) return 300
-    if (championOk && viceOk) return 200
-    if (championOk) return 150
-    if (viceOk) return 100
-    return 0
-  }
-
-  // Terceiro lugar: quem vencer a disputa do 3º lugar.
-  if (phase.includes('disputa') || phase.includes('terceiro') || phase.includes('3')) {
-    return predictedWinner === actualWinner ? 100 : 0
-  }
-
-  // Fases eliminatórias: acerto da seleção classificada.
-  const bonus = classificationBonusByPhase(game.phase)
-  return predictedWinner === actualWinner ? bonus : 0
+  return 0
 }
 
 function totalPointsForGame(game, guess) {
   if (!game || !guess) return 0
-  return calcPoints(game.home_score, game.away_score, guess.guess_home, guess.guess_away) + specialBonusPoints(game, guess)
+  return calcPoints(game.home_score, game.away_score, guess.guess_home, guess.guess_away, game.phase) + specialBonusPoints(game, guess)
 }
 
-function locked() { return new Date() > LOCK_AT }
-
-function gameLocked(game) {
-  if (locked()) return true
-  if (!game.starts_at) return false
-  return new Date() > new Date(game.starts_at)
+function locked() {
+  return false
 }
 
 function teamPoints(game, side) {
@@ -257,6 +240,56 @@ function teamPoints(game, side) {
   if (side === 'away' && r === 'B') return 3
   return 0
 }
+
+
+function phaseOrderValue(phase = '') {
+  const p = normalizedPhase(phase)
+  if (p.includes('grupo')) return 1
+  if (p.includes('dezesseis') || p.includes('32 avos') || p.includes('32avos') || p.includes('1/16')) return 2
+  if (p.includes('oitavas')) return 3
+  if (p.includes('quartas')) return 4
+  if (p.includes('semi')) return 5
+  if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) return 6
+  if (p.includes('final')) return 7
+  return 99
+}
+function isGameFinished(game) {
+  return game && game.home_score !== null && game.home_score !== undefined && game.away_score !== null && game.away_score !== undefined && game.home_score !== '' && game.away_score !== ''
+}
+function gameWinnerTeam(game) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  return h > a ? game.home_team : game.away_team
+}
+function gameLoserTeam(game) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  return h > a ? game.away_team : game.home_team
+}
+function autoKnockoutTeams(game, allGames = []) {
+  if (!isKnockoutPhase(game.phase)) return { home: game.home_team, away: game.away_team }
+  const p = normalizedPhase(game.phase)
+  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
+    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+    return { home: gameWinnerTeam(semis[0]) || game.home_team, away: gameWinnerTeam(semis[1]) || game.away_team }
+  }
+  if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
+    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+    return { home: gameLoserTeam(semis[0]) || game.home_team, away: gameLoserTeam(semis[1]) || game.away_team }
+  }
+  const order = phaseOrderValue(game.phase)
+  const prev = allGames.filter(g => phaseOrderValue(g.phase) === order - 1 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const same = allGames.filter(g => phaseOrderValue(g.phase) === order).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
+  return {
+    home: gameWinnerTeam(prev[idxGame * 2]) || game.home_team || `Vencedor ${idxGame * 2 + 1}`,
+    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || game.away_team || `Vencedor ${idxGame * 2 + 2}`
+  }
+}
+function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
+function displayAwayTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).away }
 
 function makeGroupTables(games) {
   const tables = {}
@@ -528,11 +561,11 @@ function App() {
         const game = (gameData || []).find(x => x.id === g.game_id)
         if (!game || game.home_score === null || game.away_score === null) return
 
-        const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away)
+        const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away, game.phase)
         const bonusPts = specialBonusPoints(game, g)
 
         pontos += basePts + bonusPts
-        if (basePts === 10) exatos += 1
+        if (Number(game.home_score) === Number(g.guess_home) && Number(game.away_score) === Number(g.guess_away)) exatos += 1
         if (basePts > 0 || bonusPts > 0) acertos += 1
       })
 
@@ -564,9 +597,7 @@ function App() {
       user_id: uid,
       game_id,
       guess_home: g.guess_home === '' ? null : Number(g.guess_home),
-      guess_away: g.guess_away === '' ? null : Number(g.guess_away),
-      guess_home_team: (g.guess_home_team || '').trim() || null,
-      guess_away_team: (g.guess_away_team || '').trim() || null
+      guess_away: g.guess_away === '' ? null : Number(g.guess_away)
     }))
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
     if (error) setMsg(error.message)
@@ -608,7 +639,7 @@ function App() {
 
   const total = useMemo(() => games.reduce((acc, game) => {
     const g = guesses[game.id]
-    return acc + calcPoints(game.home_score, game.away_score, g?.guess_home, g?.guess_away)
+    return acc + calcPoints(game.home_score, game.away_score, g?.guess_home, g?.guess_away, game.phase)
   }, 0), [games, guesses])
 
   const filled = useMemo(() => {
@@ -641,7 +672,7 @@ function App() {
         <p>Palpites, ranking ao vivo, tabela completa e disputa bagual entre amigos.</p>
         <div className="heroCards">
           <span>⚽ 104 jogos</span>
-          <span>🔒 Bloqueio geral em {LOCK_AT.toLocaleDateString('pt-BR')}</span>
+          <span>🔒 Cada jogo bloqueia 1h antes</span>
           <span>🏆 Ranking automático</span>
           <span>📱 Feito para celular</span>
         </div>
@@ -747,7 +778,7 @@ function App() {
         <div>
           <span>Bolão Traíras F.C.</span>
           <h2>Meus Palpites</h2>
-          <p>Preencha os placares direto na tabela da Copa 2026</p>
+          <p>Preencha tudo quando quiser. Cada jogo bloqueia 1h antes.</p>
         </div>
         <div className="posterLogo logoBox">
           <LogoTrairas className="posterLogoImg" />
@@ -787,35 +818,17 @@ function App() {
 
                 const knockout = isKnockoutPhase(game.phase)
 
-                return <div className={`posterMatch palpitesMatch ${knockout ? 'knockoutGuess' : ''} ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
+                return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
                   <span className="posterNo">{game.game_no}</span>
                   <span className="posterDate">{formatDate(game.starts_at)}</span>
 
-                  {knockout
-                    ? <input
-                        className="knockTeamInput right"
-                        disabled={isLocked}
-                        placeholder="Seleção"
-                        value={g.guess_home_team ?? ''}
-                        onChange={e => setGuess(game, 'guess_home_team', e.target.value)}
-                      />
-                    : <span className="posterSide right"><TeamNameFlag team={game.home_team} side="right" /></span>
-                  }
+                  <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
 
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_home ?? ''} onChange={e => setGuess(game, 'guess_home', e.target.value)} />
                   <b>x</b>
                   <input className="posterScoreInput" disabled={isLocked} value={g.guess_away ?? ''} onChange={e => setGuess(game, 'guess_away', e.target.value)} />
 
-                  {knockout
-                    ? <input
-                        className="knockTeamInput"
-                        disabled={isLocked}
-                        placeholder="Seleção"
-                        value={g.guess_away_team ?? ''}
-                        onChange={e => setGuess(game, 'guess_away_team', e.target.value)}
-                      />
-                    : <span className="posterSide"><TeamNameFlag team={game.away_team} /></span>
-                  }
+                  <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
 
                   <span className="posterPts">{isLocked ? '🔒 ' : ''}{pts} pts</span>
                 </div>
@@ -1016,7 +1029,7 @@ function App() {
         <div>
           <span>Painel Admin</span>
           <h2>Resultados Oficiais</h2>
-          <p>Preencha as seleções oficiais do mata-mata e os placares finais.</p>
+          <p>Informe apenas os placares oficiais. O mata-mata será preenchido automaticamente.</p>
         </div>
         <div className="posterLogo logoBox">
           <LogoTrairas className="posterLogoImg" />

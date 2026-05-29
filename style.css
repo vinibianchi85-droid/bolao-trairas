@@ -2136,3 +2136,83 @@ body{
     font-size: 8px !important;
   }
 }
+
+
+/* ===== GERENCIAR USUÁRIOS ADMIN ===== */
+.usersAdminBox {
+  color: #0f172a !important;
+}
+
+.usersAdminHint {
+  margin: 8px 0 14px !important;
+  font-weight: 800 !important;
+}
+
+.usersAdminList {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.userAdminRow {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  padding: 14px !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.08) !important;
+}
+
+.userAdminRow strong {
+  display: block !important;
+  font-size: 17px !important;
+  color: #0f172a !important;
+}
+
+.userAdminRow span {
+  display: block !important;
+  color: #475569 !important;
+  font-weight: 800 !important;
+  margin-top: 2px !important;
+}
+
+.userAdminRow small {
+  display: block !important;
+  color: #0b4b5d !important;
+  font-weight: 1000 !important;
+  margin-top: 4px !important;
+}
+
+.dangerBtn {
+  background: linear-gradient(135deg,#dc2626,#7f1d1d) !important;
+  box-shadow: 0 10px 22px rgba(127,29,29,.22) !important;
+}
+
+.dangerBtn:disabled {
+  background: #94a3b8 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.emptyUsers {
+  background: #f8fafc !important;
+  border: 1px dashed #cbd5e1 !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  text-align: center !important;
+  color: #64748b !important;
+  font-weight: 900 !important;
+}
+
+@media(max-width:700px){
+  .userAdminRow {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dangerBtn {
+    width: 100% !important;
+  }
+}

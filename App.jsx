@@ -106,10 +106,9 @@ function TeamCodeFlag({ team }) {
 
 function TeamNameFlag({ team, side = '' }) {
   const label = String(team || '').trim() || 'A definir'
-  const placeholder = label === 'A definir' || label.toLowerCase().includes('vencedor') || label.toLowerCase().includes('perdedor')
   return (
-    <span className={`teamNameFlag ${side} ${placeholder ? 'placeholderTeam' : ''}`}>
-      {!placeholder && <FlagImg team={label} />}
+    <span className={`teamNameFlag ${side} ${label === 'A definir' || label.toLowerCase().includes('vencedor') ? 'placeholderTeam' : ''}`}>
+      <FlagImg team={label} />
       <span className="teamText">{label}</span>
     </span>
   )
@@ -280,72 +279,40 @@ function cleanTeamName(value) {
 }
 
 function autoKnockoutTeams(game, allGames = []) {
-  if (!game) return { home: 'A definir', away: 'A definir' }
+  if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
 
-  const safeGames = Array.isArray(allGames) ? allGames.filter(Boolean) : []
-  const phase = game?.phase || ''
-  const p = normalizedPhase(phase)
-  const fallbackHome = cleanTeamName(game?.home_team) || 'A definir'
-  const fallbackAway = cleanTeamName(game?.away_team) || 'A definir'
+  const p = normalizedPhase(game.phase)
+  const fallbackHome = cleanTeamName(game.home_team)
+  const fallbackAway = cleanTeamName(game.away_team)
 
-  if (!isKnockoutPhase(phase)) return { home: fallbackHome, away: fallbackAway }
-
-  try {
-    if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
-      const semis = safeGames
-        .filter(g => phaseOrderValue(g?.phase) === 5 && isGameFinished(g))
-        .sort((a,b) => Number(a?.game_no || 0) - Number(b?.game_no || 0))
-
-      return {
-        home: gameWinnerTeam(semis[0]) || fallbackHome || 'Vencedor semifinal 1',
-        away: gameWinnerTeam(semis[1]) || fallbackAway || 'Vencedor semifinal 2'
-      }
-    }
-
-    if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
-      const semis = safeGames
-        .filter(g => phaseOrderValue(g?.phase) === 5 && isGameFinished(g))
-        .sort((a,b) => Number(a?.game_no || 0) - Number(b?.game_no || 0))
-
-      return {
-        home: gameLoserTeam(semis[0]) || fallbackHome || 'Perdedor semifinal 1',
-        away: gameLoserTeam(semis[1]) || fallbackAway || 'Perdedor semifinal 2'
-      }
-    }
-
-    const order = phaseOrderValue(phase)
-    const prev = safeGames
-      .filter(g => phaseOrderValue(g?.phase) === order - 1 && isGameFinished(g))
-      .sort((a,b) => Number(a?.game_no || 0) - Number(b?.game_no || 0))
-
-    const same = safeGames
-      .filter(g => phaseOrderValue(g?.phase) === order)
-      .sort((a,b) => Number(a?.game_no || 0) - Number(b?.game_no || 0))
-
-    const idxGame = Math.max(0, same.findIndex(g => g?.id === game?.id))
-
+  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
+    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
     return {
-      home: gameWinnerTeam(prev[idxGame * 2]) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-      away: gameWinnerTeam(prev[idxGame * 2 + 1]) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+      home: gameWinnerTeam(semis[0]) || fallbackHome || 'Vencedor semifinal 1',
+      away: gameWinnerTeam(semis[1]) || fallbackAway || 'Vencedor semifinal 2'
     }
-  } catch {
-    return { home: fallbackHome, away: fallbackAway }
+  }
+
+  if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
+    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+    return {
+      home: gameLoserTeam(semis[0]) || fallbackHome || 'Perdedor semifinal 1',
+      away: gameLoserTeam(semis[1]) || fallbackAway || 'Perdedor semifinal 2'
+    }
+  }
+
+  const order = phaseOrderValue(game.phase)
+  const prev = allGames.filter(g => phaseOrderValue(g.phase) === order - 1 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const same = allGames.filter(g => phaseOrderValue(g.phase) === order).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
+
+  return {
+    home: gameWinnerTeam(prev[idxGame * 2]) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
+    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
   }
 }
-function displayHomeTeam(game, allGames = []) {
-  try {
-    return autoKnockoutTeams(game, allGames).home || 'A definir'
-  } catch {
-    return String(game?.home_team || '').trim() || 'A definir'
-  }
-}
-function displayAwayTeam(game, allGames = []) {
-  try {
-    return autoKnockoutTeams(game, allGames).away || 'A definir'
-  } catch {
-    return String(game?.away_team || '').trim() || 'A definir'
-  }
-}
+function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
+function displayAwayTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).away }
 
 function makeGroupTables(games) {
   const tables = {}

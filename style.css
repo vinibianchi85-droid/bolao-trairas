@@ -2216,3 +2216,34 @@ body{
     width: 100% !important;
   }
 }
+
+
+/* ===== ABA REGULAMENTO COMO IMAGEM EMBUTIDA ===== */
+.regulamentoImagem {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  padding: 10px !important;
+  margin-top: 18px !important;
+}
+
+.regulamentoImagem img {
+  width: 100% !important;
+  max-width: 1200px !important;
+  height: auto !important;
+  display: block !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 60px rgba(0,0,0,.42) !important;
+  border: 2px solid rgba(255,255,255,.22) !important;
+}
+
+@media(max-width:900px){
+  .regulamentoImagem {
+    padding: 4px !important;
+  }
+
+  .regulamentoImagem img {
+    border-radius: 10px !important;
+  }
+}

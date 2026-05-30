@@ -277,6 +277,41 @@ function lockInfo(game) {
   return { locked: false, text, level }
 }
 
+
+function isPlaceholderTeamName(team) {
+  const t = normalizedPhase(team)
+  if (!t) return true
+  return (
+    t.includes('a definir') ||
+    t.includes('vencedor') ||
+    t.includes('perdedor') ||
+    t.includes('grupo') ||
+    t.includes('melhor 3') ||
+    t.includes('melhores 3') ||
+    t.includes('classificado')
+  )
+}
+
+function knockoutTeamsDefined(game, allGames = []) {
+  if (!isKnockoutPhase(game?.phase)) return true
+  const home = displayHomeTeam(game, allGames)
+  const away = displayAwayTeam(game, allGames)
+  return !isPlaceholderTeamName(home) && !isPlaceholderTeamName(away)
+}
+
+function bettingLocked(game, allGames = []) {
+  if (!game) return true
+  if (isKnockoutPhase(game.phase) && !knockoutTeamsDefined(game, allGames)) return true
+  return lockInfo(game).locked
+}
+
+function bettingStatusInfo(game, allGames = []) {
+  if (isKnockoutPhase(game?.phase) && !knockoutTeamsDefined(game, allGames)) {
+    return { locked: true, text: 'Aguardando classificados', level: 'locked', reason: 'classificados' }
+  }
+  return lockInfo(game)
+}
+
 function locked() {
   return false
 }
@@ -687,7 +722,7 @@ function App() {
   }
 
   function setGuess(game, field, value) {
-    if (lockInfo(game).locked) return
+    if (bettingLocked(game, games)) return
 
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
@@ -699,12 +734,17 @@ function App() {
     await ensureProfileForCurrentUser()
     if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
     const uid = session.user.id
-    const rows = Object.entries(guesses).map(([game_id, g]) => ({
-      user_id: uid,
-      game_id,
-      guess_home: g.guess_home === '' ? null : Number(g.guess_home),
-      guess_away: g.guess_away === '' ? null : Number(g.guess_away)
-    }))
+    const rows = Object.entries(guesses)
+      .filter(([game_id]) => {
+        const game = games.find(g => String(g.id) === String(game_id))
+        return game && !bettingLocked(game, games)
+      })
+      .map(([game_id, g]) => ({
+        user_id: uid,
+        game_id,
+        guess_home: g.guess_home === '' ? null : Number(g.guess_home),
+        guess_away: g.guess_away === '' ? null : Number(g.guess_away)
+      }))
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
     if (error) setMsg(error.message)
     else setMsg('Palpites salvos e ranking atualizado!')
@@ -992,7 +1032,7 @@ function App() {
               {phaseGames.map(game => {
                 const g = guesses[game.id] || {}
                 const pts = totalPointsForGame(game, g)
-                const lockData = lockInfo(game)
+                const lockData = bettingStatusInfo(game, games)
                 const isLocked = lockData.locked
 
                 return <div className={`posterMatch palpitesMatch ${isLocked ? 'lockedGame' : ''}`} key={game.id}>
@@ -1010,8 +1050,8 @@ function App() {
                   <span className="posterPts palpitesStatusBox">
                     <strong>{pts} pts</strong>
                     <em className={`lockStatus ${lockData.level}`}>
-                      <b>{isLocked ? '🔒 BLOQUEADO' : '🟢 ABERTO'}</b>
-                      {!isLocked && <small>{lockData.text}</small>}
+                      <b>{lockData.reason === 'classificados' ? '🔒 AGUARDANDO' : (isLocked ? '🔒 BLOQUEADO' : '🟢 ABERTO')}</b>
+                      <small>{lockData.text}</small>
                     </em>
                   </span>
                 </div>

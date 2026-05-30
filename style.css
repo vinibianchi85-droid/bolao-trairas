@@ -2247,3 +2247,15 @@ body{
     border-radius: 10px !important;
   }
 }
+
+
+/* ===== MATA-MATA BLOQUEADO ATÉ CLASSIFICADOS DEFINIDOS ===== */
+.lockStatus.locked small {
+  white-space: normal !important;
+  text-align: center !important;
+}
+
+.lockedGame .posterScoreInput {
+  opacity: .72 !important;
+  cursor: not-allowed !important;
+}

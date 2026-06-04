@@ -1086,7 +1086,7 @@ function App() {
       <button onClick={() => setTab('palpites')} className={tab==='palpites'?'active':''}><Table2/> Palpites</button>
       <button onClick={() => setTab('ranking')} className={tab==='ranking'?'active':''}><Trophy/> Ranking</button>
       <button onClick={() => setTab('resultados')} className={tab==='resultados'?'active':''}><Medal/> Resultados Oficiais dos Jogos</button>
-      <button onClick={() => setTab('palpitesRegistrados')} className={tab==='palpitesRegistrados'?'active':''}><Eye/> Palpites Registrados</button>
+      <button onClick={() => setTab('palpitesRegistrados')} className={tab==='palpitesRegistrados'?'active':''}><Eye/> Palpites da Galera</button>
       <button onClick={() => setTab('grupos')} className={tab==='grupos'?'active':''}><CalendarDays/> Grupos</button>
       <button onClick={() => setTab('mata')} className={tab==='mata'?'active':''}><Crown/> Mata-mata</button>
       <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
@@ -1293,7 +1293,7 @@ function App() {
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Palpites Registrados</h2>
+          <h2>Palpites da Galera</h2>
         </div>
         <button className="miniRefresh" type="button" onClick={loadPublicGuesses}><RefreshCw/> Atualizar</button>
       </div>

@@ -496,6 +496,8 @@ function App() {
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState('Todos')
   const [usersList, setUsersList] = useState([])
+  const [allGuessesPublic, setAllGuessesPublic] = useState([])
+  const [allProfilesPublic, setAllProfilesPublic] = useState([])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -511,6 +513,7 @@ function App() {
   useEffect(() => {
     if (!session) return
     if (tab === 'ranking') loadRanking()
+    if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
   }, [tab, session])
 
@@ -855,6 +858,50 @@ function App() {
   }
 
 
+
+  async function loadPublicGuesses() {
+    const { data: players, error: pError } = await supabase.from('profiles').select('*')
+    const { data: allGuesses, error: gError } = await supabase.from('guesses').select('*')
+
+    if (pError) {
+      setMsg(pError.message)
+      return
+    }
+    if (gError) {
+      setMsg(gError.message)
+      return
+    }
+
+    setAllProfilesPublic(players || [])
+    setAllGuessesPublic(allGuesses || [])
+  }
+
+  function profileForGuess(userId) {
+    return (allProfilesPublic || []).find(p => p.id === userId) || { id: userId, nome: `Jogador ${String(userId || '').slice(0,4)}` }
+  }
+
+  function guessPointsForGame(game, guess) {
+    if (!game || !guess) return 0
+    return totalPointsForGame(game, guess)
+  }
+
+  function lockedGuessesForGame(game) {
+    if (!game) return []
+    if (!bettingLocked(game, games)) return []
+    return (allGuessesPublic || [])
+      .filter(g => String(g.game_id) === String(game.id))
+      .map(g => {
+        const p = profileForGuess(g.user_id)
+        return {
+          ...g,
+          nome: displayPlayerName(p),
+          pontos: guessPointsForGame(game, g)
+        }
+      })
+      .sort((a,b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome))
+  }
+
+
   function shareRanking() {
     const text = `🏆 Ranking Bolão Traíras F.C.%0A` + ranking.slice(0,10).map((r,i) => `${i+1}º ${r.nome} - ${r.pontos} pts`).join('%0A')
     window.open(`https://wa.me/?text=${text}`, '_blank')
@@ -1038,7 +1085,8 @@ function App() {
     <nav className="tabs">
       <button onClick={() => setTab('palpites')} className={tab==='palpites'?'active':''}><Table2/> Palpites</button>
       <button onClick={() => setTab('ranking')} className={tab==='ranking'?'active':''}><Trophy/> Ranking</button>
-      <button onClick={() => setTab('resultados')} className={tab==='resultados'?'active':''}><Medal/> Resultados</button>
+      <button onClick={() => setTab('resultados')} className={tab==='resultados'?'active':''}><Medal/> Resultados Oficiais dos Jogos</button>
+      <button onClick={() => setTab('palpitesRegistrados')} className={tab==='palpitesRegistrados'?'active':''}><Eye/> Palpites Registrados</button>
       <button onClick={() => setTab('grupos')} className={tab==='grupos'?'active':''}><CalendarDays/> Grupos</button>
       <button onClick={() => setTab('mata')} className={tab==='mata'?'active':''}><Crown/> Mata-mata</button>
       <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
@@ -1195,13 +1243,13 @@ function App() {
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Resultados Oficiais</h2>
+          <h2>Resultados Oficiais dos Jogos</h2>
         </div>
         <button className="miniRefresh" type="button" onClick={refreshAll}><RefreshCw/> Atualizar</button>
       </div>
 
       <p className="muted resultadosHint">
-        Aqui todos conferem os placares oficiais lançados pela organização. Esta aba é somente leitura.
+        Aqui todos conferem os placares oficiais lançados pela organização. Esta aba é somente leitura e ajuda a conferir o ranking.
       </p>
 
       <div className="resultadosGrid">
@@ -1231,6 +1279,70 @@ function App() {
                     <em className={hasResult ? 'statusOficial ok' : 'statusOficial pending'}>
                       {hasResult ? '✅ Resultado lançado' : '⏳ Aguardando resultado'}
                     </em>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>}
+
+
+    {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox">
+      <div className="cardTitle">
+        <div className="sectionTitleWithLogo">
+          <LogoTrairas className="sectionLogoTrairas" />
+          <h2>Palpites Registrados</h2>
+        </div>
+        <button className="miniRefresh" type="button" onClick={loadPublicGuesses}><RefreshCw/> Atualizar</button>
+      </div>
+
+      <p className="muted palpitesRegistradosHint">
+        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. A pontuação exibida aqui usa o mesmo cálculo do ranking.
+      </p>
+
+      <div className="palpitesRegistradosGrid">
+        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
+          <div className={`palpiteRegPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
+            <div className="palpiteRegPhaseTitle">
+              <strong>{phaseName}</strong>
+              <span>{phaseGames.filter(g => bettingLocked(g, games)).length}/{phaseGames.length} fechados</span>
+            </div>
+
+            <div className="palpiteRegList">
+              {phaseGames.map(game => {
+                const closed = bettingLocked(game, games)
+                const gameGuesses = lockedGuessesForGame(game)
+                const hasOfficial = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
+
+                return (
+                  <div className={`palpiteRegGame ${closed ? 'closed' : 'open'}`} key={game.id}>
+                    <div className="palpiteRegHeader">
+                      <span>Jogo {game.game_no}</span>
+                      <strong>{displayHomeTeam(game, games)} <b>x</b> {displayAwayTeam(game, games)}</strong>
+                      <em>{closed ? '🔒 Fechado' : '⏳ Ainda aberto'}</em>
+                    </div>
+
+                    {!closed && (
+                      <div className="palpiteHidden">
+                        Os palpites deste jogo ficam ocultos até o fechamento.
+                      </div>
+                    )}
+
+                    {closed && (
+                      <div className="palpiteRegGuesses">
+                        {gameGuesses.length === 0 && <div className="palpiteHidden">Nenhum palpite salvo para este jogo.</div>}
+
+                        {gameGuesses.map(g => (
+                          <div className="palpiteRegRow" key={`${game.id}-${g.user_id}`}>
+                            <span>{g.nome}</span>
+                            <strong>{g.guess_home ?? '-'} x {g.guess_away ?? '-'}</strong>
+                            <em>{hasOfficial ? `${g.pontos} pts no ranking` : 'aguardando resultado'}</em>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -1319,7 +1431,7 @@ function App() {
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Painel Admin</span>
-          <h2>Resultados Oficiais</h2>
+          <h2>Resultados Oficiais dos Jogos</h2>
           <p>Informe apenas os placares oficiais. O mata-mata será preenchido automaticamente.</p>
         </div>
         <div className="posterLogo logoBox">

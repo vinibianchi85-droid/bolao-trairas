@@ -2531,3 +2531,195 @@ body{
     font-size: 12px !important;
   }
 }
+
+
+/* ===== ABA PALPITES REGISTRADOS ===== */
+.palpitesRegistradosBox {
+  color: #0f172a !important;
+}
+
+.palpitesRegistradosHint {
+  margin: 8px 0 16px !important;
+  font-weight: 800 !important;
+}
+
+.palpitesRegistradosGrid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  gap: 12px !important;
+}
+
+.palpiteRegPhase {
+  background: #f8fafc !important;
+  border: 2px solid #0b4b5d !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08) !important;
+}
+
+.palpiteRegPhase:nth-child(odd) {
+  border-color: #a0151b !important;
+}
+
+.palpiteRegPhaseTitle {
+  background: linear-gradient(90deg,#0b4b5d,#18a8d8) !important;
+  color: #fff !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-transform: uppercase !important;
+}
+
+.palpiteRegPhase:nth-child(odd) .palpiteRegPhaseTitle {
+  background: linear-gradient(90deg,#a0151b,#ef4444) !important;
+}
+
+.palpiteRegPhaseTitle span {
+  background: #facc15 !important;
+  color: #111827 !important;
+  border-radius: 999px !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  font-weight: 1000 !important;
+  white-space: nowrap !important;
+}
+
+.palpiteRegList {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.palpiteRegGame {
+  border-top: 1px solid #e2e8f0 !important;
+  background: #fff !important;
+  padding: 10px !important;
+}
+
+.palpiteRegGame:nth-child(even) {
+  background: #f1f5f9 !important;
+}
+
+.palpiteRegHeader {
+  display: grid !important;
+  grid-template-columns: 60px 1fr auto !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.palpiteRegHeader span {
+  background: #f97316 !important;
+  color: #fff !important;
+  border-radius: 7px !important;
+  padding: 4px !important;
+  text-align: center !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+}
+
+.palpiteRegHeader strong {
+  font-size: 13px !important;
+  color: #0f172a !important;
+  min-width: 0 !important;
+}
+
+.palpiteRegHeader strong b {
+  color: #b91c1c !important;
+}
+
+.palpiteRegHeader em {
+  border-radius: 999px !important;
+  padding: 5px 8px !important;
+  font-style: normal !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  white-space: nowrap !important;
+}
+
+.palpiteRegGame.closed .palpiteRegHeader em {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.palpiteHidden {
+  margin-top: 8px !important;
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+  text-align: center !important;
+  font-weight: 900 !important;
+  font-size: 12px !important;
+}
+
+.palpiteRegGuesses {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-top: 9px !important;
+}
+
+.palpiteRegRow {
+  display: grid !important;
+  grid-template-columns: 1fr 70px 125px !important;
+  gap: 8px !important;
+  align-items: center !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+}
+
+.palpiteRegRow span {
+  font-weight: 1000 !important;
+  color: #0f172a !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.palpiteRegRow strong {
+  background: #020617 !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  padding: 6px !important;
+  text-align: center !important;
+  font-size: 13px !important;
+}
+
+.palpiteRegRow em {
+  font-style: normal !important;
+  font-size: 10px !important;
+  font-weight: 1000 !important;
+  color: #0b4b5d !important;
+  text-align: right !important;
+}
+
+@media(max-width:1100px){
+  .palpitesRegistradosGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media(max-width:700px){
+  .palpiteRegHeader {
+    grid-template-columns: 54px 1fr !important;
+  }
+
+  .palpiteRegHeader em {
+    grid-column: 1 / -1 !important;
+    text-align: center !important;
+  }
+
+  .palpiteRegRow {
+    grid-template-columns: 1fr 64px !important;
+  }
+
+  .palpiteRegRow em {
+    grid-column: 1 / -1 !important;
+    text-align: left !important;
+  }
+}

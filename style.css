@@ -2723,3 +2723,84 @@ body{
     text-align: left !important;
   }
 }
+
+
+/* ===== CONFIRMAÇÃO DE SALVAMENTO DOS PALPITES ===== */
+.saveFloating {
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.saveStatusBox {
+  width: min(720px, 100%) !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+  text-align: center !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.28) !important;
+  border: 2px solid rgba(255,255,255,.22) !important;
+}
+
+.saveStatusBox strong {
+  display: block !important;
+  font-size: 15px !important;
+  font-weight: 1000 !important;
+  margin-bottom: 4px !important;
+}
+
+.saveStatusBox span {
+  display: block !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.saveStatusBox.saved {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.saveStatusBox.unsaved {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.saveSmartBtn {
+  min-width: min(420px, 100%) !important;
+  font-size: 15px !important;
+  letter-spacing: .02em !important;
+}
+
+.saveSmartBtn.needsSave {
+  background: linear-gradient(135deg,#f97316,#b45309) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 30px rgba(180,83,9,.35) !important;
+}
+
+.saveSmartBtn.savedOk {
+  background: linear-gradient(135deg,#22c55e,#15803d) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 30px rgba(21,128,61,.35) !important;
+}
+
+.lastSaveAdmin {
+  color: #7f1d1d !important;
+  background: #fef3c7 !important;
+  display: inline-block !important;
+  border-radius: 999px !important;
+  padding: 4px 8px !important;
+  margin-top: 5px !important;
+}
+
+@media(max-width:700px){
+  .saveStatusBox strong {
+    font-size: 13px !important;
+  }
+
+  .saveStatusBox span {
+    font-size: 11px !important;
+  }
+
+  .saveSmartBtn {
+    width: 100% !important;
+  }
+}

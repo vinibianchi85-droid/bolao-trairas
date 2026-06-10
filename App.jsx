@@ -780,6 +780,7 @@ function App() {
   async function saveGuesses() {
     await ensureProfileForCurrentUser()
     if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
+
     const uid = session.user.id
     const rows = Object.entries(guesses)
       .filter(([game_id]) => {
@@ -792,20 +793,32 @@ function App() {
         guess_home: g.guess_home === '' ? null : Number(g.guess_home),
         guess_away: g.guess_away === '' ? null : Number(g.guess_away)
       }))
+
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
+
     if (error) {
       setMsg(error.message)
       return
     }
 
     const savedAt = new Date().toISOString()
+
     setHasUnsavedChanges(false)
     setLastSavedAt(savedAt)
-    await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid).then(() => null).catch(() => null)
-
     setShowSavePopup(true)
-    setTimeout(() => setShowSavePopup(false), 5000)
+
+    setTimeout(() => {
+      setShowSavePopup(false)
+    }, 6000)
+
+    try {
+      await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid)
+    } catch (e) {
+      // Se a coluna last_saved_at ainda não existir, os palpites continuam salvos.
+    }
+
     setMsg(`Palpites salvos com sucesso em ${formatSaveDate(savedAt)}!`)
+
     await loadAll()
     await loadRanking()
   }
@@ -1077,15 +1090,14 @@ function App() {
         </>}
 
         {msg && <p className="msg">{msg}</p>}
-
-    {showSavePopup && <div className="saveSuccessOverlay" onClick={() => setShowSavePopup(false)}>
-      <div className="saveSuccessModal" onClick={e => e.stopPropagation()}>
+    {showSavePopup && <div className="saveSuccessOverlay">
+      <div className="saveSuccessModal">
         <div className="saveSuccessIcon">✅</div>
-        <h2>PALPITES REGISTRADOS!</h2>
-        <p>Todos os seus palpites foram salvos com sucesso.</p>
-        <strong>{lastSavedAt ? formatSaveDate(lastSavedAt) : ''}</strong>
-        <span>Guarde esta confirmação. Seus palpites estão registrados no sistema.</span>
-        <button type="button" onClick={() => setShowSavePopup(false)}>Entendi</button>
+        <h2>PALPITES SALVOS!</h2>
+        <p>Todos os seus palpites foram registrados com sucesso.</p>
+        <strong>{lastSavedAt ? formatSaveDate(lastSavedAt) : new Date().toLocaleString('pt-BR')}</strong>
+        <span>Guarde esta confirmação. Seus palpites estão salvos no sistema.</span>
+        <button type="button" onClick={() => setShowSavePopup(false)}>ENTENDI</button>
       </div>
     </div>}
       </section>

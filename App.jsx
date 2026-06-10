@@ -142,27 +142,6 @@ function formatLongDate(date) {
   })
 }
 
-
-function formatSaveDate(date) {
-  if (!date) return ''
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  })
-}
-
-function shortSaveDate(date) {
-  if (!date) return 'Nunca salvou'
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return 'Nunca salvou'
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit',
-    hour: '2-digit', minute: '2-digit'
-  })
-}
-
 const SCORE_BY_PHASE = {
   grupos: { exact: 10, result: 5 },
   dezesseis: { exact: 20, result: 10 },
@@ -519,8 +498,6 @@ function App() {
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [lastSavedAt, setLastSavedAt] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -539,19 +516,6 @@ function App() {
     if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
   }, [tab, session])
-
-
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (!hasUnsavedChanges) return
-      event.preventDefault()
-      event.returnValue = 'Você possui alterações não salvas. Deseja sair mesmo assim?'
-      return event.returnValue
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [hasUnsavedChanges])
 
   useEffect(() => {
     if (!session) return
@@ -697,7 +661,6 @@ function App() {
     }
 
     setProfile(prof)
-    setLastSavedAt(prof?.last_saved_at || null)
 
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
     setGames(gameData || [])
@@ -773,7 +736,6 @@ function App() {
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
 
-    setHasUnsavedChanges(true)
     setGuesses(old => ({ ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }))
   }
 
@@ -793,17 +755,8 @@ function App() {
         guess_away: g.guess_away === '' ? null : Number(g.guess_away)
       }))
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
-    if (error) {
-      setMsg(error.message)
-      return
-    }
-
-    const savedAt = new Date().toISOString()
-    setHasUnsavedChanges(false)
-    setLastSavedAt(savedAt)
-    await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid).then(() => null).catch(() => null)
-
-    setMsg(`Palpites salvos com sucesso em ${formatSaveDate(savedAt)}!`)
+    if (error) setMsg(error.message)
+    else setMsg('Palpites salvos e ranking atualizado!')
     await loadAll()
     await loadRanking()
   }
@@ -1214,21 +1167,7 @@ function App() {
       </div>
 
       <div className="saveFloating">
-        <div className={`saveStatusBox ${hasUnsavedChanges ? 'unsaved' : 'saved'}`}>
-          <strong>{hasUnsavedChanges ? '🔴 Existem alterações não salvas' : '🟢 Palpites salvos'}</strong>
-          <span>
-            {lastSavedAt
-              ? `Último salvamento: ${formatSaveDate(lastSavedAt)}`
-              : 'Último salvamento: ainda não registrado'}
-          </span>
-        </div>
-        <button
-          disabled={locked()}
-          className={`saveSmartBtn ${hasUnsavedChanges ? 'needsSave' : 'savedOk'}`}
-          onClick={saveGuesses}
-        >
-          <Save/> {hasUnsavedChanges ? 'SALVAR PALPITES' : 'PALPITES SALVOS ✓'}
-        </button>
+        <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar todos os palpites</button>
       </div>
     </section>}
 
@@ -1460,7 +1399,7 @@ function App() {
       </div>
 
       <p className="muted usersAdminHint">
-        Esta área mostra os participantes, a quantidade de palpites e o último salvamento registrado. Também permite remover perfil e palpites. O login do e-mail, se quiser apagar definitivamente, ainda pode ser removido no Supabase em Authentication &gt; Users.
+        Esta área remove o participante do bolão, apagando perfil e palpites. O login do e-mail, se quiser apagar definitivamente, ainda pode ser removido no Supabase em Authentication &gt; Users.
       </p>
 
       <div className="usersAdminList">
@@ -1470,7 +1409,6 @@ function App() {
               <strong>{displayPlayerName(user)}</strong>
               <span>{user.email || user.username || 'Sem e-mail cadastrado'}</span>
               <small>{user.palpites || 0} palpites salvos {user.is_admin ? '• ADMIN' : ''}</small>
-              <small className="lastSaveAdmin">Último salvamento: {shortSaveDate(user.last_saved_at)}</small>
             </div>
             <button
               type="button"

@@ -611,7 +611,6 @@ function App() {
       id: user.id,
       nome: metadataName,
       whatsapp: whats || '',
-      is_admin: false
     }
 
     // Tenta salvar com e-mail/username se existirem essas colunas.
@@ -859,21 +858,32 @@ function App() {
   async function loadUsers() {
     if (!profile?.is_admin) return
     const { data: players, error: pError } = await supabase.from('profiles').select('*').order('nome', { ascending: true })
-    const { data: allGuesses } = await supabase.from('guesses').select('user_id')
+    const { data: allGuesses } = await supabase.from('guesses').select('*')
     if (pError) {
       setMsg(pError.message)
       return
     }
 
     const guessCount = {}
+    const lastGuessSave = {}
+
     ;(allGuesses || []).forEach(g => {
       guessCount[g.user_id] = (guessCount[g.user_id] || 0) + 1
+
+      const stamp = g.updated_at || g.created_at
+      if (stamp) {
+        const current = lastGuessSave[g.user_id]
+        if (!current || new Date(stamp).getTime() > new Date(current).getTime()) {
+          lastGuessSave[g.user_id] = stamp
+        }
+      }
     })
 
     setUsersList((players || []).map(p => ({
       ...p,
       nome: displayPlayerName(p),
-      palpites: guessCount[p.id] || 0
+      palpites: guessCount[p.id] || 0,
+      last_saved_at: p.last_saved_at || lastGuessSave[p.id] || null
     })))
   }
 

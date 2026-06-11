@@ -2186,6 +2186,24 @@ body{
   margin-top: 4px !important;
 }
 
+
+.userAdminActions {
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+.userAdminActions button {
+  min-width: 130px !important;
+}
+
+.resetPasswordBtn {
+  background: linear-gradient(135deg,#334155,#0f172a) !important;
+  box-shadow: 0 10px 22px rgba(15,23,42,.20) !important;
+}
+
 .dangerBtn {
   background: linear-gradient(135deg,#dc2626,#7f1d1d) !important;
   box-shadow: 0 10px 22px rgba(127,29,29,.22) !important;
@@ -2212,6 +2230,11 @@ body{
     grid-template-columns: 1fr !important;
   }
 
+  .userAdminActions {
+    justify-content: stretch !important;
+  }
+
+  .userAdminActions button,
   .dangerBtn {
     width: 100% !important;
   }

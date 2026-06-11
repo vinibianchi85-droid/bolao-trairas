@@ -931,6 +931,43 @@ function App() {
   }
 
 
+  async function resetarSenhaUsuario(user) {
+    if (!profile?.is_admin) return
+    if (!user?.id) {
+      setMsg('Usuário inválido.')
+      return
+    }
+
+    const nome = displayPlayerName(user)
+    const novaSenha = window.prompt(`Digite a senha temporária para ${nome}:\n\nMínimo 6 caracteres.`)
+    if (!novaSenha) return
+
+    if (novaSenha.length < 6) {
+      setMsg('A senha temporária precisa ter no mínimo 6 caracteres.')
+      return
+    }
+
+    const ok = window.confirm(`Confirmar nova senha temporária para ${nome}?\n\nDepois envie essa senha pelo WhatsApp.`)
+    if (!ok) return
+
+    setMsg('Resetando senha...')
+
+    const { data, error } = await supabase.functions.invoke('reset-user-password', {
+      body: {
+        userId: user.id,
+        novaSenha
+      }
+    })
+
+    if (error || data?.error) {
+      setMsg('Erro ao resetar senha: ' + (data?.error || error.message))
+      return
+    }
+
+    setMsg('Senha resetada com sucesso! Envie a senha temporária para o participante pelo WhatsApp.')
+  }
+
+
 
   async function loadPublicGuesses() {
     const { data: players, error: pError } = await supabase.from('profiles').select('*')
@@ -1496,7 +1533,7 @@ function App() {
       </div>
 
       <p className="muted usersAdminHint">
-        Esta área mostra os participantes, a quantidade de palpites e o último salvamento registrado. Também permite remover perfil e palpites. O login do e-mail, se quiser apagar definitivamente, ainda pode ser removido no Supabase em Authentication &gt; Users.
+        Esta área mostra os participantes, a quantidade de palpites e o último salvamento registrado. Também permite resetar senha, remover perfil e palpites. Para o reset funcionar, a Edge Function reset-user-password precisa estar publicada no Supabase.
       </p>
 
       <div className="usersAdminList">
@@ -1508,14 +1545,24 @@ function App() {
               <small>{user.palpites || 0} palpites salvos {user.is_admin ? '• ADMIN' : ''}</small>
               <small className="lastSaveAdmin">Último salvamento: {shortSaveDate(user.last_saved_at)}</small>
             </div>
-            <button
-              type="button"
-              className="dangerBtn"
-              disabled={user.id === profile?.id}
-              onClick={() => deleteUserAdmin(user)}
-            >
-              Excluir
-            </button>
+            <div className="userAdminActions">
+              <button
+                type="button"
+                className="secondary small resetPasswordBtn"
+                onClick={() => resetarSenhaUsuario(user)}
+              >
+                🔐 Resetar senha
+              </button>
+
+              <button
+                type="button"
+                className="dangerBtn"
+                disabled={user.id === profile?.id}
+                onClick={() => deleteUserAdmin(user)}
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         ))}
 

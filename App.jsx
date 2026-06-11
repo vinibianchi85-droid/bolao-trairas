@@ -503,7 +503,6 @@ function App() {
   const [session, setSession] = useState(null)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [emailRecuperacao, setEmailRecuperacao] = useState('')
   const [nome, setNome] = useState('')
   const [whats, setWhats] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -672,31 +671,6 @@ function App() {
     const authEmail = email.trim().toLowerCase()
     const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: senha })
     if (error) setMsg('E-mail ou senha incorretos.')
-  }
-
-
-  async function recuperarSenha() {
-    setMsg('')
-    const authEmail = (emailRecuperacao || email).trim().toLowerCase()
-
-    if (!authEmail) {
-      setMsg('Digite o e-mail cadastrado para recuperar a senha.')
-      return
-    }
-
-    const redirectTo = window.location.origin
-
-    const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
-      redirectTo,
-    })
-
-    if (error) {
-      setMsg('Erro ao enviar recuperação: ' + error.message)
-      return
-    }
-
-    setMsg('Enviamos um link de recuperação para o e-mail informado. Abra o e-mail e siga as instruções.')
-    setModo('login')
   }
 
   async function logout() {
@@ -994,6 +968,7 @@ function App() {
   }
 
 
+
   async function loadPublicGuesses() {
     const { data: players, error: pError } = await supabase.from('profiles').select('*')
     const { data: allGuesses, error: gError } = await supabase.from('guesses').select('*')
@@ -1134,20 +1109,7 @@ function App() {
             <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
           </div>
           <button onClick={login}>Entrar</button>
-          <button className="secondary" type="button" onClick={() => { setEmailRecuperacao(email); setModo('recuperar') }}>🔑 Recuperar senha</button>
           <button className="secondary" type="button" onClick={() => setModo('cadastro')}>Ainda não tenho cadastro</button>
-        </>}
-
-        {modo === 'recuperar' && <>
-          <h2>Recuperar senha</h2>
-          <p className="loginHint">Digite o e-mail cadastrado. O app vai enviar um link para criar uma nova senha.</p>
-          <input
-            placeholder="E-mail cadastrado"
-            value={emailRecuperacao}
-            onChange={e => setEmailRecuperacao(e.target.value)}
-          />
-          <button type="button" onClick={recuperarSenha}>Enviar link de recuperação</button>
-          <button className="secondary" type="button" onClick={() => setModo('login')}>Voltar para o login</button>
         </>}
 
         {modo === 'cadastro' && <>

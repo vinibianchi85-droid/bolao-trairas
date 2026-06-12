@@ -522,10 +522,19 @@ function App() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState(null)
   const [showSavePopup, setShowSavePopup] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(false)
+  const [novaSenha, setNovaSenha] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session)
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true)
+        setModo('login')
+        setMsg('Digite sua nova senha para finalizar a recuperação.')
+      }
+    })
     return () => listener.subscription.unsubscribe()
   }, [])
 
@@ -671,6 +680,37 @@ function App() {
     const authEmail = email.trim().toLowerCase()
     const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: senha })
     if (error) setMsg('E-mail ou senha incorretos.')
+  }
+
+  async function enviarRecuperacaoSenha() {
+    setMsg('')
+    const authEmail = email.trim().toLowerCase()
+    if (!authEmail) return setMsg('Digite o e-mail cadastrado para recuperar a senha.')
+
+    const redirectTo = `${window.location.origin}${window.location.pathname}`
+    const { error } = await supabase.auth.resetPasswordForEmail(authEmail, { redirectTo })
+
+    if (error) {
+      setMsg('Não consegui enviar o link: ' + error.message)
+      return
+    }
+
+    setMsg('Link de recuperação enviado! Confira o e-mail cadastrado e siga as instruções para criar uma nova senha.')
+  }
+
+  async function trocarSenhaRecuperacao() {
+    setMsg('')
+    if (!novaSenha || novaSenha.length < 6) return setMsg('A nova senha precisa ter no mínimo 6 caracteres.')
+
+    const { error } = await supabase.auth.updateUser({ password: novaSenha })
+    if (error) {
+      setMsg('Erro ao trocar senha: ' + error.message)
+      return
+    }
+
+    setNovaSenha('')
+    setRecoveryMode(false)
+    setMsg('Senha alterada com sucesso! Você já pode usar a nova senha para entrar.')
   }
 
   async function logout() {
@@ -960,7 +1000,17 @@ function App() {
     })
 
     if (error || data?.error) {
-      setMsg('Erro ao resetar senha: ' + (data?.error || error.message))
+      const emailUsuario = user.email || user.username
+      if (emailUsuario) {
+        const redirectTo = `${window.location.origin}${window.location.pathname}`
+        const reset = await supabase.auth.resetPasswordForEmail(emailUsuario, { redirectTo })
+        if (!reset.error) {
+          setMsg('Não foi possível trocar a senha automática, mas enviei um link de recuperação para o e-mail do participante.')
+          return
+        }
+      }
+
+      setMsg('Erro ao resetar senha. A Edge Function reset-user-password precisa estar publicada no Supabase ou use o link "Esqueci minha senha" na tela de login.')
       return
     }
 
@@ -1073,7 +1123,7 @@ function App() {
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
   const proximosBloqueios = useMemo(() => nextLockGames(), [games, guesses, tab])
 
-  if (!session) {
+  if (!session || recoveryMode) {
     return <main className="page login">
       <section className="hero">
         <div className="shine"></div>
@@ -1101,15 +1151,29 @@ function App() {
         </div>
 
         {modo === 'login' && <>
-          <h2>Fazer login</h2>
-          <p className="loginHint">Entre com o e-mail cadastrado e sua senha.</p>
-          <input placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} />
-          <div className="passBox">
-            <input placeholder="Senha" type={showPass ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)} />
-            <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
-          </div>
-          <button onClick={login}>Entrar</button>
-          <button className="secondary" type="button" onClick={() => setModo('cadastro')}>Ainda não tenho cadastro</button>
+          {!recoveryMode && <>
+            <h2>Fazer login</h2>
+            <p className="loginHint">Entre com o e-mail cadastrado e sua senha.</p>
+            <input placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} />
+            <div className="passBox">
+              <input placeholder="Senha" type={showPass ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)} />
+              <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
+            </div>
+            <button onClick={login}>Entrar</button>
+            <button className="secondary" type="button" onClick={() => setModo('cadastro')}>Ainda não tenho cadastro</button>
+            <button className="linkBtn" type="button" onClick={enviarRecuperacaoSenha}>Esqueci minha senha / recuperar senha</button>
+          </>}
+
+          {recoveryMode && <>
+            <h2>Criar nova senha</h2>
+            <p className="loginHint">Digite uma nova senha para finalizar a recuperação.</p>
+            <div className="passBox">
+              <input placeholder="Nova senha" type={showPass ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+              <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
+            </div>
+            <button onClick={trocarSenhaRecuperacao}>Salvar nova senha</button>
+            <button className="secondary" type="button" onClick={() => setRecoveryMode(false)}>Voltar para login</button>
+          </>}
         </>}
 
         {modo === 'cadastro' && <>

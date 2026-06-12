@@ -2914,3 +2914,17 @@ body{
     font-size: 24px !important;
   }
 }
+
+
+/* Recuperação de senha */
+.linkBtn{
+  background:transparent !important;
+  color:#0f172a !important;
+  box-shadow:none !important;
+  padding:8px 10px !important;
+  text-decoration:underline;
+  font-weight:1000;
+}
+.linkBtn:hover{
+  color:#b91c1c !important;
+}

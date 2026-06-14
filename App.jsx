@@ -563,17 +563,6 @@ function App() {
     if (!user) return null
 
     const authEmail = user.email || ''
-
-    // Primeiro busca o perfil existente. Isso evita sobrescrever is_admin, nome, e-mail
-    // ou outros dados de usuários já cadastrados.
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (existing) return existing
-
     const metadataName =
       user.user_metadata?.nome ||
       user.user_metadata?.name ||
@@ -584,28 +573,28 @@ function App() {
     const baseProfile = {
       id: user.id,
       nome: metadataName,
-      whatsapp: whats || '',
-      is_admin: false
+      whatsapp: whats || ''
     }
 
     // Tenta salvar com e-mail/username se existirem essas colunas.
     // Se a tabela profiles não tiver essas colunas, cai no modelo simples.
+    let saved = null
     let res = await supabase
       .from('profiles')
-      .insert({ ...baseProfile, email: authEmail, username: authEmail })
+      .upsert({ ...baseProfile, email: authEmail, username: authEmail }, { onConflict: 'id' })
       .select('*')
       .single()
 
     if (res.error) {
       res = await supabase
         .from('profiles')
-        .insert(baseProfile)
+        .upsert(baseProfile, { onConflict: 'id' })
         .select('*')
         .single()
     }
 
-    if (!res.error) return res.data
-    return null
+    if (!res.error) saved = res.data
+    return saved
   }
 
 
@@ -1038,7 +1027,7 @@ function App() {
         <div>
           <div className="badge"><Trophy/> Bolão Traíras F.C.</div>
           <h1>Área do Participante</h1>
-          <p>Cada jogo bloqueia 1 hora antes da partida começar.</p>
+          <p>Palpites liberados até 1 hora antes de cada jogo.</p>
         </div>
       </div>
       <div className="topActions">

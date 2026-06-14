@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { supabase, LOCK_AT } from './supabase'
+import { supabase } from './supabase'
 import {
   Trophy, Lock, Users, Save, LogOut, Shield, Table2, Share2, Medal, Search,
   CalendarDays, Crown, Sparkles, Flame, Clock, RefreshCw, Eye, EyeOff
@@ -563,6 +563,17 @@ function App() {
     if (!user) return null
 
     const authEmail = user.email || ''
+
+    // Primeiro busca o perfil existente. Isso evita sobrescrever is_admin, nome, e-mail
+    // ou outros dados de usuários já cadastrados.
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (existing) return existing
+
     const metadataName =
       user.user_metadata?.nome ||
       user.user_metadata?.name ||
@@ -579,23 +590,22 @@ function App() {
 
     // Tenta salvar com e-mail/username se existirem essas colunas.
     // Se a tabela profiles não tiver essas colunas, cai no modelo simples.
-    let saved = null
     let res = await supabase
       .from('profiles')
-      .upsert({ ...baseProfile, email: authEmail, username: authEmail }, { onConflict: 'id' })
+      .insert({ ...baseProfile, email: authEmail, username: authEmail })
       .select('*')
       .single()
 
     if (res.error) {
       res = await supabase
         .from('profiles')
-        .upsert(baseProfile, { onConflict: 'id' })
+        .insert(baseProfile)
         .select('*')
         .single()
     }
 
-    if (!res.error) saved = res.data
-    return saved
+    if (!res.error) return res.data
+    return null
   }
 
 
@@ -1028,7 +1038,7 @@ function App() {
         <div>
           <div className="badge"><Trophy/> Bolão Traíras F.C.</div>
           <h1>Área do Participante</h1>
-          <p>{locked() ? 'Palpites bloqueados: prazo geral encerrado.' : `Palpites liberados até ${LOCK_AT.toLocaleString('pt-BR')}.`}</p>
+          <p>Cada jogo bloqueia 1 hora antes da partida começar.</p>
         </div>
       </div>
       <div className="topActions">

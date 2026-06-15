@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { supabase, LOCK_AT } from './supabase'
+import { supabase } from './supabase'
 import {
   Trophy, Lock, Users, Save, LogOut, Shield, Table2, Share2, Medal, Search,
   CalendarDays, Crown, Sparkles, Flame, Clock, RefreshCw, Eye, EyeOff
@@ -139,27 +139,6 @@ function formatLongDate(date) {
   if (!date) return ''
   return new Date(date).toLocaleString('pt-BR', {
     day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit'
-  })
-}
-
-
-function formatSaveDate(date) {
-  if (!date) return ''
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  })
-}
-
-function shortSaveDate(date) {
-  if (!date) return 'Nunca salvou'
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return 'Nunca salvou'
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit',
-    hour: '2-digit', minute: '2-digit'
   })
 }
 
@@ -519,9 +498,6 @@ function App() {
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [lastSavedAt, setLastSavedAt] = useState(null)
-  const [showSavePopup, setShowSavePopup] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -540,19 +516,6 @@ function App() {
     if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
   }, [tab, session])
-
-
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (!hasUnsavedChanges) return
-      event.preventDefault()
-      event.returnValue = 'Você possui alterações não salvas. Deseja sair mesmo assim?'
-      return event.returnValue
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [hasUnsavedChanges])
 
   useEffect(() => {
     if (!session) return
@@ -610,7 +573,7 @@ function App() {
     const baseProfile = {
       id: user.id,
       nome: metadataName,
-      whatsapp: whats || '',
+      whatsapp: whats || ''
     }
 
     // Tenta salvar com e-mail/username se existirem essas colunas.
@@ -697,7 +660,6 @@ function App() {
     }
 
     setProfile(prof)
-    setLastSavedAt(prof?.last_saved_at || null)
 
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
     setGames(gameData || [])
@@ -773,14 +735,12 @@ function App() {
     const numericFields = ['guess_home', 'guess_away']
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
 
-    setHasUnsavedChanges(true)
     setGuesses(old => ({ ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }))
   }
 
   async function saveGuesses() {
     await ensureProfileForCurrentUser()
     if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
-
     const uid = session.user.id
     const rows = Object.entries(guesses)
       .filter(([game_id]) => {
@@ -793,32 +753,9 @@ function App() {
         guess_home: g.guess_home === '' ? null : Number(g.guess_home),
         guess_away: g.guess_away === '' ? null : Number(g.guess_away)
       }))
-
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
-
-    if (error) {
-      setMsg(error.message)
-      return
-    }
-
-    const savedAt = new Date().toISOString()
-
-    setHasUnsavedChanges(false)
-    setLastSavedAt(savedAt)
-    setShowSavePopup(true)
-
-    setTimeout(() => {
-      setShowSavePopup(false)
-    }, 6000)
-
-    try {
-      await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid)
-    } catch (e) {
-      // Se a coluna last_saved_at ainda não existir, os palpites continuam salvos.
-    }
-
-    setMsg(`Palpites salvos com sucesso em ${formatSaveDate(savedAt)}!`)
-
+    if (error) setMsg(error.message)
+    else setMsg('Palpites salvos e ranking atualizado!')
     await loadAll()
     await loadRanking()
   }
@@ -871,32 +808,21 @@ function App() {
   async function loadUsers() {
     if (!profile?.is_admin) return
     const { data: players, error: pError } = await supabase.from('profiles').select('*').order('nome', { ascending: true })
-    const { data: allGuesses } = await supabase.from('guesses').select('*')
+    const { data: allGuesses } = await supabase.from('guesses').select('user_id')
     if (pError) {
       setMsg(pError.message)
       return
     }
 
     const guessCount = {}
-    const lastGuessSave = {}
-
     ;(allGuesses || []).forEach(g => {
       guessCount[g.user_id] = (guessCount[g.user_id] || 0) + 1
-
-      const stamp = g.updated_at || g.created_at
-      if (stamp) {
-        const current = lastGuessSave[g.user_id]
-        if (!current || new Date(stamp).getTime() > new Date(current).getTime()) {
-          lastGuessSave[g.user_id] = stamp
-        }
-      }
     })
 
     setUsersList((players || []).map(p => ({
       ...p,
       nome: displayPlayerName(p),
-      palpites: guessCount[p.id] || 0,
-      last_saved_at: p.last_saved_at || lastGuessSave[p.id] || null
+      palpites: guessCount[p.id] || 0
     })))
   }
 
@@ -1090,16 +1016,6 @@ function App() {
         </>}
 
         {msg && <p className="msg">{msg}</p>}
-    {showSavePopup && <div className="saveSuccessOverlay">
-      <div className="saveSuccessModal">
-        <div className="saveSuccessIcon">✅</div>
-        <h2>PALPITES SALVOS!</h2>
-        <p>Todos os seus palpites foram registrados com sucesso.</p>
-        <strong>{lastSavedAt ? formatSaveDate(lastSavedAt) : new Date().toLocaleString('pt-BR')}</strong>
-        <span>Guarde esta confirmação. Seus palpites estão salvos no sistema.</span>
-        <button type="button" onClick={() => setShowSavePopup(false)}>ENTENDI</button>
-      </div>
-    </div>}
       </section>
     </main>
   }
@@ -1111,7 +1027,7 @@ function App() {
         <div>
           <div className="badge"><Trophy/> Bolão Traíras F.C.</div>
           <h1>Área do Participante</h1>
-          <p>{locked() ? 'Palpites bloqueados: prazo geral encerrado.' : `Palpites liberados até ${LOCK_AT.toLocaleString('pt-BR')}.`}</p>
+          <p>Palpites liberados até 1 hora antes de cada jogo.</p>
         </div>
       </div>
       <div className="topActions">
@@ -1250,21 +1166,7 @@ function App() {
       </div>
 
       <div className="saveFloating">
-        <div className={`saveStatusBox ${hasUnsavedChanges ? 'unsaved' : 'saved'}`}>
-          <strong>{hasUnsavedChanges ? '🔴 Existem alterações não salvas' : '🟢 Palpites salvos'}</strong>
-          <span>
-            {lastSavedAt
-              ? `Último salvamento: ${formatSaveDate(lastSavedAt)}`
-              : 'Último salvamento: ainda não registrado'}
-          </span>
-        </div>
-        <button
-          disabled={locked()}
-          className={`saveSmartBtn ${hasUnsavedChanges ? 'needsSave' : 'savedOk'}`}
-          onClick={saveGuesses}
-        >
-          <Save/> {hasUnsavedChanges ? 'SALVAR PALPITES' : 'PALPITES SALVOS ✓'}
-        </button>
+        <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar todos os palpites</button>
       </div>
     </section>}
 
@@ -1314,139 +1216,57 @@ function App() {
     </section>}
 
 
-    {tab === 'ranking' && <section className="card">
+    {tab === 'ranking' && <section className="card rankingFunBox">
       <div className="cardTitle">
         <h2>Ranking ao vivo</h2>
         <button className="miniRefresh" type="button" onClick={refreshAll}><RefreshCw/> Atualizar agora</button>
         <button className="whats" onClick={shareRanking}><Share2/> Compartilhar no WhatsApp</button>
       </div>
+
+      <div className="rankingFunCards">
+        <div className="rankingFunCard leaderCard">
+          <span>👑</span>
+          <small>Líder Atual</small>
+          <strong>{ranking[0]?.nome || 'Aguardando ranking'}</strong>
+          <b>{ranking[0]?.pontos || 0} pts</b>
+        </div>
+
+        <div className="rankingFunCard exactCard">
+          <span>🎯</span>
+          <small>Rei do Placar Exato</small>
+          <strong>{reiDoPlacarExato()?.nome || 'Ninguém ainda'}</strong>
+          <b>{reiDoPlacarExato()?.exatos || 0} exatos</b>
+        </div>
+
+        <div className="rankingFunCard coldCard">
+          <span>🫏</span>
+          <small>Pé Frio</small>
+          <strong>{peFrioRanking()?.nome || 'Aguardando'}</strong>
+          <b>{peFrioRanking()?.pontos || 0} pts</b>
+        </div>
+      </div>
+
       <div className="podium">
-        {ranking.slice(0,3).map((r,i) => <div className={`podiumCard p${i+1}`} key={r.nome}>
+        {ranking.slice(0,3).map((r,i) => <div className={`podiumCard p${i+1}`} key={r.id || r.nome}>
           <span>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
           <b>{r.nome}</b>
           <strong>{r.pontos} pts</strong>
         </div>)}
       </div>
-      {ranking.map((r, i) => <div className={`rank ${i===0?'leader':''}`} key={r.nome}>
-        <strong>{i + 1}º</strong>
-        <span>{i===0 ? '👑 ' : ''}{r.nome}</span>
-        <b>{r.pontos} pts</b>
-        <small>{r.exatos} exatos · {r.acertos} acertos</small>
-      </div>)}
-    </section>}
 
-
-    {tab === 'resultados' && <section className="card resultadosBox">
-      <div className="cardTitle">
-        <div className="sectionTitleWithLogo">
-          <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Resultados Oficiais dos Jogos</h2>
+      {ranking.map((r, i) => (
+        <div className={`rank ${i===0?'leader':''}`} key={r.id || r.nome}>
+          <strong>{i + 1}º</strong>
+          <span>
+            {i===0 ? '👑 ' : ''}{r.nome}
+            <em className={`rankMovement ${rankingMoveClass(r, i)}`}>
+              {rankingMovement(r, i)}
+            </em>
+          </span>
+          <b>{r.pontos} pts</b>
+          <small>{r.exatos} exatos · {r.acertos} acertos</small>
         </div>
-        <button className="miniRefresh" type="button" onClick={refreshAll}><RefreshCw/> Atualizar</button>
-      </div>
-
-      <p className="muted resultadosHint">
-        Aqui todos conferem os placares oficiais lançados pela organização. Esta aba é somente leitura e ajuda a conferir o ranking.
-      </p>
-
-      <div className="resultadosGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
-          <div className={`resultadoPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
-            <div className="resultadoPhaseTitle">
-              <strong>{phaseName}</strong>
-              <span>{phaseGames.filter(g => g.home_score !== null && g.home_score !== undefined && g.home_score !== '' && g.away_score !== null && g.away_score !== undefined && g.away_score !== '').length}/{phaseGames.length} lançados</span>
-            </div>
-
-            <div className="resultadoList">
-              {phaseGames.map(game => {
-                const hasResult = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
-                return (
-                  <div className={`resultadoRow ${hasResult ? 'resultadoOk' : 'resultadoPendente'}`} key={game.id}>
-                    <span className="resultadoNo">Jogo {game.game_no}</span>
-                    <span className="resultadoDate">{formatDate(game.starts_at)}</span>
-
-                    <strong className="resultadoTeam right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></strong>
-
-                    <span className="resultadoScore">
-                      {hasResult ? `${game.home_score} x ${game.away_score}` : 'x'}
-                    </span>
-
-                    <strong className="resultadoTeam"><TeamNameFlag team={displayAwayTeam(game, games)} /></strong>
-
-                    <em className={hasResult ? 'statusOficial ok' : 'statusOficial pending'}>
-                      {hasResult ? '✅ Resultado lançado' : '⏳ Aguardando resultado'}
-                    </em>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>}
-
-
-    {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox">
-      <div className="cardTitle">
-        <div className="sectionTitleWithLogo">
-          <LogoTrairas className="sectionLogoTrairas" />
-          <h2>Palpites da Galera</h2>
-        </div>
-        <button className="miniRefresh" type="button" onClick={loadPublicGuesses}><RefreshCw/> Atualizar</button>
-      </div>
-
-      <p className="muted palpitesRegistradosHint">
-        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. A pontuação exibida aqui usa o mesmo cálculo do ranking.
-      </p>
-
-      <div className="palpitesRegistradosGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
-          <div className={`palpiteRegPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
-            <div className="palpiteRegPhaseTitle">
-              <strong>{phaseName}</strong>
-              <span>{phaseGames.filter(g => bettingLocked(g, games)).length}/{phaseGames.length} fechados</span>
-            </div>
-
-            <div className="palpiteRegList">
-              {phaseGames.map(game => {
-                const closed = bettingLocked(game, games)
-                const gameGuesses = lockedGuessesForGame(game)
-                const hasOfficial = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
-
-                return (
-                  <div className={`palpiteRegGame ${closed ? 'closed' : 'open'}`} key={game.id}>
-                    <div className="palpiteRegHeader">
-                      <span>Jogo {game.game_no}</span>
-                      <strong>{displayHomeTeam(game, games)} <b>x</b> {displayAwayTeam(game, games)}</strong>
-                      <em>{closed ? '🔒 Fechado' : '⏳ Ainda aberto'}</em>
-                    </div>
-
-                    {!closed && (
-                      <div className="palpiteHidden">
-                        Os palpites deste jogo ficam ocultos até o fechamento.
-                      </div>
-                    )}
-
-                    {closed && (
-                      <div className="palpiteRegGuesses">
-                        {gameGuesses.length === 0 && <div className="palpiteHidden">Nenhum palpite salvo para este jogo.</div>}
-
-                        {gameGuesses.map(g => (
-                          <div className="palpiteRegRow" key={`${game.id}-${g.user_id}`}>
-                            <span>{g.nome}</span>
-                            <strong>{g.guess_home ?? '-'} x {g.guess_away ?? '-'}</strong>
-                            <em>{hasOfficial ? `${g.pontos} pts no ranking` : 'aguardando resultado'}</em>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      ))}
     </section>}
 
     {tab === 'grupos' && <section className="card">
@@ -1496,7 +1316,7 @@ function App() {
       </div>
 
       <p className="muted usersAdminHint">
-        Esta área mostra os participantes, a quantidade de palpites e o último salvamento registrado. Também permite remover perfil e palpites. O login do e-mail, se quiser apagar definitivamente, ainda pode ser removido no Supabase em Authentication &gt; Users.
+        Esta área remove o participante do bolão, apagando perfil e palpites. O login do e-mail, se quiser apagar definitivamente, ainda pode ser removido no Supabase em Authentication &gt; Users.
       </p>
 
       <div className="usersAdminList">
@@ -1506,7 +1326,6 @@ function App() {
               <strong>{displayPlayerName(user)}</strong>
               <span>{user.email || user.username || 'Sem e-mail cadastrado'}</span>
               <small>{user.palpites || 0} palpites salvos {user.is_admin ? '• ADMIN' : ''}</small>
-              <small className="lastSaveAdmin">Último salvamento: {shortSaveDate(user.last_saved_at)}</small>
             </div>
             <button
               type="button"

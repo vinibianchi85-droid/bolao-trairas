@@ -255,7 +255,7 @@ function lockInfo(game) {
   if (!game?.starts_at) return { locked: false, text: 'Aberto', level: 'open' }
 
   const start = new Date(game.starts_at)
-  const lockTime = new Date(start.getTime() - 60 * 60 * 1000)
+  const lockTime = new Date(start.getTime() - 10 * 60 * 1000)
   const diff = lockTime.getTime() - Date.now()
 
   if (diff <= 0) return { locked: true, text: 'Bloqueado', level: 'locked' }
@@ -1008,8 +1008,8 @@ function App() {
       .map(game => ({ ...game, lockData: bettingStatusInfo(game, games) }))
       .filter(game => game.lockData && !game.lockData.locked)
       .sort((a, b) => {
-        const lockA = new Date(a.starts_at).getTime() - 60 * 60 * 1000
-        const lockB = new Date(b.starts_at).getTime() - 60 * 60 * 1000
+        const lockA = new Date(a.starts_at).getTime() - 10 * 60 * 1000
+        const lockB = new Date(b.starts_at).getTime() - 10 * 60 * 1000
         return lockA - lockB
       })
       .slice(0, 4)

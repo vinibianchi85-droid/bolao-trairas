@@ -323,6 +323,17 @@ function knockoutTeamsDefined(game, allGames = []) {
 function bettingLocked(game, allGames = []) {
   if (!game) return true
   if (isKnockoutPhase(game.phase) && !knockoutTeamsDefined(game, allGames)) return true
+
+  const hasOfficialResult =
+    game.home_score !== null &&
+    game.home_score !== undefined &&
+    game.home_score !== '' &&
+    game.away_score !== null &&
+    game.away_score !== undefined &&
+    game.away_score !== ''
+
+  if (hasOfficialResult) return true
+
   return lockInfo(game).locked
 }
 
@@ -678,29 +689,6 @@ function App() {
     setSession(null)
   }
 
-
-  async function fetchAllRows(table, select = '*', pageSize = 1000) {
-    let all = []
-    let from = 0
-
-    while (true) {
-      const to = from + pageSize - 1
-      const { data, error } = await supabase
-        .from(table)
-        .select(select)
-        .range(from, to)
-
-      if (error) throw error
-      const rows = data || []
-      all = all.concat(rows)
-
-      if (rows.length < pageSize) break
-      from += pageSize
-    }
-
-    return all
-  }
-
   async function refreshAll() {
     setMsg('Atualizando dados...')
     await loadAll()
@@ -725,18 +713,18 @@ function App() {
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
     setGames(gameData || [])
 
-    const guessData = await fetchAllRows('guesses')
+    const { data: guessData } = await supabase.from('guesses').select('*').eq('user_id', uid)
     const map = {}
-    ;(guessData || []).filter(g => g.user_id === uid).forEach(g => { map[g.game_id] = g })
+    ;(guessData || []).forEach(g => { map[g.game_id] = g })
     setGuesses(map)
 
     await loadRanking()
   }
 
   async function loadRanking() {
-    const players = await fetchAllRows('profiles')
-    const allGuesses = await fetchAllRows('guesses')
-    const gameData = await fetchAllRows('games')
+    const { data: players } = await supabase.from('profiles').select('*')
+    const { data: allGuesses } = await supabase.from('guesses').select('*')
+    const { data: gameData } = await supabase.from('games').select('*')
 
     const playerMap = new Map()
 
@@ -894,7 +882,7 @@ function App() {
   async function loadUsers() {
     if (!profile?.is_admin) return
     const { data: players, error: pError } = await supabase.from('profiles').select('*').order('nome', { ascending: true })
-    const allGuesses = await fetchAllRows('guesses')
+    const { data: allGuesses } = await supabase.from('guesses').select('*')
     if (pError) {
       setMsg(pError.message)
       return
@@ -957,13 +945,7 @@ function App() {
 
   async function loadPublicGuesses() {
     const { data: players, error: pError } = await supabase.from('profiles').select('*')
-    let allGuesses = []
-    let gError = null
-    try {
-      allGuesses = await fetchAllRows('guesses')
-    } catch (err) {
-      gError = err
-    }
+    const { data: allGuesses, error: gError } = await supabase.from('guesses').select('*')
 
     if (pError) {
       setMsg(pError.message)

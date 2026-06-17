@@ -333,6 +333,28 @@ function bettingStatusInfo(game, allGames = []) {
   return lockInfo(game)
 }
 
+function publicGuessesVisible(game, allGames = []) {
+  if (!game) return false
+  if (isKnockoutPhase(game.phase) && !knockoutTeamsDefined(game, allGames)) return false
+
+  const hasOfficialResult =
+    game.home_score !== null &&
+    game.home_score !== undefined &&
+    game.home_score !== '' &&
+    game.away_score !== null &&
+    game.away_score !== undefined &&
+    game.away_score !== ''
+
+  if (hasOfficialResult) return true
+  if (!game.starts_at) return false
+
+  // Mantém a aba Palpites da Galera aparecendo como antes,
+  // 1 hora antes do jogo, sem interferir no bloqueio para palpitar.
+  const start = new Date(game.starts_at)
+  const revealTime = new Date(start.getTime() - 60 * 60 * 1000)
+  return Date.now() >= revealTime.getTime()
+}
+
 function locked() {
   return false
 }
@@ -678,29 +700,6 @@ function App() {
     setSession(null)
   }
 
-
-  async function fetchAllRows(table, select = '*', pageSize = 1000) {
-    let all = []
-    let from = 0
-
-    while (true) {
-      const to = from + pageSize - 1
-      const { data, error } = await supabase
-        .from(table)
-        .select(select)
-        .range(from, to)
-
-      if (error) throw error
-      const rows = data || []
-      all = all.concat(rows)
-
-      if (rows.length < pageSize) break
-      from += pageSize
-    }
-
-    return all
-  }
-
   async function refreshAll() {
     setMsg('Atualizando dados...')
     await loadAll()
@@ -725,18 +724,18 @@ function App() {
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
     setGames(gameData || [])
 
-    const guessData = await fetchAllRows('guesses')
+    const { data: guessData } = await supabase.from('guesses').select('*').eq('user_id', uid)
     const map = {}
-    ;(guessData || []).filter(g => g.user_id === uid).forEach(g => { map[g.game_id] = g })
+    ;(guessData || []).forEach(g => { map[g.game_id] = g })
     setGuesses(map)
 
     await loadRanking()
   }
 
   async function loadRanking() {
-    const players = await fetchAllRows('profiles')
-    const allGuesses = await fetchAllRows('guesses')
-    const gameData = await fetchAllRows('games')
+    const { data: players } = await supabase.from('profiles').select('*')
+    const { data: allGuesses } = await supabase.from('guesses').select('*')
+    const { data: gameData } = await supabase.from('games').select('*')
 
     const playerMap = new Map()
 
@@ -894,7 +893,7 @@ function App() {
   async function loadUsers() {
     if (!profile?.is_admin) return
     const { data: players, error: pError } = await supabase.from('profiles').select('*').order('nome', { ascending: true })
-    const allGuesses = await fetchAllRows('guesses')
+    const { data: allGuesses } = await supabase.from('guesses').select('*')
     if (pError) {
       setMsg(pError.message)
       return
@@ -957,13 +956,7 @@ function App() {
 
   async function loadPublicGuesses() {
     const { data: players, error: pError } = await supabase.from('profiles').select('*')
-    let allGuesses = []
-    let gError = null
-    try {
-      allGuesses = await fetchAllRows('guesses')
-    } catch (err) {
-      gError = err
-    }
+    const { data: allGuesses, error: gError } = await supabase.from('guesses').select('*')
 
     if (pError) {
       setMsg(pError.message)
@@ -989,7 +982,7 @@ function App() {
 
   function lockedGuessesForGame(game) {
     if (!game) return []
-    if (!bettingLocked(game, games)) return []
+    if (!publicGuessesVisible(game, games)) return []
     return (allGuessesPublic || [])
       .filter(g => String(g.game_id) === String(game.id))
       .map(g => {
@@ -1433,12 +1426,12 @@ function App() {
           <div className={`palpiteRegPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
             <div className="palpiteRegPhaseTitle">
               <strong>{phaseName}</strong>
-              <span>{phaseGames.filter(g => bettingLocked(g, games)).length}/{phaseGames.length} fechados</span>
+              <span>{phaseGames.filter(g => publicGuessesVisible(g, games)).length}/{phaseGames.length} liberados</span>
             </div>
 
             <div className="palpiteRegList">
               {phaseGames.map(game => {
-                const closed = bettingLocked(game, games)
+                const closed = publicGuessesVisible(game, games)
                 const gameGuesses = lockedGuessesForGame(game)
                 const hasOfficial = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
 
@@ -1447,7 +1440,7 @@ function App() {
                     <div className="palpiteRegHeader">
                       <span>Jogo {game.game_no}</span>
                       <strong>{displayHomeTeam(game, games)} <b>x</b> {displayAwayTeam(game, games)}</strong>
-                      <em>{closed ? '🔒 Fechado' : '⏳ Ainda aberto'}</em>
+                      <em>{closed ? '👀 Palpites liberados' : '⏳ Oculto'}</em>
                     </div>
 
                     {!closed && (

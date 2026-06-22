@@ -516,13 +516,62 @@ function nextGames(games) {
   return games.filter(g => g.starts_at && new Date(g.starts_at) > now).slice(0, 4)
 }
 
+function phasePriority(phase = '') {
+  const p = normalizedPhase(phase)
+  const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
+  if (groupMatch) return groupMatch[1].toUpperCase().charCodeAt(0) - 65
+
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return 100
+  if (p.includes('oitavas')) return 110
+  if (p.includes('quartas')) return 120
+  if (p.includes('semi')) return 130
+  if (p.includes('3') || p.includes('terceiro')) return 140
+  if (p.includes('final')) return 150
+  return 999
+}
+
+function phaseShortLabel(phase = '') {
+  const p = normalizedPhase(phase)
+  const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
+  if (groupMatch) return `Grupo ${groupMatch[1].toUpperCase()}`
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return '16 Avos'
+  if (p.includes('oitavas')) return 'Oitavas'
+  if (p.includes('quartas')) return 'Quartas'
+  if (p.includes('semi')) return 'Semifinais'
+  if (p.includes('3') || p.includes('terceiro')) return '3º Lugar'
+  if (p.includes('final')) return 'Final'
+  return phase || 'Outros'
+}
+
+function phaseAnchor(phase = '') {
+  return `fase-${String(phase || 'outros')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}`
+}
+
 function groupGamesByPhase(games) {
-  return games.reduce((acc, game) => {
+  const grouped = games.reduce((acc, game) => {
     const phase = game.phase || 'Outros'
     if (!acc[phase]) acc[phase] = []
     acc[phase].push(game)
     return acc
   }, {})
+
+  return Object.fromEntries(
+    Object.entries(grouped)
+      .map(([phase, phaseGames]) => [
+        phase,
+        [...phaseGames].sort((a, b) => {
+          const ad = a.starts_at ? new Date(a.starts_at).getTime() : 0
+          const bd = b.starts_at ? new Date(b.starts_at).getTime() : 0
+          return ad - bd || Number(a.game_no || 0) - Number(b.game_no || 0)
+        })
+      ])
+      .sort(([a], [b]) => phasePriority(a) - phasePriority(b) || a.localeCompare(b))
+  )
 }
 
 
@@ -547,6 +596,7 @@ function App() {
   const [tab, setTab] = useState('palpites')
   const [msg, setMsg] = useState('')
   const [busca, setBusca] = useState('')
+  const [palpitesGaleraSearch, setPalpitesGaleraSearch] = useState('')
   const [filtro, setFiltro] = useState('Todos')
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
@@ -1066,6 +1116,25 @@ function App() {
   })
 
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
+  const palpitesGaleraGames = useMemo(() => {
+    const term = palpitesGaleraSearch.trim().toLowerCase()
+    if (!term) return games
+
+    return games.filter(game => {
+      const searchable = [
+        game.game_no,
+        game.phase,
+        phaseShortLabel(game.phase),
+        displayHomeTeam(game, games),
+        displayAwayTeam(game, games),
+        game.home_team,
+        game.away_team
+      ].join(' ').toLowerCase()
+
+      return searchable.includes(term)
+    })
+  }, [games, palpitesGaleraSearch])
+  const groupedPalpitesGaleraGames = useMemo(() => groupGamesByPhase(palpitesGaleraGames), [palpitesGaleraGames])
   const proximosBloqueios = useMemo(() => nextLockGames(), [games, guesses, tab])
 
   if (!session) {
@@ -1418,7 +1487,33 @@ function App() {
     </section>}
 
 
-    {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox">
+    {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox palpitesGaleraNova">
+      <style>{`
+        .palpitesGaleraNova .palpitesGaleraSearchBox{display:flex;align-items:center;gap:10px;margin:14px 0 10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+        .palpitesGaleraNova .palpitesGaleraSearchBox svg{opacity:.9;flex-shrink:0}
+        .palpitesGaleraNova .palpitesGaleraSearchBox input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:15px;font-weight:700}
+        .palpitesGaleraNova .palpitesGaleraSearchBox input::placeholder{color:rgba(255,255,255,.62)}
+        .palpitesGaleraNova .palpitesGaleraSearchCount{margin:0 0 12px;font-size:12px;font-weight:800;opacity:.75}
+        .palpitesGaleraNova .phaseQuickNav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px;position:sticky;top:8px;z-index:5;padding:10px;border-radius:16px;background:rgba(10,16,26,.88);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
+        .palpitesGaleraNova .phaseQuickNav a{font-size:12px;font-weight:800;text-decoration:none;color:#fff;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.10)}
+        .palpitesGaleraNova .phaseQuickNav a.groupLink{background:linear-gradient(135deg,rgba(18,148,78,.9),rgba(12,90,52,.9))}
+        .palpitesGaleraNova .phaseQuickNav a.knockLink{background:linear-gradient(135deg,rgba(214,158,46,.92),rgba(126,70,14,.92))}
+        .palpitesGaleraNova .phaseDivider{margin:22px 0 12px;padding:14px 16px;border-radius:18px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+        .palpitesGaleraNova .phaseDivider.group{background:linear-gradient(135deg,#116b3a,#0a3f25)}
+        .palpitesGaleraNova .phaseDivider.knockout{background:linear-gradient(135deg,#b7791f,#633b10)}
+        .palpitesGaleraNova .phaseDivider strong{font-size:20px;letter-spacing:.3px;text-transform:uppercase}
+        .palpitesGaleraNova .phaseDivider span{font-size:12px;font-weight:800;opacity:.95;background:rgba(255,255,255,.14);padding:6px 10px;border-radius:999px;white-space:nowrap}
+        .palpitesGaleraNova .palpiteRegPhase{scroll-margin-top:95px;margin-bottom:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden}
+        .palpitesGaleraNova .palpiteRegPhaseTitle{padding:12px 14px;background:rgba(255,255,255,.06)}
+        .palpitesGaleraNova .palpiteRegHeader{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center}
+        .palpitesGaleraNova .palpiteRegHeader strong{font-size:15px}
+        .palpitesGaleraNova .palpiteRegHeader small{display:block;opacity:.75;margin-top:3px;font-weight:600}
+        .palpitesGaleraNova .palpiteRegGame{border-left:5px solid rgba(255,255,255,.16);margin:10px;border-radius:14px;overflow:hidden}
+        .palpitesGaleraNova .palpiteRegGame.closed{border-left-color:#22c55e}
+        .palpitesGaleraNova .palpiteRegGame.open{border-left-color:#f59e0b}
+        @media (max-width:720px){.palpitesGaleraNova .phaseQuickNav{position:relative;top:auto}.palpitesGaleraNova .palpiteRegHeader{grid-template-columns:1fr}.palpitesGaleraNova .phaseDivider{align-items:flex-start;flex-direction:column}.palpitesGaleraNova .phaseDivider strong{font-size:18px}}
+      `}</style>
+
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />
@@ -1428,62 +1523,100 @@ function App() {
       </div>
 
       <p className="muted palpitesRegistradosHint">
-        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. A pontuação exibida aqui usa o mesmo cálculo do ranking.
+        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. Agora os jogos estão separados por grupos e fases para ficar mais fácil de localizar.
       </p>
 
+      <div className="palpitesGaleraSearchBox">
+        <Search size={18} />
+        <input
+          type="text"
+          placeholder="Pesquisar seleção, jogo, grupo ou fase..."
+          value={palpitesGaleraSearch}
+          onChange={(e) => setPalpitesGaleraSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="palpitesGaleraSearchCount">
+        Mostrando {palpitesGaleraGames.length} de {games.length} jogos
+      </div>
+
+      <div className="phaseQuickNav">
+        {Object.entries(groupedPalpitesGaleraGames).map(([phaseName]) => {
+          const isGroup = phaseName.startsWith('Grupo')
+          return <a className={isGroup ? 'groupLink' : 'knockLink'} href={`#${phaseAnchor(phaseName)}`} key={`nav-${phaseName}`}>{phaseShortLabel(phaseName)}</a>
+        })}
+      </div>
+
       <div className="palpitesRegistradosGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
-          <div className={`palpiteRegPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
-            <div className="palpiteRegPhaseTitle">
-              <strong>{phaseName}</strong>
-              <span>{phaseGames.filter(g => bettingLocked(g, games)).length}/{phaseGames.length} fechados</span>
-            </div>
+        {palpitesGaleraGames.length === 0 && (
+          <div className="palpiteHidden">Nenhum jogo encontrado para essa pesquisa.</div>
+        )}
 
-            <div className="palpiteRegList">
-              {phaseGames.map(game => {
-                const hasOfficial = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
-                const closed = bettingLocked(game, games) || hasOfficial
-                const gameGuesses = closed ? (allGuessesPublic || [])
-                  .filter(g => String(g.game_id) === String(game.id))
-                  .map(g => {
-                    const p = profileForGuess(g.user_id)
-                    return { ...g, nome: displayPlayerName(p), pontos: guessPointsForGame(game, g) }
-                  })
-                  .sort((a,b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome)) : []
+        {Object.entries(groupedPalpitesGaleraGames).map(([phaseName, phaseGames]) => {
+          const isGroup = phaseName.startsWith('Grupo')
+          const closedCount = phaseGames.filter(g => bettingLocked(g, games) || (g.home_score !== null && g.home_score !== undefined && g.home_score !== '' && g.away_score !== null && g.away_score !== undefined && g.away_score !== '')).length
 
-                return (
-                  <div className={`palpiteRegGame ${closed ? 'closed' : 'open'}`} key={game.id}>
-                    <div className="palpiteRegHeader">
-                      <span>Jogo {game.game_no}</span>
-                      <strong>{displayHomeTeam(game, games)} <b>x</b> {displayAwayTeam(game, games)}</strong>
-                      <em>{closed ? '🔒 Fechado' : '⏳ Ainda aberto'}</em>
+          return (
+            <div className={`palpiteRegPhase ${isGroup ? 'isGroupResult' : 'isKnockoutResult'}`} id={phaseAnchor(phaseName)} key={phaseName}>
+              <div className={`phaseDivider ${isGroup ? 'group' : 'knockout'}`}>
+                <strong>{isGroup ? `🟢 ${phaseShortLabel(phaseName)}` : `🏆 ${phaseShortLabel(phaseName)}`}</strong>
+                <span>{closedCount}/{phaseGames.length} jogos fechados</span>
+              </div>
+
+              <div className="palpiteRegPhaseTitle">
+                <strong>{isGroup ? 'Fase de Grupos' : 'Mata-mata'}</strong>
+                <span>{phaseGames.length} jogos nesta seção</span>
+              </div>
+
+              <div className="palpiteRegList">
+                {phaseGames.map(game => {
+                  const hasOfficial = game.home_score !== null && game.home_score !== undefined && game.home_score !== '' && game.away_score !== null && game.away_score !== undefined && game.away_score !== ''
+                  const closed = bettingLocked(game, games) || hasOfficial
+                  const gameGuesses = closed ? (allGuessesPublic || [])
+                    .filter(g => String(g.game_id) === String(game.id))
+                    .map(g => {
+                      const p = profileForGuess(g.user_id)
+                      return { ...g, nome: displayPlayerName(p), pontos: guessPointsForGame(game, g) }
+                    })
+                    .sort((a,b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome)) : []
+
+                  return (
+                    <div className={`palpiteRegGame ${closed ? 'closed' : 'open'}`} key={game.id}>
+                      <div className="palpiteRegHeader">
+                        <span>Jogo {game.game_no}</span>
+                        <strong>
+                          {displayHomeTeam(game, games)} <b>x</b> {displayAwayTeam(game, games)}
+                          <small>{formatDate(game.starts_at)}</small>
+                        </strong>
+                        <em>{closed ? '🔒 Fechado' : '⏳ Ainda aberto'}</em>
+                      </div>
+
+                      {!closed && (
+                        <div className="palpiteHidden">
+                          Os palpites deste jogo ficam ocultos até o fechamento.
+                        </div>
+                      )}
+
+                      {closed && (
+                        <div className="palpiteRegGuesses">
+                          {gameGuesses.length === 0 && <div className="palpiteHidden">Nenhum palpite salvo para este jogo.</div>}
+
+                          {gameGuesses.map(g => (
+                            <div className="palpiteRegRow" key={`${game.id}-${g.user_id}`}>
+                              <span>{g.nome}</span>
+                              <strong>{g.guess_home ?? '-'} x {g.guess_away ?? '-'}</strong>
+                              <em>{hasOfficial ? `${g.pontos} pts no ranking` : 'aguardando resultado'}</em>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    {!closed && (
-                      <div className="palpiteHidden">
-                        Os palpites deste jogo ficam ocultos até o fechamento.
-                      </div>
-                    )}
-
-                    {closed && (
-                      <div className="palpiteRegGuesses">
-                        {gameGuesses.length === 0 && <div className="palpiteHidden">Nenhum palpite salvo para este jogo.</div>}
-
-                        {gameGuesses.map(g => (
-                          <div className="palpiteRegRow" key={`${game.id}-${g.user_id}`}>
-                            <span>{g.nome}</span>
-                            <strong>{g.guess_home ?? '-'} x {g.guess_away ?? '-'}</strong>
-                            <em>{hasOfficial ? `${g.pontos} pts no ranking` : 'aguardando resultado'}</em>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>}
 

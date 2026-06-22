@@ -596,6 +596,7 @@ function App() {
   const [tab, setTab] = useState('palpites')
   const [msg, setMsg] = useState('')
   const [busca, setBusca] = useState('')
+  const [palpitesGaleraSearch, setPalpitesGaleraSearch] = useState('')
   const [filtro, setFiltro] = useState('Todos')
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
@@ -1115,6 +1116,25 @@ function App() {
   })
 
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
+  const palpitesGaleraGames = useMemo(() => {
+    const term = palpitesGaleraSearch.trim().toLowerCase()
+    if (!term) return games
+
+    return games.filter(game => {
+      const searchable = [
+        game.game_no,
+        game.phase,
+        phaseShortLabel(game.phase),
+        displayHomeTeam(game, games),
+        displayAwayTeam(game, games),
+        game.home_team,
+        game.away_team
+      ].join(' ').toLowerCase()
+
+      return searchable.includes(term)
+    })
+  }, [games, palpitesGaleraSearch])
+  const groupedPalpitesGaleraGames = useMemo(() => groupGamesByPhase(palpitesGaleraGames), [palpitesGaleraGames])
   const proximosBloqueios = useMemo(() => nextLockGames(), [games, guesses, tab])
 
   if (!session) {
@@ -1469,6 +1489,11 @@ function App() {
 
     {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox palpitesGaleraNova">
       <style>{`
+        .palpitesGaleraNova .palpitesGaleraSearchBox{display:flex;align-items:center;gap:10px;margin:14px 0 10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+        .palpitesGaleraNova .palpitesGaleraSearchBox svg{opacity:.9;flex-shrink:0}
+        .palpitesGaleraNova .palpitesGaleraSearchBox input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:15px;font-weight:700}
+        .palpitesGaleraNova .palpitesGaleraSearchBox input::placeholder{color:rgba(255,255,255,.62)}
+        .palpitesGaleraNova .palpitesGaleraSearchCount{margin:0 0 12px;font-size:12px;font-weight:800;opacity:.75}
         .palpitesGaleraNova .phaseQuickNav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px;position:sticky;top:8px;z-index:5;padding:10px;border-radius:16px;background:rgba(10,16,26,.88);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
         .palpitesGaleraNova .phaseQuickNav a{font-size:12px;font-weight:800;text-decoration:none;color:#fff;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.10)}
         .palpitesGaleraNova .phaseQuickNav a.groupLink{background:linear-gradient(135deg,rgba(18,148,78,.9),rgba(12,90,52,.9))}
@@ -1501,15 +1526,33 @@ function App() {
         Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. Agora os jogos estão separados por grupos e fases para ficar mais fácil de localizar.
       </p>
 
+      <div className="palpitesGaleraSearchBox">
+        <Search size={18} />
+        <input
+          type="text"
+          placeholder="Pesquisar seleção, jogo, grupo ou fase..."
+          value={palpitesGaleraSearch}
+          onChange={(e) => setPalpitesGaleraSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="palpitesGaleraSearchCount">
+        Mostrando {palpitesGaleraGames.length} de {games.length} jogos
+      </div>
+
       <div className="phaseQuickNav">
-        {Object.entries(groupedTableGames).map(([phaseName]) => {
+        {Object.entries(groupedPalpitesGaleraGames).map(([phaseName]) => {
           const isGroup = phaseName.startsWith('Grupo')
           return <a className={isGroup ? 'groupLink' : 'knockLink'} href={`#${phaseAnchor(phaseName)}`} key={`nav-${phaseName}`}>{phaseShortLabel(phaseName)}</a>
         })}
       </div>
 
       <div className="palpitesRegistradosGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => {
+        {palpitesGaleraGames.length === 0 && (
+          <div className="palpiteHidden">Nenhum jogo encontrado para essa pesquisa.</div>
+        )}
+
+        {Object.entries(groupedPalpitesGaleraGames).map(([phaseName, phaseGames]) => {
           const isGroup = phaseName.startsWith('Grupo')
           const closedCount = phaseGames.filter(g => bettingLocked(g, games) || (g.home_score !== null && g.home_score !== undefined && g.home_score !== '' && g.away_score !== null && g.away_score !== undefined && g.away_score !== '')).length
 

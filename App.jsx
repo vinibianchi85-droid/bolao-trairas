@@ -1402,7 +1402,7 @@ function App() {
       <button onClick={() => setTab('grupos')} className={tab==='grupos'?'active':''}><CalendarDays/> Grupos</button>
       <button onClick={() => setTab('mata')} className={tab==='mata'?'active':''}><Crown/> Mata-mata</button>
       <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
-      {profile?.is_admin && <button onClick={() => setTab('correcaoAdmin')} className={tab==='correcaoAdmin'?'active':''}><Shield/> Correção Emergência</button>}
+      
       {profile?.is_admin && <button onClick={() => setTab('admin')} className={tab==='admin'?'active':''}><Shield/> Admin</button>}
       {profile?.is_admin && <button onClick={() => setTab('usuarios')} className={tab==='usuarios'?'active':''}><Users/> Usuários</button>}
     </nav>

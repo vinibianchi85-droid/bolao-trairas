@@ -513,7 +513,7 @@ function makeGroupTables(games) {
 
 function nextGames(games) {
   const now = new Date()
-  return games.filter(g => g.starts_at && new Date(g.starts_at) > now).slice(0, 4)
+  return games.filter(g => g.starts_at && new Date(g.starts_at) > now).slice(0, 6)
 }
 
 function phasePriority(phase = '') {
@@ -1092,7 +1092,7 @@ function App() {
         const lockB = new Date(b.starts_at).getTime() - 5 * 60 * 1000
         return lockA - lockB
       })
-      .slice(0, 4)
+      .slice(0, 6)
   }
 
   const total = useMemo(() => games.reduce((acc, game) => {

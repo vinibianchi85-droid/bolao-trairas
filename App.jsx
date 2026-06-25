@@ -138,9 +138,11 @@ function TeamCodeFlag({ team }) {
 
 function TeamNameFlag({ team, side = '' }) {
   const label = String(team || '').trim() || 'A definir'
+  const isPlaceholder = isPlaceholderTeamName(label)
   return (
-    <span className={`teamNameFlag ${side} ${label === 'A definir' || label.toLowerCase().includes('vencedor') ? 'placeholderTeam' : ''}`}>
-      <FlagImg team={label} />
+    <span className={`teamNameFlag ${side} ${isPlaceholder ? 'placeholderTeam' : ''}`}>
+      {!isPlaceholder && <FlagImg team={label} />}
+      {isPlaceholder && <span className="placeholderFlag">🏳️</span>}
       <span className="teamText">{label}</span>
     </span>
   )
@@ -341,7 +343,8 @@ function isPlaceholderTeamName(team) {
     t.includes('grupo') ||
     t.includes('melhor 3') ||
     t.includes('melhores 3') ||
-    t.includes('classificado')
+    t.includes('classificado') ||
+    /^\d+[ºo]?\s/.test(t)
   )
 }
 
@@ -407,6 +410,21 @@ function gameLoserTeam(game) {
   if (h === a) return ''
   return h > a ? game.away_team : game.home_team
 }
+
+function gameWinnerTeamResolved(game, allGames = []) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  const teams = autoKnockoutTeams(game, allGames)
+  return h > a ? teams.home : teams.away
+}
+function gameLoserTeamResolved(game, allGames = []) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  const teams = autoKnockoutTeams(game, allGames)
+  return h > a ? teams.away : teams.home
+}
 function cleanTeamName(value) {
   return String(value || '').trim()
 }
@@ -442,6 +460,85 @@ function fixedRound32Teams(game) {
   return { home: slots[0], away: slots[1] }
 }
 
+function groupLetterFromPhase(phase = '') {
+  const match = String(phase || '').match(/grupo\s*([a-z])/i)
+  return match ? match[1].toUpperCase() : ''
+}
+
+function groupPhaseName(letter) {
+  return `Grupo ${String(letter || '').toUpperCase()}`
+}
+
+function groupIsComplete(games, letter) {
+  const group = groupPhaseName(letter)
+  const groupGames = games.filter(g => String(g.phase || '').toLowerCase() === group.toLowerCase())
+  return groupGames.length > 0 && groupGames.every(isGameFinished)
+}
+
+function groupRankingRows(games, letter) {
+  const tables = makeGroupTables(games)
+  return tables[groupPhaseName(letter)] || []
+}
+
+function resolveGroupPositionSlot(slot, allGames = []) {
+  const match = String(slot || '').match(/^(1|2|3)[ºo]?\s*Grupo\s*([A-Z])/i)
+  if (!match) return ''
+  const position = Number(match[1]) - 1
+  const letter = match[2].toUpperCase()
+  if (!groupIsComplete(allGames, letter)) return slot
+  const rows = groupRankingRows(allGames, letter)
+  return rows[position]?.team || slot
+}
+
+function parseBestThirdAllowedGroups(slot) {
+  const match = String(slot || '').match(/Melhor\s*3[ºo]\s*\(([^)]+)\)/i)
+  if (!match) return []
+  return match[1]
+    .split(/[\/,-]/)
+    .map(s => s.trim().toUpperCase())
+    .filter(Boolean)
+}
+
+function bestThirdCandidates(allGames = [], allowedLetters = [], usedTeams = new Set()) {
+  return allowedLetters
+    .filter(letter => groupIsComplete(allGames, letter))
+    .map(letter => {
+      const row = groupRankingRows(allGames, letter)[2]
+      return row ? { ...row, groupLetter: letter } : null
+    })
+    .filter(Boolean)
+    .filter(row => !usedTeams.has(row.team))
+    .sort((a,b) => b.pts-a.pts || b.sg-a.sg || b.gp-a.gp || a.team.localeCompare(b.team))
+}
+
+function resolveRound32SlotForGame(targetGameNo, targetSide, allGames = []) {
+  const usedThirds = new Set()
+  const entries = Object.entries(ROUND_32_FIXED_SLOTS).sort((a,b) => Number(a[0])-Number(b[0]))
+
+  for (const [gameNoText, slots] of entries) {
+    const gameNo = Number(gameNoText)
+
+    for (const side of ['home', 'away']) {
+      const slot = side === 'home' ? slots[0] : slots[1]
+      let resolved = slot
+
+      if (/Melhor\s*3/i.test(slot)) {
+        const allowed = parseBestThirdAllowedGroups(slot)
+        const candidates = bestThirdCandidates(allGames, allowed, usedThirds)
+        resolved = candidates[0]?.team || slot
+        if (resolved !== slot) usedThirds.add(resolved)
+      } else {
+        resolved = resolveGroupPositionSlot(slot, allGames)
+      }
+
+      if (gameNo === Number(targetGameNo) && side === targetSide) return resolved
+    }
+  }
+
+  const fallback = ROUND_32_FIXED_SLOTS[Number(targetGameNo)]
+  return fallback ? (targetSide === 'home' ? fallback[0] : fallback[1]) : ''
+}
+
 function autoKnockoutTeams(game, allGames = []) {
   if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
 
@@ -451,22 +548,27 @@ function autoKnockoutTeams(game, allGames = []) {
 
   if (isRound32Game(game)) {
     const fixed = fixedRound32Teams(game)
-    if (fixed) return fixed
+    if (fixed) {
+      return {
+        home: resolveRound32SlotForGame(game.game_no, 'home', allGames) || fixed.home,
+        away: resolveRound32SlotForGame(game.game_no, 'away', allGames) || fixed.away
+      }
+    }
   }
 
   if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
     return {
-      home: gameWinnerTeam(semis[0]) || fallbackHome || 'Vencedor semifinal 1',
-      away: gameWinnerTeam(semis[1]) || fallbackAway || 'Vencedor semifinal 2'
+      home: gameWinnerTeamResolved(semis[0], allGames) || fallbackHome || 'Vencedor semifinal 1',
+      away: gameWinnerTeamResolved(semis[1], allGames) || fallbackAway || 'Vencedor semifinal 2'
     }
   }
 
   if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
     return {
-      home: gameLoserTeam(semis[0]) || fallbackHome || 'Perdedor semifinal 1',
-      away: gameLoserTeam(semis[1]) || fallbackAway || 'Perdedor semifinal 2'
+      home: gameLoserTeamResolved(semis[0], allGames) || fallbackHome || 'Perdedor semifinal 1',
+      away: gameLoserTeamResolved(semis[1], allGames) || fallbackAway || 'Perdedor semifinal 2'
     }
   }
 
@@ -476,8 +578,8 @@ function autoKnockoutTeams(game, allGames = []) {
   const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
 
   return {
-    home: gameWinnerTeam(prev[idxGame * 2]) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+    home: gameWinnerTeamResolved(prev[idxGame * 2], allGames) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
+    away: gameWinnerTeamResolved(prev[idxGame * 2 + 1], allGames) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
   }
 }
 function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
@@ -521,7 +623,7 @@ function phasePriority(phase = '') {
   const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
   if (groupMatch) return groupMatch[1].toUpperCase().charCodeAt(0) - 65
 
-  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return 100
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos') || p.includes('1/16')) return 100
   if (p.includes('oitavas')) return 110
   if (p.includes('quartas')) return 120
   if (p.includes('semi')) return 130
@@ -534,7 +636,7 @@ function phaseShortLabel(phase = '') {
   const p = normalizedPhase(phase)
   const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
   if (groupMatch) return `Grupo ${groupMatch[1].toUpperCase()}`
-  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return '16 Avos'
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos') || p.includes('1/16')) return '1/16 Avos'
   if (p.includes('oitavas')) return 'Oitavas'
   if (p.includes('quartas')) return 'Quartas'
   if (p.includes('semi')) return 'Semifinais'
@@ -672,7 +774,7 @@ function App() {
       p?.display_name ||
       p?.username ||
       (p?.email ? String(p.email).split('@')[0] : '') ||
-      `Jogador ${String(p?.id || '').slice(0, 4)}`
+      `Jogador ${String(p?.id || '').slice(0, 6)}`
     )
   }
 
@@ -1259,9 +1361,9 @@ function App() {
       <div className="nextGrid">
         {upcoming.map(g => <div className="nextGame" key={g.id}>
           <small>Jogo {g.game_no} · {formatDate(g.starts_at)}</small>
-          <b>{flag(g.home_team)} {g.home_team}</b>
+          <b><TeamNameFlag team={displayHomeTeam(g, games)} /></b>
           <span>x</span>
-          <b>{flag(g.away_team)} {g.away_team}</b>
+          <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
         </div>)}
       </div>
     </section>
@@ -1636,19 +1738,61 @@ function App() {
       </div>
     </section>}
 
-    {tab === 'mata' && <section className="card">
+    {tab === 'mata' && <section className="card mataMataPage">
+      <style>{`
+        .mataMataPage .mataIntro{margin-bottom:16px}
+        .mataMataPage .mataPhaseBox{margin:22px 0 26px;border:1px solid rgba(255,255,255,.10);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.035)}
+        .mataMataPage .mataPhaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(185,28,28,.95),rgba(12,18,30,.95));border-bottom:1px solid rgba(255,255,255,.12)}
+        .mataMataPage .mataPhaseHeader strong{font-size:18px;text-transform:uppercase;letter-spacing:.4px}
+        .mataMataPage .mataPhaseHeader span{font-size:12px;font-weight:900;background:#facc15;color:#111827;padding:6px 10px;border-radius:999px;white-space:nowrap}
+        .mataMataPage .bracket{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px}
+        .mataMataPage .bracketGame{border-radius:16px;background:rgba(7,18,27,.92);border:1px solid rgba(255,255,255,.10);padding:12px;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+        .mataMataPage .bracketGame small{display:block;font-weight:900;opacity:.86;margin-bottom:3px}
+        .mataMataPage .bracketGame em{display:block;font-size:12px;opacity:.72;margin-bottom:10px}
+        .mataMataPage .bracketTeams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+        .mataMataPage .bracketTeams b{min-width:0}
+        .mataMataPage .bracketTeams .versus{font-weight:900;opacity:.8}
+        .mataMataPage .teamNameFlag{display:inline-flex;align-items:center;gap:6px;white-space:normal;max-width:100%}
+        .mataMataPage .teamNameFlag.right{justify-content:flex-end;text-align:right}
+        .mataMataPage .teamNameFlag .teamText{white-space:normal;overflow:visible;text-overflow:clip;font-size:13px;line-height:1.15}
+        .mataMataPage .placeholderFlag{font-size:16px;flex:0 0 auto}
+        @media (max-width:720px){
+          .mataMataPage .mataPhaseBox{margin:18px 0 24px;border-radius:18px}
+          .mataMataPage .mataPhaseHeader{align-items:flex-start;flex-direction:column}
+          .mataMataPage .bracket{grid-template-columns:1fr;padding:10px;gap:10px}
+          .mataMataPage .bracketTeams{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)}
+          .mataMataPage .teamNameFlag .teamText{font-size:12px}
+        }
+      `}</style>
       <h2>Mata-mata visual</h2>
-      <p className="muted">Chaveamento conforme tabela oficial. Os nomes dos classificados podem ser ajustados pelo admin quando a Copa avançar.</p>
-      <div className="bracket">
-        {games.filter(g => !(g.phase || '').startsWith('Grupo')).map(g => <div className="bracketGame" key={g.id}>
-          <small>Jogo {g.game_no} · {g.phase}</small>
-          <em>{formatDate(g.starts_at)}</em>
-          <b>{flag(g.home_team)} {g.home_team}</b>
-          <span>x</span>
-          <b>{flag(g.away_team)} {g.away_team}</b>
-        </div>)}
+      <p className="muted mataIntro">Chaveamento automático separado por fases: 1/16 avos, oitavas, quartas, semifinais, 3º lugar e final.</p>
+      <div className="mataPhases">
+        {Object.entries(groupedTableGames)
+          .filter(([phaseName]) => !phaseName.startsWith('Grupo'))
+          .map(([phaseName, phaseGames]) => (
+            <div className="mataPhaseBox" key={phaseName}>
+              <div className="mataPhaseHeader">
+                <strong>🏆 {phaseShortLabel(phaseName)}</strong>
+                <span>{phaseGames.length} jogos</span>
+              </div>
+              <div className="bracket">
+                {phaseGames.map(g => (
+                  <div className="bracketGame" key={g.id}>
+                    <small>Jogo {g.game_no}</small>
+                    <em>{formatDate(g.starts_at)}</em>
+                    <div className="bracketTeams">
+                      <b><TeamNameFlag team={displayHomeTeam(g, games)} side="right" /></b>
+                      <span className="versus">x</span>
+                      <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
       </div>
     </section>}
+
 
     {tab === 'regras' && <section className="regulamentoImagem">
       <img
@@ -1697,6 +1841,38 @@ function App() {
     </section>}
 
     {tab === 'admin' && <section className="palpitesPoster adminPoster">
+      <style>{`
+        .adminPoster .adminPhaseBox{margin:20px 0 26px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035)}
+        .adminPoster .adminPhaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:linear-gradient(135deg,rgba(127,29,29,.96),rgba(12,18,30,.96));border-bottom:1px solid rgba(255,255,255,.12)}
+        .adminPoster .adminPhaseHeader strong{font-size:17px;text-transform:uppercase;letter-spacing:.35px}
+        .adminPoster .adminPhaseHeader span{font-size:12px;font-weight:900;background:#facc15;color:#111827;padding:6px 10px;border-radius:999px;white-space:nowrap}
+        .adminPoster .adminPosterGrid{display:block !important}
+        .adminPoster .posterMatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;padding:12px}
+        .adminPoster .adminPosterMatch{display:block !important;padding:12px !important;border-radius:16px;background:rgba(7,18,27,.94);border:1px solid rgba(255,255,255,.10);overflow:hidden !important}
+        .adminPoster .adminMatchTop{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+        .adminPoster .adminDateEdit{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .adminPoster .adminDateEdit input{max-width:190px}
+        .adminPoster .adminTeamsLine{display:grid;grid-template-columns:minmax(0,1fr) 42px 18px 42px minmax(0,1fr);gap:7px;align-items:center}
+        .adminPoster .adminTeamsLine .posterSide{min-width:0;display:flex;align-items:center}
+        .adminPoster .teamNameFlag{width:100%;min-width:0;display:flex;align-items:center;gap:6px;white-space:normal !important;overflow:visible !important}
+        .adminPoster .teamNameFlag.right{justify-content:flex-end;text-align:right}
+        .adminPoster .teamNameFlag .teamText{display:inline !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;font-size:12px;line-height:1.15}
+        .adminPoster .placeholderTeam .teamText{opacity:.95;color:#fff;font-weight:800}
+        .adminPoster .placeholderFlag{font-size:16px;flex:0 0 auto}
+        .adminPoster .adminScoreInput{width:42px !important;max-width:42px;text-align:center}
+        .adminPoster .posterPts{display:block;margin-top:10px;width:100%;text-align:center}
+        @media (max-width:720px){
+          .adminPoster .adminPhaseBox{margin:18px 0 24px;border-radius:18px}
+          .adminPoster .adminPhaseHeader{align-items:flex-start;flex-direction:column}
+          .adminPoster .posterMatches{grid-template-columns:1fr;padding:10px;gap:10px}
+          .adminPoster .adminPosterMatch{padding:10px 8px !important}
+          .adminPoster .adminMatchTop{align-items:flex-start;flex-direction:column}
+          .adminPoster .adminDateEdit input{max-width:190px}
+          .adminPoster .adminTeamsLine{grid-template-columns:minmax(0,1fr) 38px 14px 38px minmax(0,1fr);gap:5px}
+          .adminPoster .teamNameFlag .teamText{font-size:11px}
+          .adminPoster .adminScoreInput{width:38px !important;max-width:38px}
+        }
+      `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Painel Admin</span>
@@ -1720,48 +1896,55 @@ function App() {
       </div>
 
       <div className="posterGrid palpitesPosterGrid adminPosterGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
-          <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
-            <div className="posterGroupTitle">
-              <strong>{phaseName}</strong>
-              <span>{phaseGames.length} jogos</span>
-            </div>
+        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => {
+          const isGroup = phaseName.startsWith('Grupo')
+          return (
+            <div className={`adminPhaseBox ${isGroup ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
+              <div className="adminPhaseHeader">
+                <strong>{isGroup ? `🟢 ${phaseShortLabel(phaseName)}` : `🏆 ${phaseShortLabel(phaseName)}`}</strong>
+                <span>{phaseGames.length} jogos</span>
+              </div>
 
-            <div className="posterTeams">
-              {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
-              ))}
-            </div>
-
-            <div className="posterMatches">
-              {phaseGames.map(game => {
-                return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
-                  <div className="adminMatchTop">
-                    <span className="posterNo">{game.game_no}</span>
-                    <span className="posterDate adminDateEdit">
-                      <small>{formatDate(game.starts_at)}</small>
-                      <input
-                        type="datetime-local"
-                        value={toDateTimeLocalValue(game.starts_at)}
-                        onChange={e => updateGameTime(game, e.target.value)}
-                      />
-                    </span>
-                  </div>
-
-                  <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
-
-                  <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
-                  <b>x</b>
-                  <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
-
-                  <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
-
-                  <span className="posterPts">Oficial</span>
+              {isGroup && (
+                <div className="posterTeams">
+                  {Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
+                    <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
+                  ))}
                 </div>
-              })}
+              )}
+
+              <div className="posterMatches">
+                {phaseGames.map(game => {
+                  return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
+                    <div className="adminMatchTop">
+                      <span className="posterNo">{game.game_no}</span>
+                      <span className="posterDate adminDateEdit">
+                        <small>{formatDate(game.starts_at)}</small>
+                        <input
+                          type="datetime-local"
+                          value={toDateTimeLocalValue(game.starts_at)}
+                          onChange={e => updateGameTime(game, e.target.value)}
+                        />
+                      </span>
+                    </div>
+
+                    <div className="adminTeamsLine">
+                      <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
+
+                      <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+                      <b>x</b>
+                      <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+
+                      <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
+                    </div>
+
+                    <span className="posterPts">Oficial</span>
+                  </div>
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>}
   </main>

@@ -475,6 +475,11 @@ function groupIsComplete(games, letter) {
   return groupGames.length > 0 && groupGames.every(isGameFinished)
 }
 
+function allGroupStageComplete(games = []) {
+  const groupGames = games.filter(g => String(g.phase || '').toLowerCase().startsWith('grupo'))
+  return groupGames.length > 0 && groupGames.every(isGameFinished)
+}
+
 function groupRankingRows(games, letter) {
   const tables = makeGroupTables(games)
   return tables[groupPhaseName(letter)] || []
@@ -500,6 +505,10 @@ function parseBestThirdAllowedGroups(slot) {
 }
 
 function bestThirdCandidates(allGames = [], allowedLetters = [], usedTeams = new Set()) {
+  // Importante: os melhores terceiros só podem ser definidos quando TODA a fase de grupos terminar.
+  // Isso evita que o primeiro 3º colocado disponível preencha provisoriamente o mata-mata e depois mude.
+  if (!allGroupStageComplete(allGames)) return []
+
   return allowedLetters
     .filter(letter => groupIsComplete(allGames, letter))
     .map(letter => {
@@ -623,7 +632,7 @@ function phasePriority(phase = '') {
   const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
   if (groupMatch) return groupMatch[1].toUpperCase().charCodeAt(0) - 65
 
-  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos') || p.includes('1/16')) return 100
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return 100
   if (p.includes('oitavas')) return 110
   if (p.includes('quartas')) return 120
   if (p.includes('semi')) return 130
@@ -636,7 +645,7 @@ function phaseShortLabel(phase = '') {
   const p = normalizedPhase(phase)
   const groupMatch = String(phase || '').match(/grupo\s*([a-z])/i)
   if (groupMatch) return `Grupo ${groupMatch[1].toUpperCase()}`
-  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos') || p.includes('1/16')) return '1/16 Avos'
+  if (p.includes('dezesseis') || p.includes('16 avos') || p.includes('16avos')) return '16 Avos'
   if (p.includes('oitavas')) return 'Oitavas'
   if (p.includes('quartas')) return 'Quartas'
   if (p.includes('semi')) return 'Semifinais'
@@ -774,7 +783,7 @@ function App() {
       p?.display_name ||
       p?.username ||
       (p?.email ? String(p.email).split('@')[0] : '') ||
-      `Jogador ${String(p?.id || '').slice(0, 6)}`
+      `Jogador ${String(p?.id || '').slice(0, 4)}`
     )
   }
 
@@ -1194,7 +1203,7 @@ function App() {
         const lockB = new Date(b.starts_at).getTime() - 5 * 60 * 1000
         return lockA - lockB
       })
-      .slice(0, 6)
+      .slice(0, 4)
   }
 
   const total = useMemo(() => games.reduce((acc, game) => {
@@ -1738,61 +1747,24 @@ function App() {
       </div>
     </section>}
 
-    {tab === 'mata' && <section className="card mataMataPage">
+    {tab === 'mata' && <section className="card">
       <style>{`
-        .mataMataPage .mataIntro{margin-bottom:16px}
-        .mataMataPage .mataPhaseBox{margin:22px 0 26px;border:1px solid rgba(255,255,255,.10);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.035)}
-        .mataMataPage .mataPhaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(185,28,28,.95),rgba(12,18,30,.95));border-bottom:1px solid rgba(255,255,255,.12)}
-        .mataMataPage .mataPhaseHeader strong{font-size:18px;text-transform:uppercase;letter-spacing:.4px}
-        .mataMataPage .mataPhaseHeader span{font-size:12px;font-weight:900;background:#facc15;color:#111827;padding:6px 10px;border-radius:999px;white-space:nowrap}
-        .mataMataPage .bracket{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px}
-        .mataMataPage .bracketGame{border-radius:16px;background:rgba(7,18,27,.92);border:1px solid rgba(255,255,255,.10);padding:12px;box-shadow:0 8px 18px rgba(0,0,0,.18)}
-        .mataMataPage .bracketGame small{display:block;font-weight:900;opacity:.86;margin-bottom:3px}
-        .mataMataPage .bracketGame em{display:block;font-size:12px;opacity:.72;margin-bottom:10px}
-        .mataMataPage .bracketTeams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-        .mataMataPage .bracketTeams b{min-width:0}
-        .mataMataPage .bracketTeams .versus{font-weight:900;opacity:.8}
-        .mataMataPage .teamNameFlag{display:inline-flex;align-items:center;gap:6px;white-space:normal;max-width:100%}
-        .mataMataPage .teamNameFlag.right{justify-content:flex-end;text-align:right}
-        .mataMataPage .teamNameFlag .teamText{white-space:normal;overflow:visible;text-overflow:clip;font-size:13px;line-height:1.15}
-        .mataMataPage .placeholderFlag{font-size:16px;flex:0 0 auto}
-        @media (max-width:720px){
-          .mataMataPage .mataPhaseBox{margin:18px 0 24px;border-radius:18px}
-          .mataMataPage .mataPhaseHeader{align-items:flex-start;flex-direction:column}
-          .mataMataPage .bracket{grid-template-columns:1fr;padding:10px;gap:10px}
-          .mataMataPage .bracketTeams{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)}
-          .mataMataPage .teamNameFlag .teamText{font-size:12px}
-        }
+        .bracket .teamNameFlag{display:inline-flex;align-items:center;gap:6px;white-space:normal}
+        .bracket .teamNameFlag .teamText{white-space:normal;overflow:visible;text-overflow:clip}
+        .bracket .placeholderFlag{font-size:16px}
       `}</style>
       <h2>Mata-mata visual</h2>
-      <p className="muted mataIntro">Chaveamento automático separado por fases: 1/16 avos, oitavas, quartas, semifinais, 3º lugar e final.</p>
-      <div className="mataPhases">
-        {Object.entries(groupedTableGames)
-          .filter(([phaseName]) => !phaseName.startsWith('Grupo'))
-          .map(([phaseName, phaseGames]) => (
-            <div className="mataPhaseBox" key={phaseName}>
-              <div className="mataPhaseHeader">
-                <strong>🏆 {phaseShortLabel(phaseName)}</strong>
-                <span>{phaseGames.length} jogos</span>
-              </div>
-              <div className="bracket">
-                {phaseGames.map(g => (
-                  <div className="bracketGame" key={g.id}>
-                    <small>Jogo {g.game_no}</small>
-                    <em>{formatDate(g.starts_at)}</em>
-                    <div className="bracketTeams">
-                      <b><TeamNameFlag team={displayHomeTeam(g, games)} side="right" /></b>
-                      <span className="versus">x</span>
-                      <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+      <p className="muted">Chaveamento automático: o app preenche 1/16 pelos grupos e as fases seguintes pelos vencedores, até a final.</p>
+      <div className="bracket">
+        {games.filter(g => !(g.phase || '').startsWith('Grupo')).map(g => <div className="bracketGame" key={g.id}>
+          <small>Jogo {g.game_no} · {g.phase}</small>
+          <em>{formatDate(g.starts_at)}</em>
+          <b><TeamNameFlag team={displayHomeTeam(g, games)} /></b>
+          <span>x</span>
+          <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
+        </div>)}
       </div>
     </section>}
-
 
     {tab === 'regras' && <section className="regulamentoImagem">
       <img
@@ -1842,33 +1814,26 @@ function App() {
 
     {tab === 'admin' && <section className="palpitesPoster adminPoster">
       <style>{`
-        .adminPoster .adminPhaseBox{margin:20px 0 26px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035)}
-        .adminPoster .adminPhaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:linear-gradient(135deg,rgba(127,29,29,.96),rgba(12,18,30,.96));border-bottom:1px solid rgba(255,255,255,.12)}
-        .adminPoster .adminPhaseHeader strong{font-size:17px;text-transform:uppercase;letter-spacing:.35px}
-        .adminPoster .adminPhaseHeader span{font-size:12px;font-weight:900;background:#facc15;color:#111827;padding:6px 10px;border-radius:999px;white-space:nowrap}
-        .adminPoster .adminPosterGrid{display:block !important}
-        .adminPoster .posterMatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;padding:12px}
-        .adminPoster .adminPosterMatch{display:block !important;padding:12px !important;border-radius:16px;background:rgba(7,18,27,.94);border:1px solid rgba(255,255,255,.10);overflow:hidden !important}
-        .adminPoster .adminMatchTop{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-        .adminPoster .adminDateEdit{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-        .adminPoster .adminDateEdit input{max-width:190px}
-        .adminPoster .adminTeamsLine{display:grid;grid-template-columns:minmax(0,1fr) 42px 18px 42px minmax(0,1fr);gap:7px;align-items:center}
-        .adminPoster .adminTeamsLine .posterSide{min-width:0;display:flex;align-items:center}
+        .adminPoster .adminPosterMatch{
+          display:grid !important;
+          grid-template-columns: 1fr 48px 20px 48px 1fr !important;
+          gap:8px !important;
+          align-items:center !important;
+          overflow:visible !important;
+        }
+        .adminPoster .adminMatchTop{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+        .adminPoster .posterPts{grid-column:1/-1;width:100%;text-align:center}
+        .adminPoster .posterSide{min-width:0;display:flex;align-items:center}
         .adminPoster .teamNameFlag{width:100%;min-width:0;display:flex;align-items:center;gap:6px;white-space:normal !important;overflow:visible !important}
         .adminPoster .teamNameFlag.right{justify-content:flex-end;text-align:right}
         .adminPoster .teamNameFlag .teamText{display:inline !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;font-size:12px;line-height:1.15}
         .adminPoster .placeholderTeam .teamText{opacity:.95;color:#fff;font-weight:800}
         .adminPoster .placeholderFlag{font-size:16px;flex:0 0 auto}
         .adminPoster .adminScoreInput{width:42px !important;max-width:42px;text-align:center}
-        .adminPoster .posterPts{display:block;margin-top:10px;width:100%;text-align:center}
         @media (max-width:720px){
-          .adminPoster .adminPhaseBox{margin:18px 0 24px;border-radius:18px}
-          .adminPoster .adminPhaseHeader{align-items:flex-start;flex-direction:column}
-          .adminPoster .posterMatches{grid-template-columns:1fr;padding:10px;gap:10px}
-          .adminPoster .adminPosterMatch{padding:10px 8px !important}
-          .adminPoster .adminMatchTop{align-items:flex-start;flex-direction:column}
+          .adminPoster .adminPosterMatch{grid-template-columns:minmax(105px,1fr) 40px 16px 40px minmax(105px,1fr) !important;padding:10px 8px !important}
+          .adminPoster .posterNo{flex:0 0 auto}
           .adminPoster .adminDateEdit input{max-width:190px}
-          .adminPoster .adminTeamsLine{grid-template-columns:minmax(0,1fr) 38px 14px 38px minmax(0,1fr);gap:5px}
           .adminPoster .teamNameFlag .teamText{font-size:11px}
           .adminPoster .adminScoreInput{width:38px !important;max-width:38px}
         }
@@ -1896,55 +1861,48 @@ function App() {
       </div>
 
       <div className="posterGrid palpitesPosterGrid adminPosterGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => {
-          const isGroup = phaseName.startsWith('Grupo')
-          return (
-            <div className={`adminPhaseBox ${isGroup ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
-              <div className="adminPhaseHeader">
-                <strong>{isGroup ? `🟢 ${phaseShortLabel(phaseName)}` : `🏆 ${phaseShortLabel(phaseName)}`}</strong>
-                <span>{phaseGames.length} jogos</span>
-              </div>
-
-              {isGroup && (
-                <div className="posterTeams">
-                  {Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
-                    <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
-                  ))}
-                </div>
-              )}
-
-              <div className="posterMatches">
-                {phaseGames.map(game => {
-                  return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
-                    <div className="adminMatchTop">
-                      <span className="posterNo">{game.game_no}</span>
-                      <span className="posterDate adminDateEdit">
-                        <small>{formatDate(game.starts_at)}</small>
-                        <input
-                          type="datetime-local"
-                          value={toDateTimeLocalValue(game.starts_at)}
-                          onChange={e => updateGameTime(game, e.target.value)}
-                        />
-                      </span>
-                    </div>
-
-                    <div className="adminTeamsLine">
-                      <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
-
-                      <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
-                      <b>x</b>
-                      <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
-
-                      <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
-                    </div>
-
-                    <span className="posterPts">Oficial</span>
-                  </div>
-                })}
-              </div>
+        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
+          <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
+            <div className="posterGroupTitle">
+              <strong>{phaseName}</strong>
+              <span>{phaseGames.length} jogos</span>
             </div>
-          )
-        })}
+
+            <div className="posterTeams">
+              {phaseName.startsWith('Grupo') && Array.from(new Set(phaseGames.flatMap(g => [g.home_team, g.away_team]))).slice(0,4).map(team => (
+                <div className="posterTeamFlag" key={team}><TeamCodeFlag team={team} /></div>
+              ))}
+            </div>
+
+            <div className="posterMatches">
+              {phaseGames.map(game => {
+                return <div className="posterMatch palpitesMatch adminPosterMatch" key={game.id}>
+                  <div className="adminMatchTop">
+                    <span className="posterNo">{game.game_no}</span>
+                    <span className="posterDate adminDateEdit">
+                      <small>{formatDate(game.starts_at)}</small>
+                      <input
+                        type="datetime-local"
+                        value={toDateTimeLocalValue(game.starts_at)}
+                        onChange={e => updateGameTime(game, e.target.value)}
+                      />
+                    </span>
+                  </div>
+
+                  <span className="posterSide right"><TeamNameFlag team={displayHomeTeam(game, games)} side="right" /></span>
+
+                  <input className="posterScoreInput adminScoreInput" value={game.home_score ?? ''} onChange={e => updateResult(game, 'home', e.target.value)} />
+                  <b>x</b>
+                  <input className="posterScoreInput adminScoreInput" value={game.away_score ?? ''} onChange={e => updateResult(game, 'away', e.target.value)} />
+
+                  <span className="posterSide"><TeamNameFlag team={displayAwayTeam(game, games)} /></span>
+
+                  <span className="posterPts">Oficial</span>
+                </div>
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </section>}
   </main>

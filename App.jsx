@@ -703,7 +703,6 @@ function App() {
   const [games, setGames] = useState([])
   const [guesses, setGuesses] = useState({})
   const [ranking, setRanking] = useState([])
-  const [rankingPrev, setRankingPrev] = useState([])
   const [tab, setTab] = useState('palpites')
   const [msg, setMsg] = useState('')
   const [busca, setBusca] = useState('')
@@ -908,6 +907,16 @@ function App() {
     const { data: allGuesses } = await fetchAllRows('guesses')
     const { data: gameData } = await supabase.from('games').select('*')
 
+    const finishedGames = (gameData || []).filter(g =>
+      g.home_score !== null && g.home_score !== undefined && g.home_score !== '' &&
+      g.away_score !== null && g.away_score !== undefined && g.away_score !== ''
+    )
+
+    const maxPossiblePoints = finishedGames.reduce((sum, game) => {
+      const cfg = phaseScoreConfig(game.phase)
+      return sum + (cfg?.exact || 0)
+    }, 0)
+
     const playerMap = new Map()
 
     ;(players || []).forEach(p => {
@@ -944,20 +953,24 @@ function App() {
         if (basePts > 0 || bonusPts > 0) acertos += 1
       })
 
+      const guessesCount = (allGuesses || []).filter(g => g.user_id === p.id).length
+      const aproveitamento = maxPossiblePoints > 0 ? Math.round((pontos / maxPossiblePoints) * 100) : 0
+
       return {
         id: p.id,
         nome: displayPlayerName(p),
         email: p.email || p.username || '',
         pontos,
         exatos,
-        acertos
+        acertos,
+        palpites: guessesCount,
+        aproveitamento,
+        maxPossiblePoints,
+        jogosEncerrados: finishedGames.length
       }
     }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
 
-    setRanking(prev => {
-      setRankingPrev(prev || [])
-      return rows
-    })
+    setRanking(rows)
   }
 
   function setGuess(game, field, value) {
@@ -1167,6 +1180,23 @@ function App() {
       .sort((a,b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome))
   }
 
+
+
+  function podiumCutPoints() {
+    return ranking.length >= 3 ? ranking[2].pontos : (ranking[ranking.length - 1]?.pontos || 0)
+  }
+
+  function averageRankingPoints() {
+    if (!ranking.length) return 0
+    return Math.round(ranking.reduce((sum, r) => sum + (r.pontos || 0), 0) / ranking.length)
+  }
+
+  function rankBandClass(index) {
+    if (index < 3) return 'top3'
+    if (index < 10) return 'top10'
+    if (index >= ranking.length - 3 && ranking.length > 5) return 'bottom3'
+    return 'middle'
+  }
 
   function shareRanking() {
     const text = `🏆 Ranking Bolão Traíras F.C.%0A` + ranking.slice(0,10).map((r,i) => `${i+1}º ${r.nome} - ${r.pontos} pts`).join('%0A')
@@ -1533,25 +1563,83 @@ function App() {
     </section>}
 
 
-    {tab === 'ranking' && <section className="card">
+    {tab === 'ranking' && <section className="card rankingPro">
+      <style>{`
+        .rankingPro .rankingResumo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+        .rankingPro .rankingResumoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px}
+        .rankingPro .rankingResumoBox span{display:block;font-size:12px;opacity:.75;margin-bottom:4px}
+        .rankingPro .rankingResumoBox b{font-size:16px}
+        .rankingPro .rank{align-items:center;gap:10px}
+        .rankingPro .rank.top3{border-left:5px solid #facc15}
+        .rankingPro .rank.top10{border-left:5px solid #22c55e}
+        .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
+        .rankingPro .rank.middle{border-left:5px solid rgba(255,255,255,.18)}
+        .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+        .rankingPro .rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rankingPro .rankMeta{font-size:12px;opacity:.8}
+        .rankingPro .rankScoreBox{text-align:right;min-width:95px}
+        .rankingPro .rankScoreBox b{display:block}
+        .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
+        .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
+        .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
+        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}}
+      `}</style>
+
       <div className="cardTitle">
         <h2>Ranking ao vivo</h2>
         <button className="miniRefresh" type="button" onClick={refreshAll}><RefreshCw/> Atualizar agora</button>
         <button className="whats" onClick={shareRanking}><Share2/> Compartilhar no WhatsApp</button>
       </div>
+
+      <div className="rankingResumo">
+        <div className="rankingResumoBox">
+          <span>👥 Participantes</span>
+          <b>{ranking.length}</b>
+        </div>
+        <div className="rankingResumoBox">
+          <span>👑 Líder</span>
+          <b>{ranking[0]?.nome || '-'}</b>
+        </div>
+        <div className="rankingResumoBox">
+          <span>🥉 Corte do pódio</span>
+          <b>{podiumCutPoints()} pts</b>
+        </div>
+        <div className="rankingResumoBox">
+          <span>📊 Média geral</span>
+          <b>{averageRankingPoints()} pts</b>
+        </div>
+      </div>
+
       <div className="podium">
         {ranking.slice(0,3).map((r,i) => <div className={`podiumCard p${i+1}`} key={r.nome}>
           <span>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
           <b>{r.nome}</b>
           <strong>{r.pontos} pts</strong>
+          <small>{r.aproveitamento}% de aproveitamento</small>
         </div>)}
       </div>
-      {ranking.map((r, i) => <div className={`rank ${i===0?'leader':''}`} key={r.nome}>
-        <strong>{i + 1}º</strong>
-        <span>{i===0 ? '👑 ' : ''}{r.nome}</span>
-        <b>{r.pontos} pts</b>
-        <small>{r.exatos} exatos · {r.acertos} acertos</small>
-      </div>)}
+
+      {ranking.map((r, i) => {
+        const leaderDistance = i === 0 ? 0 : Math.max(0, (ranking[0]?.pontos || 0) - (r.pontos || 0))
+        const podiumDistance = i < 3 ? 0 : Math.max(0, podiumCutPoints() - (r.pontos || 0) + 1)
+        return <div className={`rank ${i===0?'leader':''} ${rankBandClass(i)}`} key={r.nome}>
+          <strong>{i + 1}º</strong>
+          <div className="rankMain">
+            <span className="rankName">{i===0 ? '👑 ' : ''}{r.nome}</span>
+            <small className="rankMeta">{r.exatos} exatos · {r.acertos} acertos · {r.palpites || 0} palpites</small>
+            <div className="progressOuter">
+              <div className="progressInner" style={{ width: `${Math.min(100, Math.max(0, r.aproveitamento || 0))}%` }} />
+            </div>
+            <div className="distanceHint">
+              {i===0 ? 'Líder do bolão' : i < 3 ? `${leaderDistance} pts atrás do líder` : `${podiumDistance} pts para entrar no pódio · ${leaderDistance} pts atrás do líder`}
+            </div>
+          </div>
+          <div className="rankScoreBox">
+            <b>{r.pontos} pts</b>
+            <small>{r.aproveitamento || 0}%</small>
+          </div>
+        </div>
+      })}
     </section>}
 
 

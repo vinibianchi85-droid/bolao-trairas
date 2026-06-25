@@ -138,9 +138,11 @@ function TeamCodeFlag({ team }) {
 
 function TeamNameFlag({ team, side = '' }) {
   const label = String(team || '').trim() || 'A definir'
+  const isPlaceholder = isPlaceholderTeamName(label)
   return (
-    <span className={`teamNameFlag ${side} ${label === 'A definir' || label.toLowerCase().includes('vencedor') ? 'placeholderTeam' : ''}`}>
-      <FlagImg team={label} />
+    <span className={`teamNameFlag ${side} ${isPlaceholder ? 'placeholderTeam' : ''}`}>
+      {!isPlaceholder && <FlagImg team={label} />}
+      {isPlaceholder && <span className="placeholderFlag">🏳️</span>}
       <span className="teamText">{label}</span>
     </span>
   )
@@ -341,7 +343,8 @@ function isPlaceholderTeamName(team) {
     t.includes('grupo') ||
     t.includes('melhor 3') ||
     t.includes('melhores 3') ||
-    t.includes('classificado')
+    t.includes('classificado') ||
+    /^\d+[ºo]?\s/.test(t)
   )
 }
 
@@ -406,6 +409,21 @@ function gameLoserTeam(game) {
   const h = Number(game.home_score), a = Number(game.away_score)
   if (h === a) return ''
   return h > a ? game.away_team : game.home_team
+}
+
+function gameWinnerTeamResolved(game, allGames = []) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  const teams = autoKnockoutTeams(game, allGames)
+  return h > a ? teams.home : teams.away
+}
+function gameLoserTeamResolved(game, allGames = []) {
+  if (!isGameFinished(game)) return ''
+  const h = Number(game.home_score), a = Number(game.away_score)
+  if (h === a) return ''
+  const teams = autoKnockoutTeams(game, allGames)
+  return h > a ? teams.away : teams.home
 }
 function cleanTeamName(value) {
   return String(value || '').trim()
@@ -541,16 +559,16 @@ function autoKnockoutTeams(game, allGames = []) {
   if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
     return {
-      home: gameWinnerTeam(semis[0]) || fallbackHome || 'Vencedor semifinal 1',
-      away: gameWinnerTeam(semis[1]) || fallbackAway || 'Vencedor semifinal 2'
+      home: gameWinnerTeamResolved(semis[0], allGames) || fallbackHome || 'Vencedor semifinal 1',
+      away: gameWinnerTeamResolved(semis[1], allGames) || fallbackAway || 'Vencedor semifinal 2'
     }
   }
 
   if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
     const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
     return {
-      home: gameLoserTeam(semis[0]) || fallbackHome || 'Perdedor semifinal 1',
-      away: gameLoserTeam(semis[1]) || fallbackAway || 'Perdedor semifinal 2'
+      home: gameLoserTeamResolved(semis[0], allGames) || fallbackHome || 'Perdedor semifinal 1',
+      away: gameLoserTeamResolved(semis[1], allGames) || fallbackAway || 'Perdedor semifinal 2'
     }
   }
 
@@ -560,8 +578,8 @@ function autoKnockoutTeams(game, allGames = []) {
   const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
 
   return {
-    home: gameWinnerTeam(prev[idxGame * 2]) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-    away: gameWinnerTeam(prev[idxGame * 2 + 1]) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+    home: gameWinnerTeamResolved(prev[idxGame * 2], allGames) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
+    away: gameWinnerTeamResolved(prev[idxGame * 2 + 1], allGames) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
   }
 }
 function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
@@ -1343,9 +1361,9 @@ function App() {
       <div className="nextGrid">
         {upcoming.map(g => <div className="nextGame" key={g.id}>
           <small>Jogo {g.game_no} · {formatDate(g.starts_at)}</small>
-          <b>{flag(g.home_team)} {g.home_team}</b>
+          <b><TeamNameFlag team={displayHomeTeam(g, games)} /></b>
           <span>x</span>
-          <b>{flag(g.away_team)} {g.away_team}</b>
+          <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
         </div>)}
       </div>
     </section>
@@ -1721,15 +1739,20 @@ function App() {
     </section>}
 
     {tab === 'mata' && <section className="card">
+      <style>{`
+        .bracket .teamNameFlag{display:inline-flex;align-items:center;gap:6px;white-space:normal}
+        .bracket .teamNameFlag .teamText{white-space:normal;overflow:visible;text-overflow:clip}
+        .bracket .placeholderFlag{font-size:16px}
+      `}</style>
       <h2>Mata-mata visual</h2>
-      <p className="muted">Chaveamento conforme tabela oficial. Os nomes dos classificados podem ser ajustados pelo admin quando a Copa avançar.</p>
+      <p className="muted">Chaveamento automático: o app preenche 1/16 pelos grupos e as fases seguintes pelos vencedores, até a final.</p>
       <div className="bracket">
         {games.filter(g => !(g.phase || '').startsWith('Grupo')).map(g => <div className="bracketGame" key={g.id}>
           <small>Jogo {g.game_no} · {g.phase}</small>
           <em>{formatDate(g.starts_at)}</em>
-          <b>{flag(g.home_team)} {g.home_team}</b>
+          <b><TeamNameFlag team={displayHomeTeam(g, games)} /></b>
           <span>x</span>
-          <b>{flag(g.away_team)} {g.away_team}</b>
+          <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
         </div>)}
       </div>
     </section>}
@@ -1781,6 +1804,31 @@ function App() {
     </section>}
 
     {tab === 'admin' && <section className="palpitesPoster adminPoster">
+      <style>{`
+        .adminPoster .adminPosterMatch{
+          display:grid !important;
+          grid-template-columns: 1fr 48px 20px 48px 1fr !important;
+          gap:8px !important;
+          align-items:center !important;
+          overflow:visible !important;
+        }
+        .adminPoster .adminMatchTop{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+        .adminPoster .posterPts{grid-column:1/-1;width:100%;text-align:center}
+        .adminPoster .posterSide{min-width:0;display:flex;align-items:center}
+        .adminPoster .teamNameFlag{width:100%;min-width:0;display:flex;align-items:center;gap:6px;white-space:normal !important;overflow:visible !important}
+        .adminPoster .teamNameFlag.right{justify-content:flex-end;text-align:right}
+        .adminPoster .teamNameFlag .teamText{display:inline !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;font-size:12px;line-height:1.15}
+        .adminPoster .placeholderTeam .teamText{opacity:.95;color:#fff;font-weight:800}
+        .adminPoster .placeholderFlag{font-size:16px;flex:0 0 auto}
+        .adminPoster .adminScoreInput{width:42px !important;max-width:42px;text-align:center}
+        @media (max-width:720px){
+          .adminPoster .adminPosterMatch{grid-template-columns:minmax(105px,1fr) 40px 16px 40px minmax(105px,1fr) !important;padding:10px 8px !important}
+          .adminPoster .posterNo{flex:0 0 auto}
+          .adminPoster .adminDateEdit input{max-width:190px}
+          .adminPoster .teamNameFlag .teamText{font-size:11px}
+          .adminPoster .adminScoreInput{width:38px !important;max-width:38px}
+        }
+      `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Painel Admin</span>

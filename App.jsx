@@ -774,7 +774,7 @@ function App() {
       p?.display_name ||
       p?.username ||
       (p?.email ? String(p.email).split('@')[0] : '') ||
-      `Jogador ${String(p?.id || '').slice(0, 4)}`
+      `Jogador ${String(p?.id || '').slice(0, 6)}`
     )
   }
 
@@ -1194,7 +1194,7 @@ function App() {
         const lockB = new Date(b.starts_at).getTime() - 5 * 60 * 1000
         return lockA - lockB
       })
-      .slice(0, 4)
+      .slice(0, 6)
   }
 
   const total = useMemo(() => games.reduce((acc, game) => {

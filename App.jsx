@@ -475,6 +475,11 @@ function groupIsComplete(games, letter) {
   return groupGames.length > 0 && groupGames.every(isGameFinished)
 }
 
+function allGroupStageComplete(games = []) {
+  const groupGames = games.filter(g => String(g.phase || '').toLowerCase().startsWith('grupo'))
+  return groupGames.length > 0 && groupGames.every(isGameFinished)
+}
+
 function groupRankingRows(games, letter) {
   const tables = makeGroupTables(games)
   return tables[groupPhaseName(letter)] || []
@@ -500,6 +505,10 @@ function parseBestThirdAllowedGroups(slot) {
 }
 
 function bestThirdCandidates(allGames = [], allowedLetters = [], usedTeams = new Set()) {
+  // Os melhores terceiros só são definidos depois que TODOS os jogos da fase de grupos terminarem.
+  // Assim evita preencher um terceiro provisório e depois trocar o confronto.
+  if (!allGroupStageComplete(allGames)) return []
+
   return allowedLetters
     .filter(letter => groupIsComplete(allGames, letter))
     .map(letter => {

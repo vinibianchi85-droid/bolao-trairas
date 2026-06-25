@@ -1220,7 +1220,14 @@ function App() {
   const groupTables = useMemo(() => makeGroupTables(games), [games])
   const upcoming = useMemo(() => nextGames(games), [games])
   const filteredGames = games.filter(g => {
-    const q = `${g.game_no} ${g.phase} ${g.home_team} ${g.away_team}`.toLowerCase()
+    const q = [
+      g.game_no,
+      g.phase,
+      g.home_team,
+      g.away_team,
+      displayHomeTeam(g, games),
+      displayAwayTeam(g, games)
+    ].join(' ').toLowerCase()
     const okBusca = q.includes(busca.toLowerCase())
     const okFiltro = filtro === 'Todos' || g.phase === filtro
     return okBusca && okFiltro

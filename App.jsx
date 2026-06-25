@@ -927,37 +927,69 @@ function App() {
       }
     })
 
-    const rows = Array.from(playerMap.values()).map(p => {
-      let pontos = 0
-      let exatos = 0
-      let acertos = 0
-
-      ;(allGuesses || []).filter(g => g.user_id === p.id).forEach(g => {
-        const game = (gameData || []).find(x => x.id === g.game_id)
-        if (!game || game.home_score === null || game.away_score === null) return
-
-        const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away, game.phase)
-        const bonusPts = specialBonusPoints(game, g)
-
-        pontos += basePts + bonusPts
-        if (Number(game.home_score) === Number(g.guess_home) && Number(game.away_score) === Number(g.guess_away)) exatos += 1
-        if (basePts > 0 || bonusPts > 0) acertos += 1
+    const finishedGames = (gameData || [])
+      .filter(g => g.home_score !== null && g.home_score !== undefined && g.home_score !== '' && g.away_score !== null && g.away_score !== undefined && g.away_score !== '')
+      .sort((a, b) => {
+        const au = a.updated_at ? new Date(a.updated_at).getTime() : 0
+        const bu = b.updated_at ? new Date(b.updated_at).getTime() : 0
+        if (bu !== au) return bu - au
+        const as = a.starts_at ? new Date(a.starts_at).getTime() : 0
+        const bs = b.starts_at ? new Date(b.starts_at).getTime() : 0
+        if (bs !== as) return bs - as
+        return Number(b.game_no || 0) - Number(a.game_no || 0)
       })
 
-      return {
-        id: p.id,
-        nome: displayPlayerName(p),
-        email: p.email || p.username || '',
-        pontos,
-        exatos,
-        acertos
-      }
-    }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
+    const lastRankGame = finishedGames[0] || null
 
-    setRanking(prev => {
-      setRankingPrev(prev || [])
-      return rows
-    })
+    const buildRankingRows = (excludeGameId = null) => {
+      return Array.from(playerMap.values()).map(p => {
+        let pontos = 0
+        let exatos = 0
+        let acertos = 0
+
+        ;(allGuesses || []).filter(g => g.user_id === p.id).forEach(g => {
+          if (excludeGameId && String(g.game_id) === String(excludeGameId)) return
+          const game = (gameData || []).find(x => x.id === g.game_id)
+          if (!game || game.home_score === null || game.away_score === null) return
+
+          const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away, game.phase)
+          const bonusPts = specialBonusPoints(game, g)
+
+          pontos += basePts + bonusPts
+          if (Number(game.home_score) === Number(g.guess_home) && Number(game.away_score) === Number(g.guess_away)) exatos += 1
+          if (basePts > 0 || bonusPts > 0) acertos += 1
+        })
+
+        return {
+          id: p.id,
+          nome: displayPlayerName(p),
+          email: p.email || p.username || '',
+          pontos,
+          exatos,
+          acertos,
+          lastGamePoints: 0,
+          lastMove: null,
+          lastGameLabel: lastRankGame ? `${displayHomeTeam(lastRankGame, gameData || [])} x ${displayAwayTeam(lastRankGame, gameData || [])}` : ''
+        }
+      }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
+    }
+
+    const rows = buildRankingRows()
+
+    if (lastRankGame) {
+      const previousRows = buildRankingRows(lastRankGame.id)
+      const previousPosition = new Map(previousRows.map((r, idx) => [String(r.id || r.nome), idx + 1]))
+
+      rows.forEach((row, idx) => {
+        const guess = (allGuesses || []).find(g => String(g.user_id) === String(row.id) && String(g.game_id) === String(lastRankGame.id))
+        row.lastGamePoints = guess ? totalPointsForGame(lastRankGame, guess) : 0
+        const oldPos = previousPosition.get(String(row.id || row.nome))
+        row.lastMove = oldPos ? oldPos - (idx + 1) : null
+      })
+    }
+
+    setRanking(rows)
+    setRankingPrev([])
   }
 
   function setGuess(game, field, value) {
@@ -1220,7 +1252,14 @@ function App() {
   const groupTables = useMemo(() => makeGroupTables(games), [games])
   const upcoming = useMemo(() => nextGames(games), [games])
   const filteredGames = games.filter(g => {
-    const q = `${g.game_no} ${g.phase} ${g.home_team} ${g.away_team}`.toLowerCase()
+    const q = [
+      g.game_no,
+      g.phase,
+      g.home_team,
+      g.away_team,
+      displayHomeTeam(g, games),
+      displayAwayTeam(g, games)
+    ].join(' ').toLowerCase()
     const okBusca = q.includes(busca.toLowerCase())
     const okFiltro = filtro === 'Todos' || g.phase === filtro
     return okBusca && okFiltro
@@ -1539,12 +1578,23 @@ function App() {
           <strong>{r.pontos} pts</strong>
         </div>)}
       </div>
-      {ranking.map((r, i) => <div className={`rank ${i===0?'leader':''}`} key={r.nome}>
-        <strong>{i + 1}º</strong>
-        <span>{i===0 ? '👑 ' : ''}{r.nome}</span>
-        <b>{r.pontos} pts</b>
-        <small>{r.exatos} exatos · {r.acertos} acertos</small>
-      </div>)}
+      {ranking.length > 0 && ranking[0]?.lastGameLabel && <div className="rankingLastGameBox" style={{margin:'12px 0',padding:'12px',borderRadius:'14px',background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.12)'}}>
+        <strong>🔥 Último jogo calculado:</strong> {ranking[0].lastGameLabel}
+        <small style={{display:'block',opacity:.75,marginTop:4}}>As movimentações abaixo mostram somente o impacto desse jogo.</small>
+      </div>}
+
+      {ranking.map((r, i) => {
+        const move = r.lastMove
+        const moveText = move === null || move === undefined ? 'novo' : move > 0 ? `▲${move}` : move < 0 ? `▼${Math.abs(move)}` : '•0'
+        const moveClass = move > 0 ? 'up' : move < 0 ? 'down' : 'same'
+        return <div className={`rank ${i===0?'leader':''}`} key={r.nome}>
+          <strong>{i + 1}º</strong>
+          <span>{i===0 ? '👑 ' : ''}{r.nome}</span>
+          <b>{r.pontos} pts</b>
+          <small>{r.exatos} exatos · {r.acertos} acertos</small>
+          <em className={`rankMove ${moveClass}`} style={{fontStyle:'normal',fontWeight:900,padding:'4px 8px',borderRadius:'999px',background: move > 0 ? 'rgba(34,197,94,.18)' : move < 0 ? 'rgba(239,68,68,.18)' : 'rgba(255,255,255,.10)',border:'1px solid rgba(255,255,255,.12)',whiteSpace:'nowrap'}}>{moveText} | +{r.lastGamePoints || 0} pts</em>
+        </div>
+      })}
     </section>}
 
 

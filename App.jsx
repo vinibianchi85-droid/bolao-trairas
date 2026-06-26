@@ -10,11 +10,11 @@ import './style.css'
 
 // === Avatares do Ranking ===
 // Coloque as imagens em /public/avatars/ com estes nomes:
-// leonardo-cancian.webp, norton-mardini.webp, gilberto-miranda.webp
+// leonardo-cancian.jpg, norton-mardini.jpg, gilberto-miranda.jpg
 const RANKING_AVATARS = {
-  "leonardocancian": "/avatars/leonardo-cancian.webp",
-  "nortonmardini": "/avatars/norton-mardini.webp",
-  "gilbertomiranda": "/avatars/gilberto-miranda.webp",
+  "leonardocancian": "/avatars/leonardo-cancian.jpg",
+  "nortonmardini": "/avatars/norton-mardini.jpg",
+  "gilbertomiranda": "/avatars/gilberto-miranda.jpg",
 }
 
 function normalizeRankingName(name = "") {

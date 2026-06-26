@@ -7,14 +7,27 @@ import {
 } from 'lucide-react'
 import './style.css'
 
+
 // === Avatares do Ranking ===
-const rankingAvatars = {
-  "Leonardo Cancian": "/avatars/leonardo-cancian.webp",
-  "Norton Mardini": "/avatars/norton-mardini.webp",
-  "Gilberto Miranda": "/avatars/gilberto-miranda.webp",
-};
-const normalizeName = (s="") =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+// Coloque as imagens em /public/avatars/ com estes nomes:
+// leonardo-cancian.webp, norton-mardini.webp, gilberto-miranda.webp
+const RANKING_AVATARS = {
+  "leonardocancian": "/avatars/leonardo-cancian.webp",
+  "nortonmardini": "/avatars/norton-mardini.webp",
+  "gilbertomiranda": "/avatars/gilberto-miranda.webp",
+}
+
+function normalizeRankingName(name = "") {
+  return String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+}
+
+function getRankingAvatar(name = "") {
+  return RANKING_AVATARS[normalizeRankingName(name)] || ""
+}
 
 
 
@@ -1580,6 +1593,9 @@ function App() {
         .rankingPro .rankingResumoBox span{display:block;font-size:12px;opacity:.75;margin-bottom:4px}
         .rankingPro .rankingResumoBox b{font-size:16px}
         .rankingPro .rank{align-items:center;gap:10px}
+        .rankingPro .rankAvatar{width:64px;height:64px;border-radius:999px;object-fit:cover;border:3px solid rgba(34,197,94,.85);box-shadow:0 0 0 2px rgba(0,0,0,.35),0 0 14px rgba(34,197,94,.22);background:rgba(255,255,255,.08);flex:0 0 auto}
+        .rankingPro .rank.top3 .rankAvatar{border-color:#facc15;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 0 16px rgba(250,204,21,.32)}
+        .rankingPro .rankAvatarFallback{width:64px;height:64px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(34,197,94,.55);background:rgba(255,255,255,.08);font-size:30px;flex:0 0 auto}
         .rankingPro .rank.top3{border-left:5px solid #facc15}
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
@@ -1593,10 +1609,7 @@ function App() {
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
         @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}}
-      `}
-.rankAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px}
-.rankAvatarFallback{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#333;margin-right:12px}
-</style>
+      `}</style>
 
       <div className="cardTitle">
         <h2>Ranking ao vivo</h2>
@@ -1637,7 +1650,12 @@ function App() {
         const podiumDistance = i < 3 ? 0 : Math.max(0, podiumCutPoints() - (r.pontos || 0) + 1)
         return <div className={`rank ${i===0?'leader':''} ${rankBandClass(i)}`} key={r.nome}>
           <strong>{i + 1}º</strong>
-          <>{(() => { const avatar=rankingAvatars[Object.keys(rankingAvatars).find(k=>normalizeName(k)===normalizeName(r.nome))||""]; return avatar ? <img className="rankAvatar" src={avatar} alt={r.nome}/> : <div className="rankAvatarFallback">👤</div>; })()}<div className="rankMain">
+          {getRankingAvatar(r.nome) ? (
+            <img className="rankAvatar" src={getRankingAvatar(r.nome)} alt={r.nome} loading="lazy" />
+          ) : (
+            <div className="rankAvatarFallback">👤</div>
+          )}
+          <div className="rankMain">
             <span className="rankName">{i===0 ? '👑 ' : ''}{r.nome}</span>
             <small className="rankMeta">{r.exatos} exatos · {r.acertos} acertos · {r.palpites || 0} palpites</small>
             <div className="progressOuter">
@@ -1650,7 +1668,8 @@ function App() {
           <div className="rankScoreBox">
             <b>{r.pontos} pts</b>
             <small>{r.aproveitamento || 0}%</small>
-          </div></>
+          </div>
+        </div>
       })}
     </section>}
 
@@ -1730,10 +1749,7 @@ function App() {
         .palpitesGaleraNova .palpiteRegGame.closed{border-left-color:#22c55e}
         .palpitesGaleraNova .palpiteRegGame.open{border-left-color:#f59e0b}
         @media (max-width:720px){.palpitesGaleraNova .phaseQuickNav{position:relative;top:auto}.palpitesGaleraNova .palpiteRegHeader{grid-template-columns:1fr}.palpitesGaleraNova .phaseDivider{align-items:flex-start;flex-direction:column}.palpitesGaleraNova .phaseDivider strong{font-size:18px}}
-      `}
-.rankAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px}
-.rankAvatarFallback{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#333;margin-right:12px}
-</style>
+      `}</style>
 
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
@@ -1882,10 +1898,7 @@ function App() {
           .mataMataPage .bracketTeams{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)}
           .mataMataPage .teamNameFlag .teamText{font-size:12px}
         }
-      `}
-.rankAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px}
-.rankAvatarFallback{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#333;margin-right:12px}
-</style>
+      `}</style>
       <h2>Mata-mata visual</h2>
       <p className="muted mataIntro">Chaveamento automático separado por fases: 1/16 avos, oitavas, quartas, semifinais, 3º lugar e final.</p>
       <div className="mataPhases">
@@ -1994,10 +2007,7 @@ function App() {
           .adminPoster .teamNameFlag .teamText{font-size:11px}
           .adminPoster .adminScoreInput{width:38px !important;max-width:38px}
         }
-      `}
-.rankAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px}
-.rankAvatarFallback{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#333;margin-right:12px}
-</style>
+      `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Painel Admin</span>

@@ -1669,16 +1669,16 @@ function App() {
         .rankingPro .rankingResumoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px}
         .rankingPro .rankingResumoBox span{display:block;font-size:12px;opacity:.75;margin-bottom:4px}
         .rankingPro .rankingResumoBox b{font-size:16px}
-        .rankingPro .rank{display:flex!important;align-items:center!important;gap:12px!important;width:100%;box-sizing:border-box;padding:12px 14px}
-        .rankingPro .rank>strong{flex:0 0 38px;text-align:center;font-size:15px}
+        .rankingPro .rank{display:grid !important;grid-template-columns:42px 58px minmax(0,1fr) 95px !important;align-items:center !important;gap:12px !important;padding:16px 18px !important}
+        .rankingPro .rank > strong{font-size:22px;line-height:1;text-align:left;white-space:nowrap}
         .rankingPro .rank.top3{border-left:5px solid #facc15}
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
         .rankingPro .rank.middle{border-left:5px solid rgba(255,255,255,.18)}
-        .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 auto;max-width:none}
-        .rankingPro .rankName{font-weight:800;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:anywhere}
-        .rankingPro .rankMeta{font-size:12px;opacity:.8;white-space:normal;line-height:1.25}
-        .rankingPro .rankScoreBox{text-align:right;min-width:82px;flex:0 0 82px}
+        .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+        .rankingPro .rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rankingPro .rankMeta{font-size:12px;opacity:.8}
+        .rankingPro .rankScoreBox{text-align:right;min-width:95px}
         .rankingPro .rankScoreBox b{display:block}
         .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
@@ -1694,7 +1694,7 @@ function App() {
         .rankingPro .podiumAvatar.silver{border:3px solid #e5e7eb;box-shadow:0 0 14px rgba(229,231,235,.25)}
         .rankingPro .podiumAvatar.bronze{border:3px solid #cd7f32;box-shadow:0 0 14px rgba(205,127,50,.25)}
         @keyframes leaderAvatarGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
-        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:center!important;gap:8px!important;padding:10px 8px}.rankingPro .rank>strong{flex:0 0 28px;font-size:13px}.rankingPro .rankMain{gap:3px}.rankingPro .rankName{font-size:14px;line-height:1.15}.rankingPro .rankMeta{font-size:10.5px;line-height:1.2}.rankingPro .distanceHint{font-size:10.5px}.rankingPro .rankScoreBox{min-width:58px;flex:0 0 58px}.rankingPro .rankScoreBox b{font-size:13px}.rankingPro .rankScoreBox small{font-size:10px}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}}
+        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{grid-template-columns:38px 48px minmax(0,1fr) 82px !important;align-items:center !important;gap:10px !important;padding:14px 12px !important}.rankingPro .rank > strong{font-size:20px}.rankingPro .rankScoreBox{min-width:82px;text-align:right}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}.rankingPro .rankName{font-size:15px}.rankingPro .rankMeta{font-size:11px}.rankingPro .distanceHint{font-size:10px}}
       `}</style>
 
       <div className="cardTitle">

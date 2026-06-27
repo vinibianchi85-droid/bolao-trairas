@@ -8,6 +8,8 @@ import {
 import './style.css'
 
 
+
+
 const AVATAR_BY_NAME = {
   'norton maridoni': '/avatars/norton-mardini.png',
   'norton mardini': '/avatars/norton-mardini.png',
@@ -16,71 +18,53 @@ const AVATAR_BY_NAME = {
   'ronan vendruscolo': '/avatars/ronan-vendrusculo.png',
   'ary junior': '/avatars/ary-junior.png',
   'ary junior oliveira ribeiro': '/avatars/ary-junior.png',
-  'thiago brum': '/avatars/thiago-brum.png',
-  'thiago bruno': '/avatars/thiago-brum.png',
-  'thiago': '/avatars/thiago-brum.png',
+  'thiago bruno': '/avatars/thiago-bruno.png',
   'lucas plautz': '/avatars/lucas-plautz.png',
   'vinicius bianchini': '/avatars/vinicius-bianchini.png',
   'vinicius bianchini da silva': '/avatars/vinicius-bianchini.png',
-  'vinicius': '/avatars/vinicius-bianchini.png',
-  'vini': '/avatars/vinicius-bianchini.png',
   'renan andrade': '/avatars/renan-andrade.png',
   'everton luz': '/avatars/everton-luz.png',
   'everton da luz': '/avatars/everton-luz.png',
-  'everton': '/avatars/everton-luz.png',
   'leonardo gress': '/avatars/leonardo-gress.png',
   'leonardo gress de lima': '/avatars/leonardo-gress.png',
   'rafael miranda': '/avatars/rafael-miranda.png',
   'jefferson silveira': '/avatars/jefferson-silveira.png',
   'jeferson silveira': '/avatars/jefferson-silveira.png',
-  'jefferson': '/avatars/jefferson-silveira.png',
-  'jeferson': '/avatars/jefferson-silveira.png',
-  'laercio': '/avatars/laercio.png',
-  'laércio': '/avatars/laercio.png',
-  'lercio': '/avatars/laercio.png',
-  'leonardo secretti': '/avatars/laercio.png',
-  'leo secretti': '/avatars/laercio.png',
+  'leonardo secretti': '/avatars/leonardo-secretti.png',
   'felipe gastaldo': '/avatars/felipe-gastaldo.png',
   'joao alberto': '/avatars/joao-alberto.png',
   'joão alberto': '/avatars/joao-alberto.png',
-  'joao': '/avatars/joao-alberto.png',
-  'joão': '/avatars/joao-alberto.png',
   'andre zilio': '/avatars/andre-zilio.png',
   'andré zílio': '/avatars/andre-zilio.png',
   'andre ricardo zilio': '/avatars/andre-zilio.png',
   'andré ricardo zílio': '/avatars/andre-zilio.png',
-  'zilio': '/avatars/andre-zilio.png',
   'felipe orso': '/avatars/felipe-orso.png',
-  'dr felipe orso': '/avatars/felipe-orso.png',
   'ademar schroeder': '/avatars/ademar-schroeder.png',
-  'ademar': '/avatars/ademar-schroeder.png',
   'gilberto miranda': '/avatars/gilberto-miranda.png',
-  'gilberto': '/avatars/gilberto-miranda.png',
-  'leonardo cancian': '/avatars/leonardo-cancian.png',
-  'leo cancian': '/avatars/leonardo-cancian.png'
-}
+  'leonardo cancian': '/avatars/leonardo-cancian.png'
+} 
 
 const AVATAR_RULES = [
   [/norton.*mardin|norton.*maridon/i, '/avatars/norton-mardini.png'],
   [/douglas.*silva/i, '/avatars/douglas-silva.png'],
   [/ronan.*vendrusc/i, '/avatars/ronan-vendrusculo.png'],
   [/ary.*junior/i, '/avatars/ary-junior.png'],
-  [/thiago.*brum|thiago.*bruno/i, '/avatars/thiago-brum.png'],
+  [/thiago.*bruno/i, '/avatars/thiago-bruno.png'],
   [/lucas.*plautz/i, '/avatars/lucas-plautz.png'],
-  [/vinicius.*bianchini|^vinicius$|^vini$/i, '/avatars/vinicius-bianchini.png'],
+  [/vinicius.*bianchini/i, '/avatars/vinicius-bianchini.png'],
   [/renan.*andrade/i, '/avatars/renan-andrade.png'],
-  [/everton.*luz|everton.*da.*luz|^everton$/i, '/avatars/everton-luz.png'],
+  [/everton.*luz/i, '/avatars/everton-luz.png'],
   [/leonardo.*gress/i, '/avatars/leonardo-gress.png'],
   [/rafael.*miranda/i, '/avatars/rafael-miranda.png'],
-  [/jef+erson.*silveira|^jef+erson$/i, '/avatars/jefferson-silveira.png'],
-  [/laercio|laércio|lercio|leonardo.*secretti/i, '/avatars/laercio.png'],
+  [/jef+erson.*silveira/i, '/avatars/jefferson-silveira.png'],
+  [/leonardo.*secretti/i, '/avatars/leonardo-secretti.png'],
   [/felipe.*gastaldo/i, '/avatars/felipe-gastaldo.png'],
-  [/jo[aã]o.*alberto|^jo[aã]o$/i, '/avatars/joao-alberto.png'],
-  [/andre.*zilio|andr[eé].*z[ií]lio|zilio/i, '/avatars/andre-zilio.png'],
+  [/joao.*alberto/i, '/avatars/joao-alberto.png'],
+  [/andre.*zilio/i, '/avatars/andre-zilio.png'],
   [/felipe.*orso/i, '/avatars/felipe-orso.png'],
-  [/ademar.*schroeder|^ademar$/i, '/avatars/ademar-schroeder.png'],
-  [/gilberto.*miranda|^gilberto$/i, '/avatars/gilberto-miranda.png'],
-  [/leonardo.*cancian|leo.*cancian/i, '/avatars/leonardo-cancian.png']
+  [/ademar.*schroeder/i, '/avatars/ademar-schroeder.png'],
+  [/gilberto.*miranda/i, '/avatars/gilberto-miranda.png'],
+  [/leonardo.*cancian/i, '/avatars/leonardo-cancian.png']
 ]
 
 function normalizeAvatarName(name = '') {
@@ -106,7 +90,6 @@ function podiumAvatarClass(index) {
   if (index === 2) return 'bronze'
   return 'default'
 }
-
 
 async function fetchAllRows(table, select = '*', options = {}) {
   const pageSize = 1000
@@ -1666,34 +1649,94 @@ function App() {
     {tab === 'ranking' && <section className="card rankingPro">
       <style>{`
         .rankingPro .rankingResumo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}
-        .rankingPro .rankingResumoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px}
+        .rankingPro .rankingResumoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;min-width:0}
         .rankingPro .rankingResumoBox span{display:block;font-size:12px;opacity:.75;margin-bottom:4px}
-        .rankingPro .rankingResumoBox b{font-size:16px}
-        .rankingPro .rank{align-items:center;gap:10px}
+        .rankingPro .rankingResumoBox b{font-size:16px;word-break:break-word}
+
+        /* Ranking com avatar: força layout horizontal e impede texto espremido */
+        .rankingPro .rank{
+          display:grid !important;
+          grid-template-columns:52px 56px minmax(0,1fr) auto !important;
+          align-items:center !important;
+          gap:12px !important;
+          width:100% !important;
+          min-height:86px !important;
+          padding:16px 18px !important;
+          margin:10px 0 !important;
+          box-sizing:border-box !important;
+          overflow:visible !important;
+        }
         .rankingPro .rank.top3{border-left:5px solid #facc15}
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
         .rankingPro .rank.middle{border-left:5px solid rgba(255,255,255,.18)}
-        .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
-        .rankingPro .rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .rankingPro .rankMeta{font-size:12px;opacity:.8}
-        .rankingPro .rankScoreBox{text-align:right;min-width:95px}
-        .rankingPro .rankScoreBox b{display:block}
-        .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
+        .rankingPro .rank > strong{
+          display:block !important;
+          font-size:26px !important;
+          line-height:1 !important;
+          color:#fff !important;
+          text-align:left !important;
+          min-width:42px !important;
+        }
+        .rankingPro .rankAvatarWrap{position:relative !important;display:flex !important;align-items:center !important;justify-content:center !important;width:56px !important;height:56px !important;flex:0 0 auto !important;overflow:visible !important}
+        .rankingPro .rankAvatar{width:46px !important;height:46px !important;border-radius:50% !important;object-fit:cover !important;display:block !important;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+        .rankingPro .rankAvatar.gold{width:52px !important;height:52px !important;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
+        .rankingPro .rankAvatar.silver{width:50px !important;height:50px !important;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatar.bronze{width:50px !important;height:50px !important;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatarCrown{position:absolute;right:-5px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));z-index:2}
+        .rankingPro .rankMain{display:flex !important;flex-direction:column !important;gap:6px !important;min-width:0 !important;width:100% !important;overflow:visible !important;text-align:left !important}
+        .rankingPro .rankName{font-weight:800 !important;font-size:16px !important;line-height:1.18 !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;word-break:normal !important;color:#fff !important}
+        .rankingPro .rankMeta{font-size:12px !important;line-height:1.25 !important;opacity:.85 !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important}
+        .rankingPro .rankScoreBox{text-align:right !important;min-width:92px !important;display:flex !important;flex-direction:column !important;align-items:flex-end !important;justify-content:center !important;gap:3px !important;white-space:nowrap !important}
+        .rankingPro .rankScoreBox b{display:block !important;font-size:18px !important;line-height:1.1 !important;color:#facc15 !important}
+        .rankingPro .rankScoreBox small{font-size:12px !important;color:#fff !important;opacity:.9 !important}
+        .rankingPro .progressOuter{width:100% !important;height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:2px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
-        .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
-        .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-        .rankingPro .rankAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
-        .rankingPro .rankAvatar.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
-        .rankingPro .rankAvatar.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
-        .rankingPro .rankAvatar.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
-        .rankingPro .rankAvatarCrown{position:absolute;right:-6px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
-        .rankingPro .podiumAvatar{width:58px;height:58px;border-radius:50%;object-fit:cover;margin:4px auto 6px;display:block;background:#111827;border:2px solid rgba(255,255,255,.55)}
-        .rankingPro .podiumAvatar.gold{border:3px solid #facc15;box-shadow:0 0 18px rgba(250,204,21,.45)}
-        .rankingPro .podiumAvatar.silver{border:3px solid #e5e7eb;box-shadow:0 0 14px rgba(229,231,235,.25)}
-        .rankingPro .podiumAvatar.bronze{border:3px solid #cd7f32;box-shadow:0 0 14px rgba(205,127,50,.25)}
-        @keyframes leaderAvatarGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
-        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}}
+        .rankingPro .distanceHint{font-size:11px !important;line-height:1.25 !important;opacity:.78 !important;white-space:normal !important;overflow:visible !important}
+
+        .rankingPro .podiumAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;background:#111827;border:3px solid rgba(255,255,255,.55);box-shadow:0 8px 20px rgba(0,0,0,.30)}
+        .rankingPro .podiumAvatar.gold{border-color:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.18),0 0 24px rgba(250,204,21,.36),0 8px 20px rgba(0,0,0,.30)}
+        .rankingPro .podiumAvatar.silver{border-color:#e5e7eb}
+        .rankingPro .podiumAvatar.bronze{border-color:#cd7f32}
+        @keyframes leaderAvatarGlow{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(250,204,21,.16),0 0 18px rgba(250,204,21,.30),0 6px 18px rgba(0,0,0,.32)}50%{transform:scale(1.04);box-shadow:0 0 0 5px rgba(250,204,21,.20),0 0 30px rgba(250,204,21,.55),0 6px 18px rgba(0,0,0,.32)}}
+
+        @media(max-width:720px){
+          .rankingPro .rankingResumo{grid-template-columns:1fr 1fr}
+          .rankingPro .rankingResumoBox b{font-size:14px}
+          .rankingPro .rank{
+            grid-template-columns:40px 48px minmax(0,1fr) 76px !important;
+            gap:8px !important;
+            min-height:92px !important;
+            padding:14px 12px !important;
+            margin:10px 0 !important;
+          }
+          .rankingPro .rank > strong{font-size:22px !important;min-width:34px !important}
+          .rankingPro .rankAvatarWrap{width:48px !important;height:48px !important}
+          .rankingPro .rankAvatar{width:40px !important;height:40px !important}
+          .rankingPro .rankAvatar.gold{width:46px !important;height:46px !important}
+          .rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:44px !important;height:44px !important}
+          .rankingPro .rankName{font-size:15px !important}
+          .rankingPro .rankMeta{font-size:11px !important}
+          .rankingPro .rankScoreBox{min-width:72px !important}
+          .rankingPro .rankScoreBox b{font-size:16px !important}
+          .rankingPro .distanceHint{font-size:10.5px !important}
+          .rankingPro .podiumAvatar{width:54px;height:54px}
+        }
+
+        @media(max-width:390px){
+          .rankingPro .rank{
+            grid-template-columns:34px 42px minmax(0,1fr) 68px !important;
+            gap:7px !important;
+            padding:12px 10px !important;
+          }
+          .rankingPro .rank > strong{font-size:20px !important;min-width:30px !important}
+          .rankingPro .rankAvatarWrap{width:42px !important;height:42px !important}
+          .rankingPro .rankAvatar{width:36px !important;height:36px !important}
+          .rankingPro .rankAvatar.gold{width:40px !important;height:40px !important}
+          .rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:38px !important;height:38px !important}
+          .rankingPro .rankName{font-size:14px !important}
+          .rankingPro .rankScoreBox b{font-size:15px !important}
+        }
       `}</style>
 
       <div className="cardTitle">

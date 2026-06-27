@@ -532,19 +532,19 @@ function cleanTeamName(value) {
 
 const ROUND_32_FIXED_SLOTS = {
   73: ['2º Grupo A', '2º Grupo B'],
-  74: ['1º Grupo E', 'Melhor 3º (A/B/D/F)'],
+  74: ['Alemanha', 'Paraguai'],
   75: ['1º Grupo F', '2º Grupo C'],
   76: ['1º Grupo C', '2º Grupo F'],
-  77: ['1º Grupo I', 'Melhor 3º (D/F/G/H)'],
+  77: ['França', 'Suécia'],
   78: ['2º Grupo E', '2º Grupo I'],
   79: ['1º Grupo A', 'Melhor 3º (C/E/F/H/I)'],
   80: ['1º Grupo L', 'Melhor 3º (E/H/I/J/K)'],
-  81: ['1º Grupo D', 'Melhor 3º (B/E/F/J)'],
+  81: ['EUA', 'Bósnia'],
   82: ['1º Grupo G', 'Melhor 3º (A/E/H/J)'],
   83: ['2º Grupo K', '2º Grupo L'],
   84: ['1º Grupo H', '2º Grupo J'],
   85: ['1º Grupo B', 'Melhor 3º (E/F/G/J)'],
-  86: ['1º Grupo J', '2º Grupo H'],
+  86: ['Argentina', 'Cabo Verde'],
   87: ['1º Grupo K', 'Melhor 3º (D/E/I/J)'],
   88: ['2º Grupo D', '2º Grupo G']
 }
@@ -1529,6 +1529,216 @@ function App() {
     {msg && <p className="msg">{msg}</p>}
 
     {tab === 'palpites' && <section className="palpitesPoster">
+      <style>{`
+        @media (max-width: 700px) {
+          .palpitesPoster .posterGroup,
+          .resultadosBox .resultadoPhase {
+            overflow: hidden !important;
+          }
+
+          .palpitesPoster .posterMatches {
+            overflow: visible !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: grid !important;
+            grid-template-columns: 54px minmax(0, 1fr) 46px 12px 46px minmax(0, 1fr) !important;
+            grid-template-areas:
+              "no date date date date date"
+              "home home gh x ga away"
+              "pts pts pts pts pts pts" !important;
+            gap: 8px 5px !important;
+            align-items: center !important;
+            padding: 12px 8px !important;
+            overflow: visible !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterNo {
+            grid-area: no !important;
+            width: 48px !important;
+            min-width: 48px !important;
+            justify-self: start !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterDate {
+            grid-area: date !important;
+            min-width: 0 !important;
+            width: auto !important;
+            white-space: normal !important;
+            line-height: 1.1 !important;
+            justify-self: start !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterSide.right {
+            grid-area: home !important;
+            justify-self: stretch !important;
+            text-align: left !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterSide:not(.right) {
+            grid-area: away !important;
+            justify-self: stretch !important;
+            text-align: left !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput:nth-of-type(1) {
+            grid-area: gh !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch > b {
+            grid-area: x !important;
+            justify-self: center !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput:nth-of-type(2) {
+            grid-area: ga !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterPts {
+            grid-area: pts !important;
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
+            width: 46px !important;
+            min-width: 46px !important;
+            max-width: 46px !important;
+            height: 52px !important;
+            box-sizing: border-box !important;
+            padding: 0 !important;
+            text-align: center !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterSide,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            overflow: visible !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag.right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-direction: row !important;
+            gap: 5px !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .flagImg,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .emojiFlag,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .placeholderFlag {
+            flex: 0 0 auto !important;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .teamText {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
+            line-height: 1.05 !important;
+            font-size: 14px !important;
+          }
+
+          .resultadosBox .resultadoList {
+            overflow: visible !important;
+          }
+
+          .resultadosBox .resultadoRow {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: grid !important;
+            grid-template-columns: 88px minmax(0, 1fr) !important;
+            grid-template-areas:
+              "no date"
+              "home home"
+              "score score"
+              "away away"
+              "status status" !important;
+            gap: 8px !important;
+            align-items: center !important;
+            padding: 12px 8px !important;
+            overflow: visible !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoNo {
+            grid-area: no !important;
+            justify-self: start !important;
+            min-width: 0 !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoDate {
+            grid-area: date !important;
+            justify-self: start !important;
+            min-width: 0 !important;
+            white-space: normal !important;
+            line-height: 1.1 !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoTeam.right {
+            grid-area: home !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoScore {
+            grid-area: score !important;
+            justify-self: center !important;
+            min-width: 84px !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoTeam:not(.right) {
+            grid-area: away !important;
+          }
+
+          .resultadosBox .resultadoRow .statusOficial {
+            grid-area: status !important;
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+
+          .resultadosBox .resultadoRow .resultadoTeam,
+          .resultadosBox .resultadoRow .teamNameFlag {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+            justify-self: stretch !important;
+          }
+
+          .resultadosBox .resultadoRow .teamNameFlag,
+          .resultadosBox .resultadoRow .teamNameFlag.right {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            flex-direction: row !important;
+            gap: 6px !important;
+          }
+
+          .resultadosBox .resultadoRow .teamNameFlag .flagImg,
+          .resultadosBox .resultadoRow .teamNameFlag .emojiFlag,
+          .resultadosBox .resultadoRow .teamNameFlag .placeholderFlag {
+            flex: 0 0 auto !important;
+          }
+
+          .resultadosBox .resultadoRow .teamNameFlag .teamText {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
+            line-height: 1.1 !important;
+            font-size: 15px !important;
+          }
+        }
+      `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Bolão Traíras F.C.</span>

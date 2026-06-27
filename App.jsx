@@ -38,7 +38,13 @@ const AVATAR_BY_NAME = {
   'felipe orso': '/avatars/felipe-orso.png',
   'ademar schroeder': '/avatars/ademar-schroeder.png',
   'gilberto miranda': '/avatars/gilberto-miranda.png',
-  'leonardo cancian': '/avatars/leonardo-cancian.png'
+  'leonardo cancian': '/avatars/leonardo-cancian.png',
+  'leonardo gress de lima': '/avatars/leonardo-gress.png',
+  'andre ricardo zilio': '/avatars/andre-zilio.png',
+  'andre ricardo zílio': '/avatars/andre-zilio.png',
+  'norton maridoni': '/avatars/norton-mardini.png',
+  'norton mardini': '/avatars/norton-mardini.png',
+  'jardelino': null
 }
 
 function normalizeAvatarName(name = '') {
@@ -53,7 +59,22 @@ function normalizeAvatarName(name = '') {
 
 function avatarForPlayer(player) {
   const nameKey = normalizeAvatarName(player?.nome || player?.name || player?.username || '')
-  return AVATAR_BY_NAME[nameKey] || null
+  if (!nameKey) return null
+  if (AVATAR_BY_NAME[nameKey]) return AVATAR_BY_NAME[nameKey]
+
+  const match = Object.entries(AVATAR_BY_NAME)
+    .filter(([key, value]) => value && (nameKey.includes(key) || key.includes(nameKey)))
+    .sort((a, b) => b[0].length - a[0].length)[0]
+
+  return match ? match[1] : null
+}
+
+function initialsForPlayer(player) {
+  const raw = String(player?.nome || player?.name || player?.username || '?').trim()
+  const parts = raw.split(/\s+/).filter(Boolean)
+  if (!parts.length) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 function podiumAvatarClass(index) {
@@ -1624,7 +1645,12 @@ function App() {
         .rankingPro .rankingResumoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px}
         .rankingPro .rankingResumoBox span{display:block;font-size:12px;opacity:.75;margin-bottom:4px}
         .rankingPro .rankingResumoBox b{font-size:16px}
-        .rankingPro .rank{align-items:center;gap:10px}
+        .rankingPro .rank{display:grid!important;grid-template-columns:34px 58px minmax(0,1fr) 92px!important;align-items:center!important;gap:12px!important;padding:14px 12px!important;min-height:78px!important}
+        .rankingPro .rank strong{grid-column:auto!important;grid-row:auto!important;text-align:center;font-size:18px;line-height:1} 
+        .rankingPro .rankFallback{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#111827,#374151);color:#fff;font-weight:900;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+        .rankingPro .rankFallback.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
+        .rankingPro .rankFallback.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankFallback.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
         .rankingPro .rank.top3{border-left:5px solid #facc15}
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
@@ -1648,7 +1674,7 @@ function App() {
         .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
-        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}}
+        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{grid-template-columns:32px 48px minmax(0,1fr) 72px!important;gap:8px!important;padding:12px 8px!important;min-height:82px!important}.rankingPro .rankScoreBox{min-width:0!important}.rankingPro .rankScoreBox b{font-size:15px!important}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar,.rankingPro .rankFallback{width:38px;height:38px;font-size:12px}.rankingPro .rankAvatar.gold,.rankingPro .rankFallback.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze,.rankingPro .rankFallback.silver,.rankingPro .rankFallback.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}.rankingPro .rankName{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15}.rankingPro .rankMeta,.rankingPro .distanceHint{font-size:10px!important}}
       `}</style>
 
       <div className="cardTitle">
@@ -1682,7 +1708,9 @@ function App() {
           const medalClass = podiumAvatarClass(i)
           return <div className={`podiumCard p${i+1}`} key={r.nome}>
             <span>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
-            {avatar && <img className={`podiumAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />}
+            {avatar
+              ? <img className={`podiumAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />
+              : <div className={`podiumAvatar rankFallback ${medalClass}`}>{initialsForPlayer(r)}</div>}
             <b>{r.nome}</b>
             <strong>{r.pontos} pts</strong>
             <small>{r.aproveitamento}% de aproveitamento</small>
@@ -1697,10 +1725,12 @@ function App() {
         const medalClass = podiumAvatarClass(i)
         return <div className={`rank ${i===0?'leader':''} ${rankBandClass(i)}`} key={r.nome}>
           <strong>{i + 1}º</strong>
-          {avatar && <div className="rankAvatarWrap">
-            <img className={`rankAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />
+          <div className="rankAvatarWrap">
+            {avatar
+              ? <img className={`rankAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />
+              : <div className={`rankFallback ${medalClass}`}>{initialsForPlayer(r)}</div>}
             {i === 0 && <span className="rankAvatarCrown">👑</span>}
-          </div>}
+          </div>
           <div className="rankMain">
             <span className="rankName">{i===0 ? '👑 ' : ''}{r.nome}</span>
             <small className="rankMeta">{r.exatos} exatos · {r.acertos} acertos · {r.palpites || 0} palpites</small>

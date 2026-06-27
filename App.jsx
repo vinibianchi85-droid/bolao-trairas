@@ -1684,17 +1684,17 @@ function App() {
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
         .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-        .rankingPro .rankAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
-        .rankingPro .rankAvatar.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
-        .rankingPro .rankAvatar.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
-        .rankingPro .rankAvatar.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatar{width:54px;height:54px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+        .rankingPro .rankAvatar.gold{width:64px;height:64px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
+        .rankingPro .rankAvatar.silver{width:60px;height:60px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatar.bronze{width:60px;height:60px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
         .rankingPro .rankAvatarCrown{position:absolute;right:-6px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
-        .rankingPro .podiumAvatar{width:58px;height:58px;border-radius:50%;object-fit:cover;margin:4px auto 6px;display:block;background:#111827;border:2px solid rgba(255,255,255,.55)}
-        .rankingPro .podiumAvatar.gold{border:3px solid #facc15;box-shadow:0 0 18px rgba(250,204,21,.45)}
+        .rankingPro .podiumAvatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:4px auto 6px;display:block;background:#111827;border:2px solid rgba(255,255,255,.55)}
+        border:3px solid #facc15;box-shadow:0 0 18px rgba(250,204,21,.45)}
         .rankingPro .podiumAvatar.silver{border:3px solid #e5e7eb;box-shadow:0 0 14px rgba(229,231,235,.25)}
         .rankingPro .podiumAvatar.bronze{border:3px solid #cd7f32;box-shadow:0 0 14px rgba(205,127,50,.25)}
         @keyframes leaderAvatarGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
-        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{grid-template-columns:38px 48px minmax(0,1fr) 82px !important;align-items:center !important;gap:10px !important;padding:14px 12px !important}.rankingPro .rank > strong{font-size:20px}.rankingPro .rankScoreBox{min-width:82px;text-align:right}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}.rankingPro .rankName{font-size:15px}.rankingPro .rankMeta{font-size:11px}.rankingPro .distanceHint{font-size:10px}}
+        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{grid-template-columns:38px 48px minmax(0,1fr) 82px !important;align-items:center !important;gap:10px !important;padding:14px 12px !important}.rankingPro .rank > strong{font-size:20px}.rankingPro .rankScoreBox{min-width:82px;text-align:right}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:48px;height:48px}.rankingPro .rankAvatar.gold{width:56px;height:56px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:52px;height:52px}.rankingPro .podiumAvatar{width:66px;height:66px}.rankingPro .rankName{font-size:15px}.rankingPro .rankMeta{font-size:11px}.rankingPro .distanceHint{font-size:10px}}
       `}</style>
 
       <div className="cardTitle">

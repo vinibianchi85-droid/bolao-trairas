@@ -1529,6 +1529,76 @@ function App() {
     {msg && <p className="msg">{msg}</p>}
 
     {tab === 'palpites' && <section className="palpitesPoster">
+      <style>{`
+        @media (max-width: 720px) {
+          .palpitesPoster .posterMatches {
+            overflow: hidden;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch {
+            grid-template-columns: 52px 86px minmax(0, 1fr) 44px 12px 44px minmax(0, 1fr);
+            column-gap: 6px;
+            row-gap: 6px;
+            align-items: center;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterSide {
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag {
+            min-width: 0;
+            max-width: 100%;
+            gap: 4px;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .flagImg,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .emojiFlag,
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .placeholderFlag {
+            flex: 0 0 auto;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .teamText {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
+            width: 44px;
+            min-width: 44px;
+          }
+        }
+
+        @media (max-width: 430px) {
+          .palpitesPoster .posterMatch.palpitesMatch {
+            grid-template-columns: 44px 82px minmax(46px, 1fr) 40px 10px 40px minmax(46px, 1fr);
+            column-gap: 5px;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterNo {
+            padding-left: 7px;
+            padding-right: 7px;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterDate {
+            font-size: 12px;
+            line-height: 1.15;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
+            width: 40px;
+            min-width: 40px;
+          }
+
+          .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .teamText {
+            font-size: 13px;
+          }
+        }
+      `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
           <span>Bolão Traíras F.C.</span>

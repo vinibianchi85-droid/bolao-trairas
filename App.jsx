@@ -8,8 +8,6 @@ import {
 import './style.css'
 
 
-
-
 const AVATAR_BY_NAME = {
   'norton maridoni': '/avatars/norton-mardini.png',
   'norton mardini': '/avatars/norton-mardini.png',
@@ -19,11 +17,13 @@ const AVATAR_BY_NAME = {
   'ary junior': '/avatars/ary-junior.png',
   'ary junior oliveira ribeiro': '/avatars/ary-junior.png',
   'thiago brum': '/avatars/thiago-brum.png',
+  'thiago bruno': '/avatars/thiago-brum.png',
   'thiago': '/avatars/thiago-brum.png',
   'lucas plautz': '/avatars/lucas-plautz.png',
   'vinicius bianchini': '/avatars/vinicius-bianchini.png',
   'vinicius bianchini da silva': '/avatars/vinicius-bianchini.png',
   'vinicius': '/avatars/vinicius-bianchini.png',
+  'vini': '/avatars/vinicius-bianchini.png',
   'renan andrade': '/avatars/renan-andrade.png',
   'everton luz': '/avatars/everton-luz.png',
   'everton da luz': '/avatars/everton-luz.png',
@@ -33,18 +33,23 @@ const AVATAR_BY_NAME = {
   'rafael miranda': '/avatars/rafael-miranda.png',
   'jefferson silveira': '/avatars/jefferson-silveira.png',
   'jeferson silveira': '/avatars/jefferson-silveira.png',
+  'jefferson': '/avatars/jefferson-silveira.png',
+  'jeferson': '/avatars/jefferson-silveira.png',
   'laercio': '/avatars/laercio.png',
   'laércio': '/avatars/laercio.png',
   'lercio': '/avatars/laercio.png',
-  'lércio': '/avatars/laercio.png',
+  'leonardo secretti': '/avatars/laercio.png',
+  'leo secretti': '/avatars/laercio.png',
   'felipe gastaldo': '/avatars/felipe-gastaldo.png',
   'joao alberto': '/avatars/joao-alberto.png',
   'joão alberto': '/avatars/joao-alberto.png',
-  'joaozinho': '/avatars/joao-alberto.png',
+  'joao': '/avatars/joao-alberto.png',
+  'joão': '/avatars/joao-alberto.png',
   'andre zilio': '/avatars/andre-zilio.png',
   'andré zílio': '/avatars/andre-zilio.png',
   'andre ricardo zilio': '/avatars/andre-zilio.png',
   'andré ricardo zílio': '/avatars/andre-zilio.png',
+  'zilio': '/avatars/andre-zilio.png',
   'felipe orso': '/avatars/felipe-orso.png',
   'dr felipe orso': '/avatars/felipe-orso.png',
   'ademar schroeder': '/avatars/ademar-schroeder.png',
@@ -60,21 +65,21 @@ const AVATAR_RULES = [
   [/douglas.*silva/i, '/avatars/douglas-silva.png'],
   [/ronan.*vendrusc/i, '/avatars/ronan-vendrusculo.png'],
   [/ary.*junior/i, '/avatars/ary-junior.png'],
-  [/thiago.*brum|thiago/i, '/avatars/thiago-brum.png'],
+  [/thiago.*brum|thiago.*bruno/i, '/avatars/thiago-brum.png'],
   [/lucas.*plautz/i, '/avatars/lucas-plautz.png'],
-  [/vinicius.*bianchini|vinicius/i, '/avatars/vinicius-bianchini.png'],
+  [/vinicius.*bianchini|^vinicius$|^vini$/i, '/avatars/vinicius-bianchini.png'],
   [/renan.*andrade/i, '/avatars/renan-andrade.png'],
-  [/everton.*luz|everton/i, '/avatars/everton-luz.png'],
+  [/everton.*luz|everton.*da.*luz|^everton$/i, '/avatars/everton-luz.png'],
   [/leonardo.*gress/i, '/avatars/leonardo-gress.png'],
   [/rafael.*miranda/i, '/avatars/rafael-miranda.png'],
-  [/jef+erson.*silveira/i, '/avatars/jefferson-silveira.png'],
-  [/la[eé]rcio|lercio|l[eé]rcio/i, '/avatars/laercio.png'],
+  [/jef+erson.*silveira|^jef+erson$/i, '/avatars/jefferson-silveira.png'],
+  [/laercio|laércio|lercio|leonardo.*secretti/i, '/avatars/laercio.png'],
   [/felipe.*gastaldo/i, '/avatars/felipe-gastaldo.png'],
-  [/jo[aã]o.*alberto|joaozinho/i, '/avatars/joao-alberto.png'],
-  [/andr[eé].*z[ií]lio/i, '/avatars/andre-zilio.png'],
+  [/jo[aã]o.*alberto|^jo[aã]o$/i, '/avatars/joao-alberto.png'],
+  [/andre.*zilio|andr[eé].*z[ií]lio|zilio/i, '/avatars/andre-zilio.png'],
   [/felipe.*orso/i, '/avatars/felipe-orso.png'],
-  [/ademar.*schroeder|ademar/i, '/avatars/ademar-schroeder.png'],
-  [/gilberto.*miranda|gilberto/i, '/avatars/gilberto-miranda.png'],
+  [/ademar.*schroeder|^ademar$/i, '/avatars/ademar-schroeder.png'],
+  [/gilberto.*miranda|^gilberto$/i, '/avatars/gilberto-miranda.png'],
   [/leonardo.*cancian|leo.*cancian/i, '/avatars/leonardo-cancian.png']
 ]
 
@@ -101,6 +106,7 @@ function podiumAvatarClass(index) {
   if (index === 2) return 'bronze'
   return 'default'
 }
+
 
 async function fetchAllRows(table, select = '*', options = {}) {
   const pageSize = 1000
@@ -1668,25 +1674,25 @@ function App() {
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
         .rankingPro .rank.middle{border-left:5px solid rgba(255,255,255,.18)}
-        .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto}
-        .rankingPro .rankAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
-        .rankingPro .rankAvatar.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
-        .rankingPro .rankAvatar.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
-        .rankingPro .rankAvatar.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
-        .rankingPro .rankAvatarCrown{position:absolute;right:-6px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
         .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
         .rankingPro .rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .rankingPro .podiumAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;background:#111827;border:3px solid rgba(255,255,255,.55);box-shadow:0 8px 20px rgba(0,0,0,.30)}
-        .rankingPro .podiumAvatar.gold{border-color:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.18),0 0 24px rgba(250,204,21,.36),0 8px 20px rgba(0,0,0,.30)}
-        .rankingPro .podiumAvatar.silver{border-color:#e5e7eb}
-        .rankingPro .podiumAvatar.bronze{border-color:#cd7f32}
-        @keyframes leaderAvatarGlow{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(250,204,21,.16),0 0 18px rgba(250,204,21,.30),0 6px 18px rgba(0,0,0,.32)}50%{transform:scale(1.04);box-shadow:0 0 0 5px rgba(250,204,21,.20),0 0 30px rgba(250,204,21,.55),0 6px 18px rgba(0,0,0,.32)}}
         .rankingPro .rankMeta{font-size:12px;opacity:.8}
         .rankingPro .rankScoreBox{text-align:right;min-width:95px}
         .rankingPro .rankScoreBox b{display:block}
         .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
+        .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+        .rankingPro .rankAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+        .rankingPro .rankAvatar.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
+        .rankingPro .rankAvatar.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatar.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatarCrown{position:absolute;right:-6px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+        .rankingPro .podiumAvatar{width:58px;height:58px;border-radius:50%;object-fit:cover;margin:4px auto 6px;display:block;background:#111827;border:2px solid rgba(255,255,255,.55)}
+        .rankingPro .podiumAvatar.gold{border:3px solid #facc15;box-shadow:0 0 18px rgba(250,204,21,.45)}
+        .rankingPro .podiumAvatar.silver{border:3px solid #e5e7eb;box-shadow:0 0 14px rgba(229,231,235,.25)}
+        .rankingPro .podiumAvatar.bronze{border:3px solid #cd7f32;box-shadow:0 0 14px rgba(205,127,50,.25)}
+        @keyframes leaderAvatarGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
         @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}}
       `}</style>
 

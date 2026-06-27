@@ -11,75 +11,48 @@ import './style.css'
 
 
 const AVATAR_BY_NAME = {
-  // Corrigidos e com apelidos para evitar erro por acento, sobrenome ou corretor
   'norton maridoni': '/avatars/norton-mardini.png',
   'norton mardini': '/avatars/norton-mardini.png',
-
   'douglas silva': '/avatars/douglas-silva.png',
-
   'ronan vendrusculo': '/avatars/ronan-vendrusculo.png',
   'ronan vendruscolo': '/avatars/ronan-vendrusculo.png',
-
   'ary junior': '/avatars/ary-junior.png',
   'ary junior oliveira ribeiro': '/avatars/ary-junior.png',
-
-  // O corretor tinha colocado Thiago Bruno, mas o correto é Thiago Brum.
-  // Mantive os dois apontando para o mesmo avatar antigo para não quebrar.
-  'thiago brum': '/avatars/thiago-bruno.png',
-  'thiago bruno': '/avatars/thiago-bruno.png',
-
+  'thiago brum': '/avatars/thiago-brum.png',
+  'thiago bruno': '/avatars/thiago-brum.png',
   'lucas plautz': '/avatars/lucas-plautz.png',
-
   'vinicius bianchini': '/avatars/vinicius-bianchini.png',
   'vinicius bianchini da silva': '/avatars/vinicius-bianchini.png',
-
   'renan andrade': '/avatars/renan-andrade.png',
-
   'everton luz': '/avatars/everton-luz.png',
   'everton da luz': '/avatars/everton-luz.png',
-
   'leonardo gress': '/avatars/leonardo-gress.png',
   'leonardo gress de lima': '/avatars/leonardo-gress.png',
-
   'rafael miranda': '/avatars/rafael-miranda.png',
-
   'jefferson silveira': '/avatars/jefferson-silveira.png',
   'jeferson silveira': '/avatars/jefferson-silveira.png',
-
-  // O corretor tinha colocado Leonardo Secretti, mas o correto é Laércio.
-  // Mantive Leonardo Secretti como alias para o mesmo arquivo, caso ainda exista no banco.
-  'laercio': '/avatars/leonardo-secretti.png',
-  'laércio': '/avatars/leonardo-secretti.png',
   'leonardo secretti': '/avatars/leonardo-secretti.png',
-
   'felipe gastaldo': '/avatars/felipe-gastaldo.png',
-
   'joao alberto': '/avatars/joao-alberto.png',
   'joão alberto': '/avatars/joao-alberto.png',
-
+  'laércio': '/avatars/laercio.png',
+  'laercio': '/avatars/laercio.png',
   'andre zilio': '/avatars/andre-zilio.png',
   'andré zílio': '/avatars/andre-zilio.png',
   'andre ricardo zilio': '/avatars/andre-zilio.png',
   'andré ricardo zílio': '/avatars/andre-zilio.png',
-
   'felipe orso': '/avatars/felipe-orso.png',
-
   'ademar schroeder': '/avatars/ademar-schroeder.png',
-
   'gilberto miranda': '/avatars/gilberto-miranda.png',
-
   'leonardo cancian': '/avatars/leonardo-cancian.png'
-}
+} 
 
 const AVATAR_RULES = [
   [/norton.*mardin|norton.*maridon/i, '/avatars/norton-mardini.png'],
   [/douglas.*silva/i, '/avatars/douglas-silva.png'],
   [/ronan.*vendrusc/i, '/avatars/ronan-vendrusculo.png'],
   [/ary.*junior/i, '/avatars/ary-junior.png'],
-
-  // Corrigido: Thiago Brum. Mantém Bruno como variação.
-  [/thiago.*brum|thiago.*bruno/i, '/avatars/thiago-bruno.png'],
-
+  [/thiago.*bruno/i, '/avatars/thiago-bruno.png'],
   [/lucas.*plautz/i, '/avatars/lucas-plautz.png'],
   [/vinicius.*bianchini/i, '/avatars/vinicius-bianchini.png'],
   [/renan.*andrade/i, '/avatars/renan-andrade.png'],
@@ -87,13 +60,10 @@ const AVATAR_RULES = [
   [/leonardo.*gress/i, '/avatars/leonardo-gress.png'],
   [/rafael.*miranda/i, '/avatars/rafael-miranda.png'],
   [/jef+erson.*silveira/i, '/avatars/jefferson-silveira.png'],
-
-  // Corrigido: Laércio. Mantém Leonardo Secretti como variação antiga.
-  [/laercio|laércio|leonardo.*secretti/i, '/avatars/leonardo-secretti.png'],
-
+  [/leonardo.*secretti/i, '/avatars/leonardo-secretti.png'],
   [/felipe.*gastaldo/i, '/avatars/felipe-gastaldo.png'],
-  [/joao.*alberto|joão.*alberto/i, '/avatars/joao-alberto.png'],
-  [/andre.*zilio|andré.*zílio/i, '/avatars/andre-zilio.png'],
+  [/joao.*alberto/i, '/avatars/joao-alberto.png'],
+  [/andre.*zilio/i, '/avatars/andre-zilio.png'],
   [/felipe.*orso/i, '/avatars/felipe-orso.png'],
   [/ademar.*schroeder/i, '/avatars/ademar-schroeder.png'],
   [/gilberto.*miranda/i, '/avatars/gilberto-miranda.png'],

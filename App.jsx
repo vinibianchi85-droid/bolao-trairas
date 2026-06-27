@@ -26,6 +26,7 @@ const AVATAR_BY_NAME = {
   'everton luz': '/avatars/everton-luz.png',
   'everton da luz': '/avatars/everton-luz.png',
   'leonardo gress': '/avatars/leonardo-gress.png',
+  'leonardo gress de lima': '/avatars/leonardo-gress.png',
   'rafael miranda': '/avatars/rafael-miranda.png',
   'jefferson silveira': '/avatars/jefferson-silveira.png',
   'jeferson silveira': '/avatars/jefferson-silveira.png',
@@ -35,11 +36,36 @@ const AVATAR_BY_NAME = {
   'joão alberto': '/avatars/joao-alberto.png',
   'andre zilio': '/avatars/andre-zilio.png',
   'andré zílio': '/avatars/andre-zilio.png',
+  'andre ricardo zilio': '/avatars/andre-zilio.png',
+  'andré ricardo zílio': '/avatars/andre-zilio.png',
   'felipe orso': '/avatars/felipe-orso.png',
   'ademar schroeder': '/avatars/ademar-schroeder.png',
   'gilberto miranda': '/avatars/gilberto-miranda.png',
   'leonardo cancian': '/avatars/leonardo-cancian.png'
-}
+} 
+
+const AVATAR_RULES = [
+  [/norton.*mardin|norton.*maridon/i, '/avatars/norton-mardini.png'],
+  [/douglas.*silva/i, '/avatars/douglas-silva.png'],
+  [/ronan.*vendrusc/i, '/avatars/ronan-vendrusculo.png'],
+  [/ary.*junior/i, '/avatars/ary-junior.png'],
+  [/thiago.*bruno/i, '/avatars/thiago-bruno.png'],
+  [/lucas.*plautz/i, '/avatars/lucas-plautz.png'],
+  [/vinicius.*bianchini/i, '/avatars/vinicius-bianchini.png'],
+  [/renan.*andrade/i, '/avatars/renan-andrade.png'],
+  [/everton.*luz/i, '/avatars/everton-luz.png'],
+  [/leonardo.*gress/i, '/avatars/leonardo-gress.png'],
+  [/rafael.*miranda/i, '/avatars/rafael-miranda.png'],
+  [/jef+erson.*silveira/i, '/avatars/jefferson-silveira.png'],
+  [/leonardo.*secretti/i, '/avatars/leonardo-secretti.png'],
+  [/felipe.*gastaldo/i, '/avatars/felipe-gastaldo.png'],
+  [/joao.*alberto/i, '/avatars/joao-alberto.png'],
+  [/andre.*zilio/i, '/avatars/andre-zilio.png'],
+  [/felipe.*orso/i, '/avatars/felipe-orso.png'],
+  [/ademar.*schroeder/i, '/avatars/ademar-schroeder.png'],
+  [/gilberto.*miranda/i, '/avatars/gilberto-miranda.png'],
+  [/leonardo.*cancian/i, '/avatars/leonardo-cancian.png']
+]
 
 function normalizeAvatarName(name = '') {
   return String(name)
@@ -53,7 +79,9 @@ function normalizeAvatarName(name = '') {
 
 function avatarForPlayer(player) {
   const nameKey = normalizeAvatarName(player?.nome || player?.name || player?.username || '')
-  return AVATAR_BY_NAME[nameKey] || null
+  if (AVATAR_BY_NAME[nameKey]) return AVATAR_BY_NAME[nameKey]
+  const rule = AVATAR_RULES.find(([regex]) => regex.test(nameKey))
+  return rule ? rule[1] : null
 }
 
 function podiumAvatarClass(index) {

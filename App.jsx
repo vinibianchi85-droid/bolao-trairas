@@ -1552,6 +1552,8 @@ function App() {
             min-width: 0;
             max-width: 100%;
             gap: 3px;
+            white-space: normal !important;
+            overflow: visible !important;
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag.right {
@@ -1568,10 +1570,12 @@ function App() {
 
           .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .teamText {
             min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 12.5px;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+            word-break: normal;
+            line-height: 1.05;
+            font-size: 12px;
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
@@ -1584,8 +1588,8 @@ function App() {
 
         @media (max-width: 430px) {
           .palpitesPoster .posterMatch.palpitesMatch {
-            grid-template-columns: 34px 54px minmax(78px, 1fr) 32px 7px 32px minmax(78px, 1fr);
-            column-gap: 3px;
+            grid-template-columns: 32px 48px minmax(64px, 1fr) 30px 6px 30px minmax(64px, 1fr);
+            column-gap: 2px;
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .posterNo {
@@ -1608,7 +1612,8 @@ function App() {
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .teamText {
-            font-size: 11.5px;
+            font-size: 10.8px;
+            line-height: 1.05;
           }
         }
       `}</style>
@@ -1868,6 +1873,8 @@ function App() {
             min-width: 0;
             max-width: 100%;
             gap: 3px;
+            white-space: normal !important;
+            overflow: visible !important;
           }
 
           .resultadosBox .resultadoTeam .teamNameFlag.right {
@@ -1884,10 +1891,12 @@ function App() {
 
           .resultadosBox .resultadoTeam .teamNameFlag .teamText {
             min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 12.5px;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+            word-break: normal;
+            line-height: 1.05;
+            font-size: 12px;
           }
 
           .resultadosBox .statusOficial {
@@ -1897,8 +1906,8 @@ function App() {
 
         @media (max-width: 430px) {
           .resultadosBox .resultadoRow {
-            grid-template-columns: 34px 54px minmax(78px, 1fr) 34px minmax(78px, 1fr);
-            column-gap: 3px;
+            grid-template-columns: 32px 48px minmax(66px, 1fr) 32px minmax(66px, 1fr);
+            column-gap: 2px;
           }
 
           .resultadosBox .resultadoNo {
@@ -1918,7 +1927,8 @@ function App() {
           }
 
           .resultadosBox .resultadoTeam .teamNameFlag .teamText {
-            font-size: 11.5px;
+            font-size: 10.8px;
+            line-height: 1.05;
           }
         }
       `}</style>

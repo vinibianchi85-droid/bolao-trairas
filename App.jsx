@@ -8,6 +8,61 @@ import {
 import './style.css'
 
 
+
+
+const AVATAR_BY_NAME = {
+  'norton maridoni': '/avatars/norton-mardini.png',
+  'norton mardini': '/avatars/norton-mardini.png',
+  'douglas silva': '/avatars/douglas-silva.png',
+  'ronan vendrusculo': '/avatars/ronan-vendrusculo.png',
+  'ronan vendruscolo': '/avatars/ronan-vendrusculo.png',
+  'ary junior': '/avatars/ary-junior.png',
+  'ary junior oliveira ribeiro': '/avatars/ary-junior.png',
+  'thiago bruno': '/avatars/thiago-bruno.png',
+  'lucas plautz': '/avatars/lucas-plautz.png',
+  'vinicius bianchini': '/avatars/vinicius-bianchini.png',
+  'vinicius bianchini da silva': '/avatars/vinicius-bianchini.png',
+  'renan andrade': '/avatars/renan-andrade.png',
+  'everton luz': '/avatars/everton-luz.png',
+  'everton da luz': '/avatars/everton-luz.png',
+  'leonardo gress': '/avatars/leonardo-gress.png',
+  'rafael miranda': '/avatars/rafael-miranda.png',
+  'jefferson silveira': '/avatars/jefferson-silveira.png',
+  'jeferson silveira': '/avatars/jefferson-silveira.png',
+  'leonardo secretti': '/avatars/leonardo-secretti.png',
+  'felipe gastaldo': '/avatars/felipe-gastaldo.png',
+  'joao alberto': '/avatars/joao-alberto.png',
+  'joão alberto': '/avatars/joao-alberto.png',
+  'andre zilio': '/avatars/andre-zilio.png',
+  'andré zílio': '/avatars/andre-zilio.png',
+  'felipe orso': '/avatars/felipe-orso.png',
+  'ademar schroeder': '/avatars/ademar-schroeder.png',
+  'gilberto miranda': '/avatars/gilberto-miranda.png',
+  'leonardo cancian': '/avatars/leonardo-cancian.png'
+}
+
+function normalizeAvatarName(name = '') {
+  return String(name)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function avatarForPlayer(player) {
+  const nameKey = normalizeAvatarName(player?.nome || player?.name || player?.username || '')
+  return AVATAR_BY_NAME[nameKey] || null
+}
+
+function podiumAvatarClass(index) {
+  if (index === 0) return 'gold'
+  if (index === 1) return 'silver'
+  if (index === 2) return 'bronze'
+  return 'default'
+}
+
 async function fetchAllRows(table, select = '*', options = {}) {
   const pageSize = 1000
   let from = 0
@@ -1574,15 +1629,26 @@ function App() {
         .rankingPro .rank.top10{border-left:5px solid #22c55e}
         .rankingPro .rank.bottom3{border-left:5px solid #ef4444}
         .rankingPro .rank.middle{border-left:5px solid rgba(255,255,255,.18)}
+        .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto}
+        .rankingPro .rankAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+        .rankingPro .rankAvatar.gold{width:50px;height:50px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
+        .rankingPro .rankAvatar.silver{width:48px;height:48px;border:3px solid #e5e7eb;box-shadow:0 0 0 3px rgba(229,231,235,.16),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatar.bronze{width:48px;height:48px;border:3px solid #cd7f32;box-shadow:0 0 0 3px rgba(205,127,50,.18),0 6px 18px rgba(0,0,0,.30)}
+        .rankingPro .rankAvatarCrown{position:absolute;right:-6px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
         .rankingPro .rankMain{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
         .rankingPro .rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rankingPro .podiumAvatar{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;background:#111827;border:3px solid rgba(255,255,255,.55);box-shadow:0 8px 20px rgba(0,0,0,.30)}
+        .rankingPro .podiumAvatar.gold{border-color:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.18),0 0 24px rgba(250,204,21,.36),0 8px 20px rgba(0,0,0,.30)}
+        .rankingPro .podiumAvatar.silver{border-color:#e5e7eb}
+        .rankingPro .podiumAvatar.bronze{border-color:#cd7f32}
+        @keyframes leaderAvatarGlow{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(250,204,21,.16),0 0 18px rgba(250,204,21,.30),0 6px 18px rgba(0,0,0,.32)}50%{transform:scale(1.04);box-shadow:0 0 0 5px rgba(250,204,21,.20),0 0 30px rgba(250,204,21,.55),0 6px 18px rgba(0,0,0,.32)}}
         .rankingPro .rankMeta{font-size:12px;opacity:.8}
         .rankingPro .rankScoreBox{text-align:right;min-width:95px}
         .rankingPro .rankScoreBox b{display:block}
         .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
-        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}}
+        @media(max-width:720px){.rankingPro .rankingResumo{grid-template-columns:1fr 1fr}.rankingPro .rank{align-items:flex-start}.rankingPro .rankScoreBox{min-width:80px}.rankingPro .rankingResumoBox b{font-size:14px}.rankingPro .rankAvatar{width:38px;height:38px}.rankingPro .rankAvatar.gold{width:44px;height:44px}.rankingPro .rankAvatar.silver,.rankingPro .rankAvatar.bronze{width:42px;height:42px}.rankingPro .podiumAvatar{width:54px;height:54px}}
       `}</style>
 
       <div className="cardTitle">
@@ -1611,19 +1677,30 @@ function App() {
       </div>
 
       <div className="podium">
-        {ranking.slice(0,3).map((r,i) => <div className={`podiumCard p${i+1}`} key={r.nome}>
-          <span>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
-          <b>{r.nome}</b>
-          <strong>{r.pontos} pts</strong>
-          <small>{r.aproveitamento}% de aproveitamento</small>
-        </div>)}
+        {ranking.slice(0,3).map((r,i) => {
+          const avatar = avatarForPlayer(r)
+          const medalClass = podiumAvatarClass(i)
+          return <div className={`podiumCard p${i+1}`} key={r.nome}>
+            <span>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
+            {avatar && <img className={`podiumAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />}
+            <b>{r.nome}</b>
+            <strong>{r.pontos} pts</strong>
+            <small>{r.aproveitamento}% de aproveitamento</small>
+          </div>
+        })}
       </div>
 
       {ranking.map((r, i) => {
         const leaderDistance = i === 0 ? 0 : Math.max(0, (ranking[0]?.pontos || 0) - (r.pontos || 0))
         const podiumDistance = i < 3 ? 0 : Math.max(0, podiumCutPoints() - (r.pontos || 0) + 1)
+        const avatar = avatarForPlayer(r)
+        const medalClass = podiumAvatarClass(i)
         return <div className={`rank ${i===0?'leader':''} ${rankBandClass(i)}`} key={r.nome}>
           <strong>{i + 1}º</strong>
+          {avatar && <div className="rankAvatarWrap">
+            <img className={`rankAvatar ${medalClass}`} src={avatar} alt={r.nome} loading="lazy" />
+            {i === 0 && <span className="rankAvatarCrown">👑</span>}
+          </div>}
           <div className="rankMain">
             <span className="rankName">{i===0 ? '👑 ' : ''}{r.nome}</span>
             <small className="rankMeta">{r.exatos} exatos · {r.acertos} acertos · {r.palpites || 0} palpites</small>

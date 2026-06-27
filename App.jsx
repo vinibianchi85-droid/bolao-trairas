@@ -1544,14 +1544,14 @@ function App() {
             width: 100% !important;
             box-sizing: border-box !important;
             display: grid !important;
-            grid-template-columns: 54px minmax(0, 1fr) 46px 12px 46px minmax(0, 1fr) !important;
+            grid-template-columns: 50px minmax(0, .86fr) 42px 10px 42px minmax(0, 1.38fr) !important;
             grid-template-areas:
               "no date date date date date"
               "home home gh x ga away"
               "pts pts pts pts pts pts" !important;
-            gap: 8px 5px !important;
+            gap: 8px 4px !important;
             align-items: center !important;
-            padding: 12px 8px !important;
+            padding: 12px 6px !important;
             overflow: visible !important;
           }
 
@@ -1603,9 +1603,9 @@ function App() {
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
-            width: 46px !important;
-            min-width: 46px !important;
-            max-width: 46px !important;
+            width: 42px !important;
+            min-width: 42px !important;
+            max-width: 42px !important;
             height: 52px !important;
             box-sizing: border-box !important;
             padding: 0 !important;
@@ -1626,7 +1626,7 @@ function App() {
             align-items: center !important;
             justify-content: flex-start !important;
             flex-direction: row !important;
-            gap: 5px !important;
+            gap: 4px !important;
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .flagImg,
@@ -1644,7 +1644,7 @@ function App() {
             overflow-wrap: anywhere !important;
             word-break: normal !important;
             line-height: 1.05 !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
           }
 
           .resultadosBox .resultadoList {
@@ -1655,16 +1655,14 @@ function App() {
             width: 100% !important;
             box-sizing: border-box !important;
             display: grid !important;
-            grid-template-columns: 88px minmax(0, 1fr) !important;
+            grid-template-columns: 84px minmax(0, .9fr) 84px minmax(0, 1.35fr) !important;
             grid-template-areas:
-              "no date"
-              "home home"
-              "score score"
-              "away away"
-              "status status" !important;
-            gap: 8px !important;
+              "no date date date"
+              "home home score away"
+              "status status status status" !important;
+            gap: 8px 5px !important;
             align-items: center !important;
-            padding: 12px 8px !important;
+            padding: 12px 6px !important;
             overflow: visible !important;
           }
 
@@ -1689,7 +1687,8 @@ function App() {
           .resultadosBox .resultadoRow .resultadoScore {
             grid-area: score !important;
             justify-self: center !important;
-            min-width: 84px !important;
+            min-width: 78px !important;
+            width: 78px !important;
           }
 
           .resultadosBox .resultadoRow .resultadoTeam:not(.right) {
@@ -1735,7 +1734,7 @@ function App() {
             overflow-wrap: anywhere !important;
             word-break: normal !important;
             line-height: 1.1 !important;
-            font-size: 15px !important;
+            font-size: 13px !important;
           }
         }
       `}</style>
@@ -1977,6 +1976,40 @@ function App() {
 
 
     {tab === 'resultados' && <section className="card resultadosBox">
+      <style>{`
+        @media (max-width: 700px) {
+          .resultadosBox .resultadoPhase { overflow: hidden !important; }
+          .resultadosBox .resultadoList { overflow: visible !important; }
+          .resultadosBox .resultadoRow {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: grid !important;
+            grid-template-columns: 84px minmax(0, .9fr) 78px minmax(0, 1.35fr) !important;
+            grid-template-areas:
+              "no date date date"
+              "home home score away"
+              "status status status status" !important;
+            gap: 8px 5px !important;
+            align-items: center !important;
+            padding: 12px 6px !important;
+            overflow: visible !important;
+          }
+          .resultadosBox .resultadoRow .resultadoNo { grid-area: no !important; justify-self: start !important; min-width: 0 !important; }
+          .resultadosBox .resultadoRow .resultadoDate { grid-area: date !important; justify-self: start !important; min-width: 0 !important; white-space: normal !important; line-height: 1.1 !important; }
+          .resultadosBox .resultadoRow .resultadoTeam.right { grid-area: home !important; }
+          .resultadosBox .resultadoRow .resultadoTeam:not(.right) { grid-area: away !important; }
+          .resultadosBox .resultadoRow .resultadoScore { grid-area: score !important; justify-self: center !important; min-width: 78px !important; width: 78px !important; }
+          .resultadosBox .resultadoRow .statusOficial { grid-area: status !important; width: 100% !important; min-width: 0 !important; }
+          .resultadosBox .resultadoRow .resultadoTeam,
+          .resultadosBox .resultadoRow .teamNameFlag { width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: visible !important; justify-self: stretch !important; }
+          .resultadosBox .resultadoRow .teamNameFlag,
+          .resultadosBox .resultadoRow .teamNameFlag.right { display: flex !important; align-items: center !important; justify-content: flex-start !important; flex-direction: row !important; gap: 4px !important; }
+          .resultadosBox .resultadoRow .teamNameFlag .flagImg,
+          .resultadosBox .resultadoRow .teamNameFlag .emojiFlag,
+          .resultadosBox .resultadoRow .teamNameFlag .placeholderFlag { flex: 0 0 auto !important; }
+          .resultadosBox .resultadoRow .teamNameFlag .teamText { min-width: 0 !important; max-width: 100% !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; overflow-wrap: anywhere !important; word-break: normal !important; line-height: 1.08 !important; font-size: 13px !important; }
+        }
+      `}</style>
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />

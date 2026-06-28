@@ -531,22 +531,22 @@ function cleanTeamName(value) {
 
 
 const ROUND_32_FIXED_SLOTS = {
-  73: ['2º Grupo A', '2º Grupo B'],
+  73: ['África do Sul', 'Canadá'],
   74: ['Alemanha', 'Paraguai'],
-  75: ['1º Grupo F', '2º Grupo C'],
-  76: ['1º Grupo C', '2º Grupo F'],
+  75: ['Holanda', 'Marrocos'],
+  76: ['Brasil', 'Japão'],
   77: ['França', 'Suécia'],
-  78: ['2º Grupo E', '2º Grupo I'],
-  79: ['1º Grupo A', 'Melhor 3º (C/E/F/H/I)'],
-  80: ['1º Grupo L', 'Melhor 3º (E/H/I/J/K)'],
+  78: ['Costa do Marfim', 'Noruega'],
+  79: ['México', 'Equador'],
+  80: ['Inglaterra', 'RD Congo'],
   81: ['EUA', 'Bósnia'],
-  82: ['1º Grupo G', 'Melhor 3º (A/E/H/J)'],
-  83: ['2º Grupo K', '2º Grupo L'],
-  84: ['1º Grupo H', '2º Grupo J'],
-  85: ['1º Grupo B', 'Melhor 3º (E/F/G/J)'],
+  82: ['Bélgica', 'Senegal'],
+  83: ['Portugal', 'Croácia'],
+  84: ['Espanha', 'Áustria'],
+  85: ['Suíça', 'Argélia'],
   86: ['Argentina', 'Cabo Verde'],
-  87: ['1º Grupo K', 'Melhor 3º (D/E/I/J)'],
-  88: ['2º Grupo D', '2º Grupo G']
+  87: ['Colômbia', 'Gana'],
+  88: ['Austrália', 'Egito']
 }
 
 function isRound32Game(game) {

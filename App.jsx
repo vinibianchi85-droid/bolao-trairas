@@ -1849,6 +1849,10 @@ function App() {
             font-size: 13px !important;
           }
         }
+
+        .saveStatusTop {
+          margin: 14px 0 16px;
+        }
       `}</style>
       <div className="tablePosterHeader palpitesHeader">
         <div>
@@ -1890,6 +1894,17 @@ function App() {
             ? 'Aparecem somente os jogos do mata-mata para facilitar os palpites desta fase.'
             : 'Histórico dos jogos da primeira fase separado para consulta.'}
         </p>
+
+        {palpitesSubtab === 'mata' && (
+          <div className={`saveStatusBox saveStatusTop ${hasUnsavedChanges ? 'unsaved' : 'saved'}`}>
+            <strong>{hasUnsavedChanges ? '🔴 Existem alterações não salvas' : '🟢 Palpites salvos'}</strong>
+            <span>
+              {lastSavedAt
+                ? `Último salvamento: ${formatSaveDate(lastSavedAt)}`
+                : 'Último salvamento: ainda não registrado'}
+            </span>
+          </div>
+        )}
 
         <div className="posterControls">
           <div className="filters">

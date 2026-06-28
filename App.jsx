@@ -143,7 +143,7 @@ const LOGO_TRAIRAS = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABZYAAAYACAYA
 
 const FLAGS = {
   'Brasil':'🇧🇷','México':'🇲🇽','África do Sul':'🇿🇦','Coreia do Sul':'🇰🇷','Tchéquia':'🇨🇿',
-  'Canadá':'🇨🇦','Bósnia-Herzegovina':'🇧🇦','Estados Unidos':'🇺🇸','Paraguai':'🇵🇾',
+  'Canadá':'🇨🇦','Bósnia-Herzegovina':'🇧🇦','Bósnia':'🇧🇦','Bosnia':'🇧🇦','Estados Unidos':'🇺🇸','EUA':'🇺🇸','USA':'🇺🇸','Paraguai':'🇵🇾',
   'Austrália':'🇦🇺','Turquia':'🇹🇷','Catar':'🇶🇦','Suíça':'🇨🇭','Haiti':'🇭🇹',
   'Escócia':'🏴','Alemanha':'🇩🇪','Curaçao':'🇨🇼','Holanda':'🇳🇱','Japão':'🇯🇵',
   'Costa do Marfim':'🇨🇮','Equador':'🇪🇨','Suécia':'🇸🇪','Tunísia':'🇹🇳',
@@ -158,7 +158,7 @@ const FLAGS = {
 
 const TEAM_CODES = {
   'Brasil':'BRA','México':'MEX','África do Sul':'RSA','Coreia do Sul':'KOR','Tchéquia':'CZE',
-  'Canadá':'CAN','Bósnia-Herzegovina':'BIH','Estados Unidos':'EUA','Paraguai':'PAR',
+  'Canadá':'CAN','Bósnia-Herzegovina':'BIH','Bósnia':'BIH','Bosnia':'BIH','Estados Unidos':'EUA','EUA':'EUA','USA':'USA','Paraguai':'PAR',
   'Austrália':'AUS','Turquia':'TUR','Catar':'QAT','Suíça':'SUI','Haiti':'HAI',
   'Escócia':'SCO','Alemanha':'ALE','Curaçao':'CUR','Holanda':'NED','Japão':'JPN',
   'Costa do Marfim':'CIV','Equador':'ECU','Suécia':'SWE','Tunísia':'TUN',
@@ -184,7 +184,7 @@ function teamCode(team) {
 
 const FLAG_CODES = {
   'Brasil':'br','México':'mx','África do Sul':'za','Coreia do Sul':'kr','Tchéquia':'cz',
-  'Canadá':'ca','Bósnia-Herzegovina':'ba','Estados Unidos':'us','Paraguai':'py',
+  'Canadá':'ca','Bósnia-Herzegovina':'ba','Bósnia':'ba','Bosnia':'ba','Estados Unidos':'us','EUA':'us','USA':'us','Paraguai':'py',
   'Austrália':'au','Turquia':'tr','Catar':'qa','Suíça':'ch','Haiti':'ht',
   'Escócia':'gb-sct','Alemanha':'de','Curaçao':'cw','Holanda':'nl','Japão':'jp',
   'Costa do Marfim':'ci','Equador':'ec','Suécia':'se','Tunísia':'tn',

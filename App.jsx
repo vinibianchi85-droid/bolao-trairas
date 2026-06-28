@@ -1981,33 +1981,53 @@ function App() {
     </section>}
 
 
-    {tab === 'chaveamento' && <section className="card bracketTrairasPage">
+    {tab === 'chaveamento' && <section className="card bracketTrairasPage bracketPosterExact">
       <style>{`
-        .bracketTrairasPage{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(14,165,233,.20),transparent 32%),linear-gradient(115deg,#120710 0%,#061a2d 42%,#06101f 58%,#1a0711 100%);border:1px solid rgba(255,255,255,.14);padding:18px}
-        .bracketTrairasPage:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(220,38,38,.22),transparent 25%,transparent 75%,rgba(14,165,233,.18));pointer-events:none}
-        .bracketHero{position:relative;z-index:1;display:grid;grid-template-columns:130px 1fr 130px;gap:16px;align-items:center;margin-bottom:8px;text-align:center}
-        .bracketLogoWrap{display:flex;justify-content:center;align-items:center}.bracketLogoWrap .sectionLogoTrairas{width:116px;height:116px;filter:drop-shadow(0 12px 22px rgba(0,0,0,.45))}
-        .bracketHeroText h2{margin:0;font-size:44px;line-height:.95;text-transform:uppercase;letter-spacing:.04em;color:#f8fafc;text-shadow:0 4px 18px rgba(0,0,0,.45)}
-        .bracketHeroText strong{display:block;margin-top:6px;font-size:20px;text-transform:uppercase;letter-spacing:.08em;color:#ef4444}.bracketHeroText span{display:block;margin-top:5px;font-size:18px;color:#38bdf8;font-weight:900;font-style:italic}
-        .bracketCupTop{display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:12px;font-weight:1000;text-transform:uppercase;line-height:1.1}.bracketCupTop .cupIcon{font-size:56px;filter:drop-shadow(0 0 18px rgba(250,204,21,.35))}
-        .bracketHint{position:relative;z-index:1;margin:8px auto 14px;max-width:920px;padding:9px 12px;border-radius:999px;background:rgba(2,6,23,.66);border:1px solid rgba(255,255,255,.13);font-size:12px;color:rgba(255,255,255,.78);font-weight:800;text-align:center}
-        .bracketScroll{position:relative;z-index:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:8px 0 14px;border-radius:18px;background:rgba(0,0,0,.12)}
-        .bracketCanvas{position:relative;width:1500px;height:860px;margin:0 auto;background:radial-gradient(circle at 50% 44%,rgba(15,23,42,.50),transparent 26%)}
-        .bracketLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}.bracketLines path{fill:none;stroke:rgba(255,255,255,.82);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}.bracketLines .blue{stroke:#38bdf8}.bracketLines .red{stroke:#ef4444}
-        .bracketMatch{position:absolute;z-index:3;width:166px;min-height:66px;border-radius:10px;padding:4px;background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(2,6,23,.90));border:1.5px solid var(--edge,#38bdf8);box-shadow:0 8px 18px rgba(0,0,0,.34);color:#fff;cursor:pointer;text-align:left;overflow:hidden}
-        .bracketMatch:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(0,0,0,.42);border-color:#fff}.bracketMatch.done{box-shadow:0 0 0 1px rgba(34,197,94,.20),0 10px 22px rgba(0,0,0,.36)}
-        .bracketTeam{display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:6px;align-items:center;height:28px;padding:3px 6px;border-radius:7px;background:rgba(255,255,255,.045);font-size:14px;font-weight:1000;text-transform:uppercase}.bracketTeam + .bracketTeam{margin-top:3px}.bracketTeam.winner{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(14,165,233,.12));box-shadow:inset 0 0 0 1px rgba(34,197,94,.35)}
-        .bracketTeam .teamNameFlag{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap!important}.bracketTeam .teamText{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.bracketTeam .flagImg,.bracketTeam .flagEmoji{flex:0 0 auto}.bracketScore{text-align:right;color:#f8fafc;font-size:14px;font-weight:1000}.bracketScore.empty{color:rgba(255,255,255,.25)}
-        .roundName{position:absolute;z-index:2;font-size:15px;text-transform:uppercase;letter-spacing:.06em;font-weight:1000;text-shadow:0 2px 8px rgba(0,0,0,.55)}.roundName.blue{color:#38bdf8}.roundName.red{color:#ef4444}.roundName.white{color:#fff}
-        .centralCup{position:absolute;left:666px;top:142px;z-index:2;width:168px;text-align:center;filter:drop-shadow(0 0 26px rgba(250,204,21,.32))}.centralCup .cupBig{font-size:150px;line-height:1}.centralCup b{display:block;margin-top:-8px;color:#fff;text-transform:uppercase;font-size:18px;text-shadow:0 2px 10px rgba(0,0,0,.7)}
-        .finalBox{position:absolute;left:632px;top:380px;z-index:3;width:236px;border:2px solid #fff;border-radius:12px;padding:11px 12px;background:rgba(2,6,23,.84);text-align:center;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.45)}.finalBox small{display:block;color:#38bdf8;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}.finalBox strong{display:block;margin-top:5px;font-size:16px;min-height:22px}.championBanner{position:absolute;left:600px;top:478px;z-index:3;width:300px;padding:10px 12px;border-radius:999px;background:#f8fafc;color:#0f2b46;text-align:center;font-size:22px;font-weight:1000;text-transform:uppercase;box-shadow:0 10px 24px rgba(0,0,0,.4)}
-        .thirdBox{position:absolute;left:605px;top:548px;z-index:3;width:290px;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.55);color:#fff;text-align:center}.thirdBox small{display:block;color:#ef4444;font-weight:1000;text-transform:uppercase}.thirdBox b{display:block;margin-top:4px;font-size:13px}
-        .legendDef{position:absolute;left:660px;top:620px;z-index:3;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;gap:8px}.legendDef:before{content:"";width:28px;height:18px;border:1.5px solid #38bdf8;border-radius:4px;background:rgba(2,6,23,.8)}
-        .bracketModalOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(5px)}.bracketModal{width:min(520px,100%);border-radius:22px;background:linear-gradient(145deg,#061a2d,#170711);border:1px solid rgba(255,255,255,.18);box-shadow:0 28px 80px rgba(0,0,0,.55);overflow:hidden;color:#fff}.bracketModalTop{padding:15px 18px;background:linear-gradient(135deg,#0ea5e9,#ef4444);display:flex;align-items:center;justify-content:space-between;gap:12px}.bracketModalTop strong{font-size:17px;text-transform:uppercase}.bracketModalTop button{border:0;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-weight:1000;padding:8px 11px;cursor:pointer}.bracketModalBody{padding:18px}.bracketModalTeams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:14px}.bracketModalTeam{text-align:center;font-size:15px;font-weight:1000}.bracketModalScore{font-size:24px;font-weight:1000;color:#facc15;white-space:nowrap}.bracketInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bracketInfo{padding:11px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.bracketInfo span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#93c5fd;font-weight:900;margin-bottom:4px}.bracketInfo b{font-size:13px}.bracketClassificado{margin-top:12px;padding:12px;border-radius:16px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);font-weight:1000;text-align:center}
-        @media(max-width:720px){.bracketTrairasPage{padding:12px}.bracketHero{grid-template-columns:70px 1fr 70px;gap:8px}.bracketLogoWrap .sectionLogoTrairas{width:64px;height:64px}.bracketCupTop .cupIcon{font-size:38px}.bracketCupTop span{display:none}.bracketHeroText h2{font-size:28px}.bracketHeroText strong{font-size:13px}.bracketHeroText span{font-size:13px}.bracketHint{border-radius:14px;text-align:left}.bracketCanvas{transform-origin:top left}.bracketModalTeams{grid-template-columns:1fr}.bracketModalScore{text-align:center}.bracketInfoGrid{grid-template-columns:1fr}}
-      `}</style>
+        .bracketPosterExact{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 45%,rgba(15,52,86,.55),transparent 26%),linear-gradient(115deg,#07121f 0%,#081827 46%,#071220 54%,#081d31 100%);border:1px solid rgba(255,255,255,.13);padding:0;min-height:calc(100vh - 120px)}
+        .bracketPosterExact:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,rgba(146,19,32,.42),transparent 23%,transparent 77%,rgba(14,87,122,.40)),radial-gradient(circle at 50% 37%,rgba(56,189,248,.14),transparent 28%);pointer-events:none}
+        .bracketPosterExact:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.04),transparent 36%);pointer-events:none}
+        .bracketPosterInner{position:relative;z-index:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:10px 0 16px;border-radius:18px}
+        .bracketPosterCanvas{position:relative;width:1500px;height:900px;margin:0 auto;transform-origin:top left}
+        .posterHeader{position:absolute;left:0;right:0;top:8px;height:150px;display:grid;grid-template-columns:250px 1fr 250px;align-items:center;text-align:center;pointer-events:none}
+        .posterHeaderLogo{display:flex;justify-content:center}.posterHeaderLogo .sectionLogoTrairas{width:142px;height:142px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.55))}
+        .posterTitle h2{margin:0;text-transform:uppercase;letter-spacing:.06em;font-size:62px;line-height:.95;color:#f8fafc;text-shadow:0 4px 18px rgba(0,0,0,.65)}
+        .posterTitle strong{display:block;margin-top:8px;text-transform:uppercase;letter-spacing:.09em;font-size:24px;color:#ef4444}.posterTitle span{display:block;margin-top:8px;font-size:23px;color:#38bdf8;font-weight:1000;font-style:italic;letter-spacing:.05em}
+        .posterMiniCup{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:16px;text-transform:uppercase;font-weight:1000;line-height:1.08;color:#f8fafc}.posterMiniCup b{color:#38bdf8}.posterMiniCup em{font-style:normal;color:#ef4444}.posterMiniCup .cupSmall{font-size:58px;filter:drop-shadow(0 0 16px rgba(239,68,68,.35))}
+        .bracketSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}.bracketSvg path{fill:none;stroke:rgba(255,255,255,.90);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}.bracketSvg .blue{stroke:#38bdf8}.bracketSvg .red{stroke:#ef4444}
+        .posterRoundLabel{position:absolute;z-index:2;text-transform:uppercase;font-weight:1000;font-size:16px;letter-spacing:.06em;text-shadow:0 3px 8px rgba(0,0,0,.6)}.posterRoundLabel.blue{color:#38bdf8}.posterRoundLabel.red{color:#ef4444}.posterRoundLabel.white{color:#f8fafc}
+        .posterNode{position:absolute;z-index:3;width:132px;min-height:64px;border-radius:8px;background:linear-gradient(180deg,rgba(4,18,33,.94),rgba(3,8,18,.88));border:1.8px solid var(--edge,#38bdf8);box-shadow:0 8px 18px rgba(0,0,0,.46);padding:0;color:#fff;cursor:pointer;overflow:hidden}
+        .posterNode:hover{border-color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.16),0 10px 24px rgba(0,0,0,.48)}
+        .posterNode.done{box-shadow:0 0 14px rgba(34,197,94,.14),0 8px 18px rgba(0,0,0,.42)}
+        .posterTeamRow{height:32px;display:grid;grid-template-columns:35px 1fr 20px;align-items:center;gap:6px;padding:4px 8px;background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.10)}
+        .posterTeamRow:last-child{border-bottom:0}.posterTeamRow.winner{background:linear-gradient(90deg,rgba(14,165,233,.20),rgba(255,255,255,.03))}.posterTeamRow.placeholder{opacity:.70}
+        .posterTeamRow .flagImg,.posterTeamRow .emojiFlag,.posterTeamRow .placeholderFlag{width:28px;height:19px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.15);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.posterTeamRow .placeholderFlag{box-shadow:none;background:rgba(255,255,255,.08)}
+        .posterCode{font-size:19px;font-weight:1000;letter-spacing:.02em;white-space:nowrap;overflow:visible;text-overflow:clip;line-height:1}.posterScore{font-size:14px;font-weight:1000;text-align:right;color:#f8fafc}.posterScore.empty{color:transparent}
+        .posterAdvance{position:absolute;z-index:3;width:118px;height:44px;border-radius:7px;background:linear-gradient(180deg,rgba(4,18,33,.92),rgba(3,8,18,.82));border:1.6px solid var(--edge,#38bdf8);box-shadow:0 8px 18px rgba(0,0,0,.36);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:1000;text-transform:uppercase;font-size:18px;letter-spacing:.03em;cursor:pointer;overflow:hidden}.posterAdvance.placeholder{color:rgba(255,255,255,.70);font-size:0;font-style:normal}.posterAdvance.placeholder:after{content:"";width:100%;height:100%;display:block}.posterAdvance.done{background:linear-gradient(180deg,rgba(14,165,233,.16),rgba(2,6,23,.82))}
+        .cupCenter{position:absolute;left:660px;top:190px;z-index:2;width:180px;text-align:center;pointer-events:none}.cupCenter .cupWorld{font-size:156px;line-height:1;filter:drop-shadow(0 0 26px rgba(250,204,21,.38))}.cupCenter b{display:block;color:#fff;text-transform:uppercase;font-size:22px;text-shadow:0 2px 8px rgba(0,0,0,.8);margin-top:0}
+        .finalSlot{position:absolute;left:620px;top:455px;z-index:3;width:260px;height:61px;border-radius:9px;background:rgba(3,7,18,.84);border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:1000;text-transform:uppercase;cursor:pointer}.finalSlot.placeholder{font-size:0;color:transparent;font-style:normal}.championLabel{position:absolute;left:618px;top:536px;z-index:3;width:264px;height:42px;border-radius:999px;background:#f8fafc;color:#0b2a44;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;text-transform:uppercase;box-shadow:0 8px 22px rgba(0,0,0,.46)}
+        .championBox{position:absolute;left:570px;top:605px;z-index:3;width:360px;height:64px;border-radius:9px;background:rgba(3,7,18,.76);border:2px solid rgba(255,255,255,.80);display:flex;align-items:center;justify-content:center;color:#fff;font-size:23px;font-weight:1000;text-transform:uppercase}.championBox.placeholder{font-size:0;color:transparent;text-transform:none}
+        .posterLegend{position:absolute;left:700px;top:690px;z-index:3;color:#f8fafc;font-size:12px;font-weight:900;text-transform:uppercase;display:flex;align-items:center;gap:8px}.posterLegend:before{content:"";width:28px;height:18px;border:1.4px solid #38bdf8;border-radius:4px;background:rgba(3,7,18,.86)}
+        .posterModalOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.70);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(5px)}.posterModal{width:min(480px,100%);border-radius:18px;background:linear-gradient(145deg,#071827,#0a1020);border:1px solid rgba(255,255,255,.18);box-shadow:0 28px 80px rgba(0,0,0,.58);overflow:hidden;color:#fff}.posterModalTop{padding:14px 16px;background:linear-gradient(135deg,rgba(14,165,233,.85),rgba(239,68,68,.72));display:flex;align-items:center;justify-content:space-between;gap:12px}.posterModalTop strong{font-size:16px;text-transform:uppercase}.posterModalTop button{border:0;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-weight:1000;padding:8px 11px;cursor:pointer}.posterModalBody{padding:18px}.posterModalTeams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:14px}.posterModalTeam{font-size:17px;font-weight:1000}.posterModalScore{font-size:26px;font-weight:1000;color:#facc15;white-space:nowrap}.posterInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.posterInfo{padding:11px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.posterInfo span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#93c5fd;font-weight:900;margin-bottom:4px}.posterInfo b{font-size:13px}.posterClassificado{margin-top:12px;padding:12px;border-radius:16px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);font-weight:1000;text-align:center}
+        @media(max-width:720px){.bracketPosterExact{padding:0}.bracketPosterInner{padding:0 0 14px}.bracketPosterCanvas{width:1500px;height:900px}.posterTitle h2{font-size:44px}.posterTitle strong{font-size:18px}.posterTitle span{font-size:18px}.posterHeaderLogo .sectionLogoTrairas{width:110px;height:110px}.posterModalTeams{grid-template-columns:1fr}.posterModalScore{text-align:center}.posterInfoGrid{grid-template-columns:1fr}}      `}</style>
       {(() => {
         const byNo = (no) => bracketGames.find(g => Number(g.game_no) === Number(no)) || games.find(g => Number(g.game_no) === Number(no))
+        const posterCodes = { 'Alemanha':'GER', 'Estados Unidos':'USA', 'EUA':'USA', 'Inglaterra':'ENG' }
+        const posterTeamCode = (team) => posterCodes[String(team || '').trim()] || teamCode(team)
+        const teamLabel = (team) => {
+          const label = String(team || '').trim()
+          if (!label) return ''
+          if (isPlaceholderTeamName(label)) return ''
+          return posterTeamCode(label)
+        }
+        const renderTeamRow = (team, score, isWinner) => {
+          const label = String(team || '').trim() || 'A definir'
+          const placeholder = isPlaceholderTeamName(label)
+          return <div className={`posterTeamRow ${isWinner ? 'winner' : ''} ${placeholder ? 'placeholder' : ''}`}>
+            {!placeholder ? <FlagImg team={label} /> : <span className="placeholderFlag">🏳️</span>}
+            <span className="posterCode">{teamLabel(label)}</span>
+            <span className={`posterScore ${score !== null && score !== undefined && score !== '' ? '' : 'empty'}`}>{score}</span>
+          </div>
+        }
         const renderMatch = (no, x, y, edge='blue') => {
           const game = byNo(no)
           if (!game) return null
@@ -2015,40 +2035,44 @@ function App() {
           const away = displayAwayTeam(game, games)
           const done = isGameFinished(game)
           const winner = gameWinnerTeamResolved(game, games)
-          return <button type="button" key={no} className={`bracketMatch ${done ? 'done' : ''}`} style={{left:x, top:y, '--edge': edge === 'red' ? '#ef4444' : '#38bdf8'}} onClick={() => setSelectedBracketGame(game)}>
-            <div className={`bracketTeam ${winner && winner === home ? 'winner' : ''}`}><span><TeamNameFlag team={home} /></span><span className={`bracketScore ${done ? '' : 'empty'}`}>{done ? game.home_score : ''}</span></div>
-            <div className={`bracketTeam ${winner && winner === away ? 'winner' : ''}`}><span><TeamNameFlag team={away} /></span><span className={`bracketScore ${done ? '' : 'empty'}`}>{done ? game.away_score : ''}</span></div>
+          return <button type="button" key={no} className={`posterNode ${done ? 'done' : ''}`} style={{left:x, top:y, '--edge': edge === 'red' ? '#ef4444' : '#38bdf8'}} onClick={() => setSelectedBracketGame(game)}>
+            {renderTeamRow(home, done ? game.home_score : '', winner && winner === home)}
+            {renderTeamRow(away, done ? game.away_score : '', winner && winner === away)}
+          </button>
+        }
+        const renderAdvance = (no, x, y, edge='blue') => {
+          const game = byNo(no)
+          const winner = gameWinnerTeamResolved(game, games)
+          return <button type="button" key={`adv-${no}`} className={`posterAdvance ${winner ? 'done' : 'placeholder'}`} style={{left:x, top:y, '--edge': edge === 'red' ? '#ef4444' : '#38bdf8'}} onClick={() => game && setSelectedBracketGame(game)}>
+            {winner ? posterTeamCode(winner) : ''}
           </button>
         }
         const champion = gameWinnerTeamResolved(byNo(104), games)
-        const third = gameWinnerTeamResolved(byNo(103), games)
         return <>
-          <div className="bracketHero">
-            <div className="bracketLogoWrap"><LogoTrairas className="sectionLogoTrairas" /></div>
-            <div className="bracketHeroText"><h2>Mata-Mata</h2><strong>Copa do Traíras F.C. 2026</strong><span>Rumo à glória!</span></div>
-            <div className="bracketCupTop"><span className="cupIcon">🏆</span><span>Copa do<br/>Traíras F.C.</span></div>
-          </div>
-          <div className="bracketHint">👆 Toque em um confronto para ver placar, data, horário, fase e local cadastrado no app. No celular, arraste para o lado.</div>
-          <div className="bracketScroll">
-            <div className="bracketCanvas">
-              <svg className="bracketLines" viewBox="0 0 1500 860" preserveAspectRatio="none">
-                <path className="blue" d="M186 73 H230 V113 H250 M186 153 H230 V113"/><path className="blue" d="M186 253 H230 V293 H250 M186 333 H230 V293"/><path className="blue" d="M186 453 H230 V493 H250 M186 533 H230 V493"/><path className="blue" d="M186 633 H230 V673 H250 M186 713 H230 V673"/>
-                <path className="blue" d="M416 113 H460 V203 H430 M416 293 H460 V203"/><path className="blue" d="M416 493 H460 V583 H430 M416 673 H460 V583"/><path className="blue" d="M596 203 H628 V413 H575 M596 583 H628 V413"/><path className="blue" d="M741 413 H632"/>
-                <path className="red" d="M1314 73 H1270 V113 H1238 M1314 153 H1270 V113"/><path className="red" d="M1314 253 H1270 V293 H1238 M1314 333 H1270 V293"/><path className="red" d="M1314 453 H1270 V493 H1238 M1314 533 H1270 V493"/><path className="red" d="M1314 633 H1270 V673 H1238 M1314 713 H1270 V673"/>
-                <path className="red" d="M1070 113 H1038 V203 H904 M1070 293 H1038 V203"/><path className="red" d="M1070 493 H1038 V583 H904 M1070 673 H1038 V583"/><path className="red" d="M904 203 H872 V413 H759 M904 583 H872 V413"/><path className="red" d="M759 413 H868"/>
-                <path d="M700 446 V478"/><path d="M800 446 V478"/>
+          <div className="bracketPosterInner">
+            <div className="bracketPosterCanvas">
+              <div className="posterHeader">
+                <div className="posterHeaderLogo"><LogoTrairas className="sectionLogoTrairas" /></div>
+                <div className="posterTitle"><h2>Mata-Mata</h2><strong>Copa do Traíras F.C. 2026</strong><span>Rumo à glória!</span></div>
+                <div className="posterMiniCup"><span className="cupSmall">🏆</span><span>Copa do<br/><b>Traíras F.C.</b><br/><em>2026</em></span></div>
+              </div>
+              <svg className="bracketSvg" viewBox="0 0 1500 900" preserveAspectRatio="none">
+                <path className="blue" d="M178 210 H232 V240 H250 M178 270 H232 V240"/><path className="blue" d="M178 315 H232 V345 H250 M178 375 H232 V345"/><path className="blue" d="M178 435 H232 V465 H250 M178 495 H232 V465"/><path className="blue" d="M178 540 H232 V570 H250 M178 600 H232 V570"/>
+                <path className="blue" d="M368 240 H430 V322 H430 M368 345 H430 V322 H450"/><path className="blue" d="M368 465 H430 V547 H450 M368 570 H430 V547"/><path className="blue" d="M568 322 H612 V472 H590 M568 547 H612 V472"/><path className="blue" d="M710 472 H620"/>
+                <path className="red" d="M1322 210 H1268 V240 H1250 M1322 270 H1268 V240"/><path className="red" d="M1322 315 H1268 V345 H1250 M1322 375 H1268 V345"/><path className="red" d="M1322 435 H1268 V465 H1250 M1322 495 H1268 V465"/><path className="red" d="M1322 540 H1268 V570 H1250 M1322 600 H1268 V570"/>
+                <path className="red" d="M1132 240 H1070 V322 H1050 M1132 345 H1070 V322"/><path className="red" d="M1132 465 H1070 V547 H1050 M1132 570 H1070 V547"/><path className="red" d="M932 322 H888 V472 H910 M932 547 H888 V472"/><path className="red" d="M790 472 H880"/>
               </svg>
-              <div className="roundName blue" style={{left:48,top:10}}>1/16 avos</div><div className="roundName blue" style={{left:284,top:48}}>Oitavas</div><div className="roundName blue" style={{left:455,top:145}}>Quartas</div><div className="roundName blue" style={{left:590,top:328}}>Semifinal</div>
-              <div className="roundName red" style={{right:55,top:10}}>1/16 avos</div><div className="roundName red" style={{right:284,top:48}}>Oitavas</div><div className="roundName red" style={{right:455,top:145}}>Quartas</div><div className="roundName red" style={{right:590,top:328}}>Semifinal</div>
-              <div className="centralCup"><div className="cupBig">🏆</div><b>Final</b></div>
-              {renderMatch(74,20,40,'blue')}{renderMatch(77,20,120,'blue')}{renderMatch(73,20,220,'blue')}{renderMatch(75,20,300,'blue')}{renderMatch(83,20,420,'blue')}{renderMatch(84,20,500,'blue')}{renderMatch(81,20,600,'blue')}{renderMatch(82,20,680,'blue')}
-              {renderMatch(89,250,80,'blue')}{renderMatch(90,250,260,'blue')}{renderMatch(93,250,460,'blue')}{renderMatch(94,250,640,'blue')}{renderMatch(97,430,170,'blue')}{renderMatch(98,430,550,'blue')}{renderMatch(101,575,380,'blue')}
-              {renderMatch(76,1314,40,'red')}{renderMatch(78,1314,120,'red')}{renderMatch(79,1314,220,'red')}{renderMatch(80,1314,300,'red')}{renderMatch(86,1314,420,'red')}{renderMatch(88,1314,500,'red')}{renderMatch(85,1314,600,'red')}{renderMatch(87,1314,680,'red')}
-              {renderMatch(91,1070,80,'red')}{renderMatch(92,1070,260,'red')}{renderMatch(95,1070,460,'red')}{renderMatch(96,1070,640,'red')}{renderMatch(99,904,170,'red')}{renderMatch(100,904,550,'red')}{renderMatch(102,759,380,'red')}
-              <button type="button" className="finalBox" onClick={() => byNo(104) && setSelectedBracketGame(byNo(104))}><small>Final</small><strong>{champion ? <TeamNameFlag team={champion} /> : 'A definir'}</strong></button>
-              <div className="championBanner">Campeão!</div>
-              <button type="button" className="thirdBox" onClick={() => byNo(103) && setSelectedBracketGame(byNo(103))}><small>3º Lugar</small><b>{third ? <TeamNameFlag team={third} /> : 'A definir'}</b></button>
-              <div className="legendDef">A definir</div>
+              <div className="posterRoundLabel blue" style={{left:48,top:165}}>1/16 avos</div><div className="posterRoundLabel blue" style={{left:285,top:168}}>Oitavas</div><div className="posterRoundLabel blue" style={{left:465,top:278}}>Quartas</div><div className="posterRoundLabel blue" style={{left:598,top:400}}>Semifinal</div>
+              <div className="posterRoundLabel red" style={{right:55,top:165}}>1/16 avos</div><div className="posterRoundLabel red" style={{right:285,top:168}}>Oitavas</div><div className="posterRoundLabel red" style={{right:465,top:278}}>Quartas</div><div className="posterRoundLabel red" style={{right:598,top:400}}>Semifinal</div>
+              <div className="cupCenter"><div className="cupWorld">🏆</div><b>Final</b></div>
+              {renderMatch(74,44,192,'blue')}{renderMatch(77,44,252,'blue')}{renderMatch(73,44,312,'blue')}{renderMatch(75,44,372,'blue')}{renderMatch(83,44,432,'blue')}{renderMatch(84,44,492,'blue')}{renderMatch(81,44,552,'blue')}{renderMatch(82,44,612,'blue')}
+              {renderAdvance(89,250,218,'blue')}{renderAdvance(90,250,332,'blue')}{renderAdvance(93,250,458,'blue')}{renderAdvance(94,250,572,'blue')}{renderAdvance(97,450,304,'blue')}{renderAdvance(98,450,530,'blue')}{renderAdvance(101,590,430,'blue')}
+              {renderMatch(76,1322,192,'red')}{renderMatch(78,1322,252,'red')}{renderMatch(79,1322,312,'red')}{renderMatch(80,1322,372,'red')}{renderMatch(86,1322,432,'red')}{renderMatch(88,1322,492,'red')}{renderMatch(85,1322,552,'red')}{renderMatch(87,1322,612,'red')}
+              {renderAdvance(91,1132,218,'red')}{renderAdvance(92,1132,332,'red')}{renderAdvance(95,1132,458,'red')}{renderAdvance(96,1132,572,'red')}{renderAdvance(99,932,304,'red')}{renderAdvance(100,932,530,'red')}{renderAdvance(102,790,430,'red')}
+              <button type="button" className={`finalSlot ${champion ? '' : 'placeholder'}`} onClick={() => byNo(104) && setSelectedBracketGame(byNo(104))}>{champion ? posterTeamCode(champion) : ''}</button>
+              <div className="championLabel">Campeão!</div>
+              <div className={`championBox ${champion ? '' : 'placeholder'}`}>{champion ? <><FlagImg team={champion} />&nbsp; {champion}</> : 'Campeão será preenchido automaticamente'}</div>
+              <div className="posterLegend">A definir</div>
             </div>
           </div>
         </>
@@ -2059,20 +2083,18 @@ function App() {
         const away = displayAwayTeam(game, games)
         const hasResult = isGameFinished(game)
         const winner = gameWinnerTeamResolved(game, games)
-        const local = game.stadium || game.venue || game.arena || game.estadio || game.local || game.city || game.cidade || 'Não cadastrado no app'
-        return <div className="bracketModalOverlay" onClick={() => setSelectedBracketGame(null)}>
-          <div className="bracketModal" onClick={(e) => e.stopPropagation()}>
-            <div className="bracketModalTop"><strong>{game.phase} · Jogo {game.game_no}</strong><button type="button" onClick={() => setSelectedBracketGame(null)}>Fechar</button></div>
-            <div className="bracketModalBody">
-              <div className="bracketModalTeams"><div className="bracketModalTeam"><TeamNameFlag team={home} /></div><div className="bracketModalScore">{hasResult ? `${game.home_score} x ${game.away_score}` : 'x'}</div><div className="bracketModalTeam"><TeamNameFlag team={away} /></div></div>
-              <div className="bracketInfoGrid"><div className="bracketInfo"><span>Data e horário</span><b>{formatDate(game.starts_at)}</b></div><div className="bracketInfo"><span>Status</span><b>{hasResult ? 'Resultado lançado' : 'Aguardando resultado'}</b></div><div className="bracketInfo"><span>Local / Estádio</span><b>{local}</b></div><div className="bracketInfo"><span>Fase</span><b>{game.phase}</b></div></div>
-              {winner && <div className="bracketClassificado">⭐ Classificado: {winner}</div>}
+        return <div className="posterModalOverlay" onClick={() => setSelectedBracketGame(null)}>
+          <div className="posterModal" onClick={(e) => e.stopPropagation()}>
+            <div className="posterModalTop"><strong>{game.phase} · Jogo {game.game_no}</strong><button type="button" onClick={() => setSelectedBracketGame(null)}>Fechar</button></div>
+            <div className="posterModalBody">
+              <div className="posterModalTeams"><div className="posterModalTeam"><TeamNameFlag team={home} /></div><div className="posterModalScore">{hasResult ? `${game.home_score} x ${game.away_score}` : 'x'}</div><div className="posterModalTeam"><TeamNameFlag team={away} /></div></div>
+              <div className="posterInfoGrid"><div className="posterInfo"><span>Data e horário</span><b>{formatDate(game.starts_at)}</b></div><div className="posterInfo"><span>Status</span><b>{hasResult ? 'Resultado lançado' : 'Aguardando resultado'}</b></div><div className="posterInfo"><span>Fase</span><b>{game.phase}</b></div><div className="posterInfo"><span>Jogo</span><b>{game.game_no}</b></div></div>
+              {winner && <div className="posterClassificado">⭐ Classificado: {winner}</div>}
             </div>
           </div>
         </div>
       })()}
     </section>}
-
 
     {tab === 'resultados' && <section className="card resultadosBox">
       <style>{`

@@ -2003,23 +2003,23 @@ function App() {
         const { home, away, game } = matchTeams(gameNo)
         // Área clicável invisível. Não desenha caixa por cima da arte.
         // Quando a arte tiver espaços vazios das fases seguintes, mostra só texto pequeno, sem fundo.
-        if (!home && !away) return <button className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
+        if (!home && !away) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
-          <button className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
+          <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <span>{home && <><FlagImg team={home} className="chaveFlag"/> {shortCode(home)}</>}</span>
             <b>x</b>
             <span>{away && <><FlagImg team={away} className="chaveFlag"/> {shortCode(away)}</>}</span>
-          </button>
+          </div>
         )
       }
       const OverlayWinner = ({ gameNo, className = '' }) => {
         const team = winnerTeam(gameNo)
         const game = byNo.get(Number(gameNo))
-        if (!team) return <button className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
+        if (!team) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
-          <button className={`chaveTapZone chaveTextOnly chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
+          <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <span><FlagImg team={team} className="chaveFlag"/> {shortCode(team)}</span>
-          </button>
+          </div>
         )
       }
       const firstRoundZones = [
@@ -2031,7 +2031,7 @@ function App() {
         <div className="chavePosterViewport">
           <div className="chavePosterStage">
             <img className="chavePosterBg" src={CHAVEAMENTO_TRAIRAS_BG} alt="Chaveamento Traíras F.C." />
-            {firstRoundZones.map(([n,c]) => <button key={n} className={`chaveTapZone ${c}`} onClick={() => setChaveamentoGame(byNo.get(Number(n)))} aria-label={`Jogo ${n}`} />)}
+            {firstRoundZones.map(([n,c]) => <div key={n} role="button" tabIndex={0} className={`chaveTapZone ${c}`} onClick={() => setChaveamentoGame(byNo.get(Number(n)))} aria-label={`Jogo ${n}`} />)}
             <OverlayMatch gameNo={89} className="m89" />
             <OverlayMatch gameNo={90} className="m90" />
             <OverlayMatch gameNo={93} className="m93" />
@@ -2072,7 +2072,8 @@ function App() {
           .chavePosterViewport { overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; border-radius:18px; border:1px solid rgba(125,211,252,.15); background:#02070d; }
           .chavePosterStage { position:relative; width:1536px; height:885px; transform-origin: top left; }
           .chavePosterBg { position:absolute; inset:0; width:1536px; height:885px; display:block; user-select:none; pointer-events:none; }
-          .chaveTapZone { position:absolute; border:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; cursor:pointer; padding:0; appearance:none; -webkit-appearance:none; }
+          .chaveTapZone { position:absolute; display:block; border:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; cursor:pointer; padding:0; margin:0; appearance:none; -webkit-appearance:none; -webkit-tap-highlight-color:transparent; }
+          .chaveTapZone::before, .chaveTapZone::after { content:none !important; display:none !important; background:transparent !important; box-shadow:none !important; }
           .chaveTapZone:hover, .chaveTapZone:focus, .chaveTapZone:active { background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; }
           .chaveTextOnly { display:flex; align-items:center; justify-content:center; gap:7px; color:#fff; font-weight:900; font-size:18px; letter-spacing:.5px; text-shadow:0 2px 7px #000; white-space:nowrap; }
           .chaveTextOnly span { display:inline-flex; align-items:center; gap:5px; min-width:0; }

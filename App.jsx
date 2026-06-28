@@ -143,7 +143,7 @@ const LOGO_TRAIRAS = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABZYAAAYACAYA
 
 const FLAGS = {
   'Brasil':'🇧🇷','México':'🇲🇽','África do Sul':'🇿🇦','Coreia do Sul':'🇰🇷','Tchéquia':'🇨🇿',
-  'Canadá':'🇨🇦','Bósnia-Herzegovina':'🇧🇦','Estados Unidos':'🇺🇸','Paraguai':'🇵🇾',
+  'Canadá':'🇨🇦','Bósnia-Herzegovina':'🇧🇦','Bósnia':'🇧🇦','Bosnia':'🇧🇦','Estados Unidos':'🇺🇸','EUA':'🇺🇸','USA':'🇺🇸','Paraguai':'🇵🇾',
   'Austrália':'🇦🇺','Turquia':'🇹🇷','Catar':'🇶🇦','Suíça':'🇨🇭','Haiti':'🇭🇹',
   'Escócia':'🏴','Alemanha':'🇩🇪','Curaçao':'🇨🇼','Holanda':'🇳🇱','Japão':'🇯🇵',
   'Costa do Marfim':'🇨🇮','Equador':'🇪🇨','Suécia':'🇸🇪','Tunísia':'🇹🇳',
@@ -158,7 +158,7 @@ const FLAGS = {
 
 const TEAM_CODES = {
   'Brasil':'BRA','México':'MEX','África do Sul':'RSA','Coreia do Sul':'KOR','Tchéquia':'CZE',
-  'Canadá':'CAN','Bósnia-Herzegovina':'BIH','Estados Unidos':'EUA','Paraguai':'PAR',
+  'Canadá':'CAN','Bósnia-Herzegovina':'BIH','Bósnia':'BIH','Bosnia':'BIH','Estados Unidos':'EUA','EUA':'EUA','USA':'USA','Paraguai':'PAR',
   'Austrália':'AUS','Turquia':'TUR','Catar':'QAT','Suíça':'SUI','Haiti':'HAI',
   'Escócia':'SCO','Alemanha':'ALE','Curaçao':'CUR','Holanda':'NED','Japão':'JPN',
   'Costa do Marfim':'CIV','Equador':'ECU','Suécia':'SWE','Tunísia':'TUN',
@@ -184,7 +184,7 @@ function teamCode(team) {
 
 const FLAG_CODES = {
   'Brasil':'br','México':'mx','África do Sul':'za','Coreia do Sul':'kr','Tchéquia':'cz',
-  'Canadá':'ca','Bósnia-Herzegovina':'ba','Estados Unidos':'us','Paraguai':'py',
+  'Canadá':'ca','Bósnia-Herzegovina':'ba','Bósnia':'ba','Bosnia':'ba','Estados Unidos':'us','EUA':'us','USA':'us','Paraguai':'py',
   'Austrália':'au','Turquia':'tr','Catar':'qa','Suíça':'ch','Haiti':'ht',
   'Escócia':'gb-sct','Alemanha':'de','Curaçao':'cw','Holanda':'nl','Japão':'jp',
   'Costa do Marfim':'ci','Equador':'ec','Suécia':'se','Tunísia':'tn',
@@ -531,22 +531,22 @@ function cleanTeamName(value) {
 
 
 const ROUND_32_FIXED_SLOTS = {
-  73: ['2º Grupo A', '2º Grupo B'],
+  73: ['África do Sul', 'Canadá'],
   74: ['Alemanha', 'Paraguai'],
-  75: ['1º Grupo F', '2º Grupo C'],
-  76: ['1º Grupo C', '2º Grupo F'],
+  75: ['Holanda', 'Marrocos'],
+  76: ['Brasil', 'Japão'],
   77: ['França', 'Suécia'],
-  78: ['2º Grupo E', '2º Grupo I'],
-  79: ['1º Grupo A', 'Melhor 3º (C/E/F/H/I)'],
-  80: ['1º Grupo L', 'Melhor 3º (E/H/I/J/K)'],
+  78: ['Costa do Marfim', 'Noruega'],
+  79: ['México', 'Equador'],
+  80: ['Inglaterra', 'RD Congo'],
   81: ['EUA', 'Bósnia'],
-  82: ['1º Grupo G', 'Melhor 3º (A/E/H/J)'],
-  83: ['2º Grupo K', '2º Grupo L'],
-  84: ['1º Grupo H', '2º Grupo J'],
-  85: ['1º Grupo B', 'Melhor 3º (E/F/G/J)'],
+  82: ['Bélgica', 'Senegal'],
+  83: ['Portugal', 'Croácia'],
+  84: ['Espanha', 'Áustria'],
+  85: ['Suíça', 'Argélia'],
   86: ['Argentina', 'Cabo Verde'],
-  87: ['1º Grupo K', 'Melhor 3º (D/E/I/J)'],
-  88: ['2º Grupo D', '2º Grupo G']
+  87: ['Colômbia', 'Gana'],
+  88: ['Austrália', 'Egito']
 }
 
 function isRound32Game(game) {
@@ -1544,14 +1544,14 @@ function App() {
             width: 100% !important;
             box-sizing: border-box !important;
             display: grid !important;
-            grid-template-columns: 54px minmax(0, 1fr) 46px 12px 46px minmax(0, 1fr) !important;
+            grid-template-columns: 50px minmax(0, .86fr) 42px 10px 42px minmax(0, 1.38fr) !important;
             grid-template-areas:
               "no date date date date date"
               "home home gh x ga away"
               "pts pts pts pts pts pts" !important;
-            gap: 8px 5px !important;
+            gap: 8px 4px !important;
             align-items: center !important;
-            padding: 12px 8px !important;
+            padding: 12px 6px !important;
             overflow: visible !important;
           }
 
@@ -1603,9 +1603,9 @@ function App() {
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .posterScoreInput {
-            width: 46px !important;
-            min-width: 46px !important;
-            max-width: 46px !important;
+            width: 42px !important;
+            min-width: 42px !important;
+            max-width: 42px !important;
             height: 52px !important;
             box-sizing: border-box !important;
             padding: 0 !important;
@@ -1626,7 +1626,7 @@ function App() {
             align-items: center !important;
             justify-content: flex-start !important;
             flex-direction: row !important;
-            gap: 5px !important;
+            gap: 4px !important;
           }
 
           .palpitesPoster .posterMatch.palpitesMatch .teamNameFlag .flagImg,
@@ -1644,7 +1644,7 @@ function App() {
             overflow-wrap: anywhere !important;
             word-break: normal !important;
             line-height: 1.05 !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
           }
 
           .resultadosBox .resultadoList {
@@ -1655,16 +1655,14 @@ function App() {
             width: 100% !important;
             box-sizing: border-box !important;
             display: grid !important;
-            grid-template-columns: 88px minmax(0, 1fr) !important;
+            grid-template-columns: 84px minmax(0, .9fr) 84px minmax(0, 1.35fr) !important;
             grid-template-areas:
-              "no date"
-              "home home"
-              "score score"
-              "away away"
-              "status status" !important;
-            gap: 8px !important;
+              "no date date date"
+              "home home score away"
+              "status status status status" !important;
+            gap: 8px 5px !important;
             align-items: center !important;
-            padding: 12px 8px !important;
+            padding: 12px 6px !important;
             overflow: visible !important;
           }
 
@@ -1689,7 +1687,8 @@ function App() {
           .resultadosBox .resultadoRow .resultadoScore {
             grid-area: score !important;
             justify-self: center !important;
-            min-width: 84px !important;
+            min-width: 78px !important;
+            width: 78px !important;
           }
 
           .resultadosBox .resultadoRow .resultadoTeam:not(.right) {
@@ -1735,7 +1734,7 @@ function App() {
             overflow-wrap: anywhere !important;
             word-break: normal !important;
             line-height: 1.1 !important;
-            font-size: 15px !important;
+            font-size: 13px !important;
           }
         }
       `}</style>
@@ -1977,6 +1976,40 @@ function App() {
 
 
     {tab === 'resultados' && <section className="card resultadosBox">
+      <style>{`
+        @media (max-width: 700px) {
+          .resultadosBox .resultadoPhase { overflow: hidden !important; }
+          .resultadosBox .resultadoList { overflow: visible !important; }
+          .resultadosBox .resultadoRow {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: grid !important;
+            grid-template-columns: 84px minmax(0, .9fr) 78px minmax(0, 1.35fr) !important;
+            grid-template-areas:
+              "no date date date"
+              "home home score away"
+              "status status status status" !important;
+            gap: 8px 5px !important;
+            align-items: center !important;
+            padding: 12px 6px !important;
+            overflow: visible !important;
+          }
+          .resultadosBox .resultadoRow .resultadoNo { grid-area: no !important; justify-self: start !important; min-width: 0 !important; }
+          .resultadosBox .resultadoRow .resultadoDate { grid-area: date !important; justify-self: start !important; min-width: 0 !important; white-space: normal !important; line-height: 1.1 !important; }
+          .resultadosBox .resultadoRow .resultadoTeam.right { grid-area: home !important; }
+          .resultadosBox .resultadoRow .resultadoTeam:not(.right) { grid-area: away !important; }
+          .resultadosBox .resultadoRow .resultadoScore { grid-area: score !important; justify-self: center !important; min-width: 78px !important; width: 78px !important; }
+          .resultadosBox .resultadoRow .statusOficial { grid-area: status !important; width: 100% !important; min-width: 0 !important; }
+          .resultadosBox .resultadoRow .resultadoTeam,
+          .resultadosBox .resultadoRow .teamNameFlag { width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: visible !important; justify-self: stretch !important; }
+          .resultadosBox .resultadoRow .teamNameFlag,
+          .resultadosBox .resultadoRow .teamNameFlag.right { display: flex !important; align-items: center !important; justify-content: flex-start !important; flex-direction: row !important; gap: 4px !important; }
+          .resultadosBox .resultadoRow .teamNameFlag .flagImg,
+          .resultadosBox .resultadoRow .teamNameFlag .emojiFlag,
+          .resultadosBox .resultadoRow .teamNameFlag .placeholderFlag { flex: 0 0 auto !important; }
+          .resultadosBox .resultadoRow .teamNameFlag .teamText { min-width: 0 !important; max-width: 100% !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; overflow-wrap: anywhere !important; word-break: normal !important; line-height: 1.08 !important; font-size: 13px !important; }
+        }
+      `}</style>
       <div className="cardTitle">
         <div className="sectionTitleWithLogo">
           <LogoTrairas className="sectionLogoTrairas" />

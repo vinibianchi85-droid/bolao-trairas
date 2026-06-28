@@ -1981,106 +1981,78 @@ function App() {
     </section>}
 
 
-    {tab === 'chaveamento' && <section className="card chaveamentoTrairasBox">
+    {tab === 'chaveamento' && <section className="card bracketTrairasPage">
       <style>{`
-        .chaveamentoTrairasBox{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 0%,rgba(14,165,233,.18),transparent 34%),linear-gradient(135deg,#061425 0%,#0a1730 42%,#190b16 100%);border:1px solid rgba(255,255,255,.14)}
-        .chaveamentoTrairasBox:before{content:"";position:absolute;inset:-80px -120px auto auto;width:260px;height:260px;border-radius:999px;background:rgba(239,68,68,.18);filter:blur(12px);pointer-events:none}
-        .chavHeader{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
-        .chavTitle{display:flex;align-items:center;gap:12px;min-width:0}
-        .chavTitle .sectionLogoTrairas{width:48px;height:48px;flex:0 0 auto}
-        .chavTitle span{display:block;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd}
-        .chavTitle h2{margin:0;font-size:26px;line-height:1.05;text-transform:uppercase}
-        .chavTitle p{margin:4px 0 0;color:rgba(255,255,255,.72);font-size:13px}
-        .chavCup{width:92px;height:92px;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid rgba(250,204,21,.38);box-shadow:0 0 28px rgba(250,204,21,.22), inset 0 0 22px rgba(250,204,21,.08)}
-        .chavHint{position:relative;margin:0 0 14px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);font-size:12px;font-weight:800;color:rgba(255,255,255,.84)}
-        .chavScroll{position:relative;overflow-x:auto;padding:4px 2px 12px;-webkit-overflow-scrolling:touch}
-        .chavBoard{min-width:1160px;display:grid;grid-template-columns:repeat(6, minmax(170px, 1fr));gap:18px;align-items:stretch}
-        .chavRound{display:flex;flex-direction:column;gap:12px;position:relative}
-        .chavRoundTitle{position:sticky;top:0;z-index:2;text-align:center;padding:9px 10px;border-radius:999px;background:linear-gradient(135deg,#0ea5e9,#ef4444);border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 8px 20px rgba(0,0,0,.24)}
-        .chavMatch{position:relative;width:100%;text-align:left;color:#fff;border:1px solid rgba(255,255,255,.12);background:rgba(7,18,31,.92);border-radius:18px;padding:11px 11px 10px;box-shadow:0 12px 24px rgba(0,0,0,.22);cursor:pointer;transition:.18s ease;overflow:hidden}
-        .chavMatch:after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#38bdf8,#ef4444)}
-        .chavMatch:hover{transform:translateY(-2px);border-color:rgba(147,197,253,.55)}
-        .chavMatch.done{background:linear-gradient(135deg,rgba(12,38,58,.96),rgba(30,18,34,.96));border-color:rgba(34,197,94,.34)}
-        .chavMatch.pending{opacity:.92}
-        .chavMeta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;font-size:10px;font-weight:900;text-transform:uppercase;color:rgba(255,255,255,.66)}
-        .chavTeams{display:flex;flex-direction:column;gap:6px}
-        .chavTeam{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 8px;border-radius:12px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.07)}
-        .chavTeam.winner{background:linear-gradient(135deg,rgba(14,165,233,.22),rgba(34,197,94,.16));border-color:rgba(34,197,94,.35);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
-        .chavTeamName{min-width:0;font-size:12px;font-weight:900;line-height:1.15}
-        .chavTeamName .teamNameFlag{min-width:0;display:flex;align-items:center;gap:5px;white-space:normal!important}
-        .chavTeamName .teamText{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
-        .chavScore{font-size:14px;font-weight:1000;color:#fff;min-width:20px;text-align:right}
-        .chavStatus{margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:900;color:rgba(255,255,255,.76)}
-        .chavStatus b{color:#facc15;font-weight:1000}
-        .chavFinalColumn{justify-content:center}
-        .chavChampionBox{border-radius:22px;padding:15px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(250,204,21,.20),transparent 50%),rgba(255,255,255,.06);border:1px solid rgba(250,204,21,.30);box-shadow:0 0 30px rgba(250,204,21,.12)}
-        .chavChampionBox .cupBig{font-size:48px;display:block;margin-bottom:8px}
-        .chavChampionBox strong{display:block;text-transform:uppercase;letter-spacing:.08em;color:#facc15;font-size:12px;margin-bottom:8px}
-        .chavChampionBox span{display:block;font-weight:1000;font-size:15px}
-        .chavModalOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(5px)}
-        .chavModal{width:min(520px,100%);border-radius:24px;background:linear-gradient(145deg,#071827,#130b18);border:1px solid rgba(255,255,255,.18);box-shadow:0 28px 80px rgba(0,0,0,.55);overflow:hidden;color:#fff}
-        .chavModalTop{padding:16px 18px;background:linear-gradient(135deg,#0ea5e9,#ef4444);display:flex;align-items:center;justify-content:space-between;gap:12px}
-        .chavModalTop strong{font-size:18px;text-transform:uppercase}.chavModalTop button{border:0;border-radius:999px;background:rgba(0,0,0,.26);color:#fff;font-weight:1000;padding:8px 11px;cursor:pointer}
-        .chavModalBody{padding:18px}.chavModalTeams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:14px}.chavModalTeam{text-align:center;font-size:15px;font-weight:1000}.chavModalScore{font-size:24px;font-weight:1000;color:#facc15;white-space:nowrap}.chavInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.chavInfo{padding:11px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.chavInfo span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#93c5fd;font-weight:900;margin-bottom:4px}.chavInfo b{font-size:13px}.chavClassificado{margin-top:12px;padding:12px;border-radius:16px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);font-weight:1000;text-align:center}
-        @media(max-width:720px){.chavHeader{align-items:flex-start}.chavCup{width:68px;height:68px;font-size:36px;border-radius:20px}.chavTitle h2{font-size:21px}.chavBoard{min-width:1040px;gap:12px;grid-template-columns:repeat(6,165px)}.chavMatch{padding:10px}.chavInfoGrid{grid-template-columns:1fr}.chavModalTeams{grid-template-columns:1fr}.chavModalScore{text-align:center}}
+        .bracketTrairasPage{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(14,165,233,.20),transparent 32%),linear-gradient(115deg,#120710 0%,#061a2d 42%,#06101f 58%,#1a0711 100%);border:1px solid rgba(255,255,255,.14);padding:18px}
+        .bracketTrairasPage:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(220,38,38,.22),transparent 25%,transparent 75%,rgba(14,165,233,.18));pointer-events:none}
+        .bracketHero{position:relative;z-index:1;display:grid;grid-template-columns:130px 1fr 130px;gap:16px;align-items:center;margin-bottom:8px;text-align:center}
+        .bracketLogoWrap{display:flex;justify-content:center;align-items:center}.bracketLogoWrap .sectionLogoTrairas{width:116px;height:116px;filter:drop-shadow(0 12px 22px rgba(0,0,0,.45))}
+        .bracketHeroText h2{margin:0;font-size:44px;line-height:.95;text-transform:uppercase;letter-spacing:.04em;color:#f8fafc;text-shadow:0 4px 18px rgba(0,0,0,.45)}
+        .bracketHeroText strong{display:block;margin-top:6px;font-size:20px;text-transform:uppercase;letter-spacing:.08em;color:#ef4444}.bracketHeroText span{display:block;margin-top:5px;font-size:18px;color:#38bdf8;font-weight:900;font-style:italic}
+        .bracketCupTop{display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:12px;font-weight:1000;text-transform:uppercase;line-height:1.1}.bracketCupTop .cupIcon{font-size:56px;filter:drop-shadow(0 0 18px rgba(250,204,21,.35))}
+        .bracketHint{position:relative;z-index:1;margin:8px auto 14px;max-width:920px;padding:9px 12px;border-radius:999px;background:rgba(2,6,23,.66);border:1px solid rgba(255,255,255,.13);font-size:12px;color:rgba(255,255,255,.78);font-weight:800;text-align:center}
+        .bracketScroll{position:relative;z-index:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:8px 0 14px;border-radius:18px;background:rgba(0,0,0,.12)}
+        .bracketCanvas{position:relative;width:1500px;height:860px;margin:0 auto;background:radial-gradient(circle at 50% 44%,rgba(15,23,42,.50),transparent 26%)}
+        .bracketLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}.bracketLines path{fill:none;stroke:rgba(255,255,255,.82);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}.bracketLines .blue{stroke:#38bdf8}.bracketLines .red{stroke:#ef4444}
+        .bracketMatch{position:absolute;z-index:3;width:166px;min-height:66px;border-radius:10px;padding:4px;background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(2,6,23,.90));border:1.5px solid var(--edge,#38bdf8);box-shadow:0 8px 18px rgba(0,0,0,.34);color:#fff;cursor:pointer;text-align:left;overflow:hidden}
+        .bracketMatch:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(0,0,0,.42);border-color:#fff}.bracketMatch.done{box-shadow:0 0 0 1px rgba(34,197,94,.20),0 10px 22px rgba(0,0,0,.36)}
+        .bracketTeam{display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:6px;align-items:center;height:28px;padding:3px 6px;border-radius:7px;background:rgba(255,255,255,.045);font-size:14px;font-weight:1000;text-transform:uppercase}.bracketTeam + .bracketTeam{margin-top:3px}.bracketTeam.winner{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(14,165,233,.12));box-shadow:inset 0 0 0 1px rgba(34,197,94,.35)}
+        .bracketTeam .teamNameFlag{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap!important}.bracketTeam .teamText{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.bracketTeam .flagImg,.bracketTeam .flagEmoji{flex:0 0 auto}.bracketScore{text-align:right;color:#f8fafc;font-size:14px;font-weight:1000}.bracketScore.empty{color:rgba(255,255,255,.25)}
+        .roundName{position:absolute;z-index:2;font-size:15px;text-transform:uppercase;letter-spacing:.06em;font-weight:1000;text-shadow:0 2px 8px rgba(0,0,0,.55)}.roundName.blue{color:#38bdf8}.roundName.red{color:#ef4444}.roundName.white{color:#fff}
+        .centralCup{position:absolute;left:666px;top:142px;z-index:2;width:168px;text-align:center;filter:drop-shadow(0 0 26px rgba(250,204,21,.32))}.centralCup .cupBig{font-size:150px;line-height:1}.centralCup b{display:block;margin-top:-8px;color:#fff;text-transform:uppercase;font-size:18px;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+        .finalBox{position:absolute;left:632px;top:380px;z-index:3;width:236px;border:2px solid #fff;border-radius:12px;padding:11px 12px;background:rgba(2,6,23,.84);text-align:center;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.45)}.finalBox small{display:block;color:#38bdf8;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}.finalBox strong{display:block;margin-top:5px;font-size:16px;min-height:22px}.championBanner{position:absolute;left:600px;top:478px;z-index:3;width:300px;padding:10px 12px;border-radius:999px;background:#f8fafc;color:#0f2b46;text-align:center;font-size:22px;font-weight:1000;text-transform:uppercase;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+        .thirdBox{position:absolute;left:605px;top:548px;z-index:3;width:290px;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.55);color:#fff;text-align:center}.thirdBox small{display:block;color:#ef4444;font-weight:1000;text-transform:uppercase}.thirdBox b{display:block;margin-top:4px;font-size:13px}
+        .legendDef{position:absolute;left:660px;top:620px;z-index:3;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;gap:8px}.legendDef:before{content:"";width:28px;height:18px;border:1.5px solid #38bdf8;border-radius:4px;background:rgba(2,6,23,.8)}
+        .bracketModalOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(5px)}.bracketModal{width:min(520px,100%);border-radius:22px;background:linear-gradient(145deg,#061a2d,#170711);border:1px solid rgba(255,255,255,.18);box-shadow:0 28px 80px rgba(0,0,0,.55);overflow:hidden;color:#fff}.bracketModalTop{padding:15px 18px;background:linear-gradient(135deg,#0ea5e9,#ef4444);display:flex;align-items:center;justify-content:space-between;gap:12px}.bracketModalTop strong{font-size:17px;text-transform:uppercase}.bracketModalTop button{border:0;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-weight:1000;padding:8px 11px;cursor:pointer}.bracketModalBody{padding:18px}.bracketModalTeams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:14px}.bracketModalTeam{text-align:center;font-size:15px;font-weight:1000}.bracketModalScore{font-size:24px;font-weight:1000;color:#facc15;white-space:nowrap}.bracketInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bracketInfo{padding:11px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.bracketInfo span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#93c5fd;font-weight:900;margin-bottom:4px}.bracketInfo b{font-size:13px}.bracketClassificado{margin-top:12px;padding:12px;border-radius:16px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);font-weight:1000;text-align:center}
+        @media(max-width:720px){.bracketTrairasPage{padding:12px}.bracketHero{grid-template-columns:70px 1fr 70px;gap:8px}.bracketLogoWrap .sectionLogoTrairas{width:64px;height:64px}.bracketCupTop .cupIcon{font-size:38px}.bracketCupTop span{display:none}.bracketHeroText h2{font-size:28px}.bracketHeroText strong{font-size:13px}.bracketHeroText span{font-size:13px}.bracketHint{border-radius:14px;text-align:left}.bracketCanvas{transform-origin:top left}.bracketModalTeams{grid-template-columns:1fr}.bracketModalScore{text-align:center}.bracketInfoGrid{grid-template-columns:1fr}}
       `}</style>
-
-      <div className="chavHeader">
-        <div className="chavTitle">
-          <LogoTrairas className="sectionLogoTrairas" />
-          <div>
-            <span>Copa do Traíras F.C. 2026</span>
-            <h2>Chaveamento</h2>
-            <p>Do 1/16 avos até a final, com vencedores avançando conforme os resultados oficiais.</p>
+      {(() => {
+        const byNo = (no) => bracketGames.find(g => Number(g.game_no) === Number(no)) || games.find(g => Number(g.game_no) === Number(no))
+        const renderMatch = (no, x, y, edge='blue') => {
+          const game = byNo(no)
+          if (!game) return null
+          const home = displayHomeTeam(game, games)
+          const away = displayAwayTeam(game, games)
+          const done = isGameFinished(game)
+          const winner = gameWinnerTeamResolved(game, games)
+          return <button type="button" key={no} className={`bracketMatch ${done ? 'done' : ''}`} style={{left:x, top:y, '--edge': edge === 'red' ? '#ef4444' : '#38bdf8'}} onClick={() => setSelectedBracketGame(game)}>
+            <div className={`bracketTeam ${winner && winner === home ? 'winner' : ''}`}><span><TeamNameFlag team={home} /></span><span className={`bracketScore ${done ? '' : 'empty'}`}>{done ? game.home_score : ''}</span></div>
+            <div className={`bracketTeam ${winner && winner === away ? 'winner' : ''}`}><span><TeamNameFlag team={away} /></span><span className={`bracketScore ${done ? '' : 'empty'}`}>{done ? game.away_score : ''}</span></div>
+          </button>
+        }
+        const champion = gameWinnerTeamResolved(byNo(104), games)
+        const third = gameWinnerTeamResolved(byNo(103), games)
+        return <>
+          <div className="bracketHero">
+            <div className="bracketLogoWrap"><LogoTrairas className="sectionLogoTrairas" /></div>
+            <div className="bracketHeroText"><h2>Mata-Mata</h2><strong>Copa do Traíras F.C. 2026</strong><span>Rumo à glória!</span></div>
+            <div className="bracketCupTop"><span className="cupIcon">🏆</span><span>Copa do<br/>Traíras F.C.</span></div>
           </div>
-        </div>
-        <div className="chavCup" title="Taça">🏆</div>
-      </div>
-
-      <div className="chavHint">👆 Toque em qualquer confronto para ver placar, horário, fase e local cadastrado no app. No celular, arraste para o lado para acompanhar toda a chave.</div>
-
-      <div className="chavScroll">
-        <div className="chavBoard">
-          {[
-            ['1/16 avos', bracketGames.filter(g => phaseOrderValue(g.phase) === 2)],
-            ['Oitavas', bracketGames.filter(g => phaseOrderValue(g.phase) === 3)],
-            ['Quartas', bracketGames.filter(g => phaseOrderValue(g.phase) === 4)],
-            ['Semifinal', bracketGames.filter(g => phaseOrderValue(g.phase) === 5)],
-            ['3º Lugar', bracketGames.filter(g => phaseOrderValue(g.phase) === 6)],
-            ['Final', bracketGames.filter(g => phaseOrderValue(g.phase) === 7)]
-          ].map(([roundName, roundGames]) => (
-            <div className={`chavRound ${roundName === 'Final' ? 'chavFinalColumn' : ''}`} key={roundName}>
-              <div className="chavRoundTitle">{roundName}</div>
-              {roundName === 'Final' && <div className="chavChampionBox">
-                <span className="cupBig">🏆</span>
-                <strong>Campeão</strong>
-                <span>{roundGames[0] && gameWinnerTeamResolved(roundGames[0], games) ? <TeamNameFlag team={gameWinnerTeamResolved(roundGames[0], games)} /> : 'A definir'}</span>
-              </div>}
-              {roundGames.map(game => {
-                const home = displayHomeTeam(game, games)
-                const away = displayAwayTeam(game, games)
-                const hasResult = isGameFinished(game)
-                const winner = gameWinnerTeamResolved(game, games)
-                return <button type="button" className={`chavMatch ${hasResult ? 'done' : 'pending'}`} key={game.id} onClick={() => setSelectedBracketGame(game)}>
-                  <div className="chavMeta"><span>Jogo {game.game_no}</span><span>{formatDate(game.starts_at)}</span></div>
-                  <div className="chavTeams">
-                    <div className={`chavTeam ${winner && winner === home ? 'winner' : ''}`}>
-                      <span className="chavTeamName"><TeamNameFlag team={home} /></span>
-                      <span className="chavScore">{hasResult ? game.home_score : ''}</span>
-                    </div>
-                    <div className={`chavTeam ${winner && winner === away ? 'winner' : ''}`}>
-                      <span className="chavTeamName"><TeamNameFlag team={away} /></span>
-                      <span className="chavScore">{hasResult ? game.away_score : ''}</span>
-                    </div>
-                  </div>
-                  <div className="chavStatus"><span>{hasResult ? '✅ Encerrado' : '⏳ Aguardando'}</span>{winner && <b>Avançou</b>}</div>
-                </button>
-              })}
+          <div className="bracketHint">👆 Toque em um confronto para ver placar, data, horário, fase e local cadastrado no app. No celular, arraste para o lado.</div>
+          <div className="bracketScroll">
+            <div className="bracketCanvas">
+              <svg className="bracketLines" viewBox="0 0 1500 860" preserveAspectRatio="none">
+                <path className="blue" d="M186 73 H230 V113 H250 M186 153 H230 V113"/><path className="blue" d="M186 253 H230 V293 H250 M186 333 H230 V293"/><path className="blue" d="M186 453 H230 V493 H250 M186 533 H230 V493"/><path className="blue" d="M186 633 H230 V673 H250 M186 713 H230 V673"/>
+                <path className="blue" d="M416 113 H460 V203 H430 M416 293 H460 V203"/><path className="blue" d="M416 493 H460 V583 H430 M416 673 H460 V583"/><path className="blue" d="M596 203 H628 V413 H575 M596 583 H628 V413"/><path className="blue" d="M741 413 H632"/>
+                <path className="red" d="M1314 73 H1270 V113 H1238 M1314 153 H1270 V113"/><path className="red" d="M1314 253 H1270 V293 H1238 M1314 333 H1270 V293"/><path className="red" d="M1314 453 H1270 V493 H1238 M1314 533 H1270 V493"/><path className="red" d="M1314 633 H1270 V673 H1238 M1314 713 H1270 V673"/>
+                <path className="red" d="M1070 113 H1038 V203 H904 M1070 293 H1038 V203"/><path className="red" d="M1070 493 H1038 V583 H904 M1070 673 H1038 V583"/><path className="red" d="M904 203 H872 V413 H759 M904 583 H872 V413"/><path className="red" d="M759 413 H868"/>
+                <path d="M700 446 V478"/><path d="M800 446 V478"/>
+              </svg>
+              <div className="roundName blue" style={{left:48,top:10}}>1/16 avos</div><div className="roundName blue" style={{left:284,top:48}}>Oitavas</div><div className="roundName blue" style={{left:455,top:145}}>Quartas</div><div className="roundName blue" style={{left:590,top:328}}>Semifinal</div>
+              <div className="roundName red" style={{right:55,top:10}}>1/16 avos</div><div className="roundName red" style={{right:284,top:48}}>Oitavas</div><div className="roundName red" style={{right:455,top:145}}>Quartas</div><div className="roundName red" style={{right:590,top:328}}>Semifinal</div>
+              <div className="centralCup"><div className="cupBig">🏆</div><b>Final</b></div>
+              {renderMatch(74,20,40,'blue')}{renderMatch(77,20,120,'blue')}{renderMatch(73,20,220,'blue')}{renderMatch(75,20,300,'blue')}{renderMatch(83,20,420,'blue')}{renderMatch(84,20,500,'blue')}{renderMatch(81,20,600,'blue')}{renderMatch(82,20,680,'blue')}
+              {renderMatch(89,250,80,'blue')}{renderMatch(90,250,260,'blue')}{renderMatch(93,250,460,'blue')}{renderMatch(94,250,640,'blue')}{renderMatch(97,430,170,'blue')}{renderMatch(98,430,550,'blue')}{renderMatch(101,575,380,'blue')}
+              {renderMatch(76,1314,40,'red')}{renderMatch(78,1314,120,'red')}{renderMatch(79,1314,220,'red')}{renderMatch(80,1314,300,'red')}{renderMatch(86,1314,420,'red')}{renderMatch(88,1314,500,'red')}{renderMatch(85,1314,600,'red')}{renderMatch(87,1314,680,'red')}
+              {renderMatch(91,1070,80,'red')}{renderMatch(92,1070,260,'red')}{renderMatch(95,1070,460,'red')}{renderMatch(96,1070,640,'red')}{renderMatch(99,904,170,'red')}{renderMatch(100,904,550,'red')}{renderMatch(102,759,380,'red')}
+              <button type="button" className="finalBox" onClick={() => byNo(104) && setSelectedBracketGame(byNo(104))}><small>Final</small><strong>{champion ? <TeamNameFlag team={champion} /> : 'A definir'}</strong></button>
+              <div className="championBanner">Campeão!</div>
+              <button type="button" className="thirdBox" onClick={() => byNo(103) && setSelectedBracketGame(byNo(103))}><small>3º Lugar</small><b>{third ? <TeamNameFlag team={third} /> : 'A definir'}</b></button>
+              <div className="legendDef">A definir</div>
             </div>
-          ))}
-        </div>
-      </div>
-
+          </div>
+        </>
+      })()}
       {selectedBracketGameLive && (() => {
         const game = selectedBracketGameLive
         const home = displayHomeTeam(game, games)
@@ -2088,25 +2060,13 @@ function App() {
         const hasResult = isGameFinished(game)
         const winner = gameWinnerTeamResolved(game, games)
         const local = game.stadium || game.venue || game.arena || game.estadio || game.local || game.city || game.cidade || 'Não cadastrado no app'
-        return <div className="chavModalOverlay" onClick={() => setSelectedBracketGame(null)}>
-          <div className="chavModal" onClick={(e) => e.stopPropagation()}>
-            <div className="chavModalTop">
-              <strong>{game.phase} · Jogo {game.game_no}</strong>
-              <button type="button" onClick={() => setSelectedBracketGame(null)}>Fechar</button>
-            </div>
-            <div className="chavModalBody">
-              <div className="chavModalTeams">
-                <div className="chavModalTeam"><TeamNameFlag team={home} /></div>
-                <div className="chavModalScore">{hasResult ? `${game.home_score} x ${game.away_score}` : 'x'}</div>
-                <div className="chavModalTeam"><TeamNameFlag team={away} /></div>
-              </div>
-              <div className="chavInfoGrid">
-                <div className="chavInfo"><span>Data e horário</span><b>{formatDate(game.starts_at)}</b></div>
-                <div className="chavInfo"><span>Status</span><b>{hasResult ? 'Resultado lançado' : 'Aguardando resultado'}</b></div>
-                <div className="chavInfo"><span>Local / Estádio</span><b>{local}</b></div>
-                <div className="chavInfo"><span>Fase</span><b>{game.phase}</b></div>
-              </div>
-              {winner && <div className="chavClassificado">⭐ Classificado: {winner}</div>}
+        return <div className="bracketModalOverlay" onClick={() => setSelectedBracketGame(null)}>
+          <div className="bracketModal" onClick={(e) => e.stopPropagation()}>
+            <div className="bracketModalTop"><strong>{game.phase} · Jogo {game.game_no}</strong><button type="button" onClick={() => setSelectedBracketGame(null)}>Fechar</button></div>
+            <div className="bracketModalBody">
+              <div className="bracketModalTeams"><div className="bracketModalTeam"><TeamNameFlag team={home} /></div><div className="bracketModalScore">{hasResult ? `${game.home_score} x ${game.away_score}` : 'x'}</div><div className="bracketModalTeam"><TeamNameFlag team={away} /></div></div>
+              <div className="bracketInfoGrid"><div className="bracketInfo"><span>Data e horário</span><b>{formatDate(game.starts_at)}</b></div><div className="bracketInfo"><span>Status</span><b>{hasResult ? 'Resultado lançado' : 'Aguardando resultado'}</b></div><div className="bracketInfo"><span>Local / Estádio</span><b>{local}</b></div><div className="bracketInfo"><span>Fase</span><b>{game.phase}</b></div></div>
+              {winner && <div className="bracketClassificado">⭐ Classificado: {winner}</div>}
             </div>
           </div>
         </div>

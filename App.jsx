@@ -1878,8 +1878,29 @@ function App() {
         <div className="posterControls">
           <div className="filters">
             <Search size={18}/>
-            <input placeholder="Buscar jogo, grupo ou seleção..." value={busca} onChange={e => setBusca(e.target.value)} style={{ color: '#000', caretColor: '#000', background: '#fff' }} />
-            <select value={filtro} onChange={e => setFiltro(e.target.value)}>
+            <input
+              placeholder="Buscar jogo, grupo ou seleção..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              style={{
+                color: '#000',
+                WebkitTextFillColor: '#000',
+                caretColor: '#000',
+                background: '#fff',
+                opacity: 1,
+              }}
+            />
+            <select
+              value={filtro}
+              onChange={e => setFiltro(e.target.value)}
+              style={{
+                color: '#000',
+                WebkitTextFillColor: '#000',
+                caretColor: '#000',
+                background: '#fff',
+                opacity: 1,
+              }}
+            >
               {phases.map(p => <option key={p}>{p}</option>)}
             </select>
           </div>
@@ -2600,8 +2621,29 @@ function App() {
       <div className="posterControls">
         <div className="filters">
           <Search size={18}/>
-          <input placeholder="Buscar jogo..." value={busca} onChange={e => setBusca(e.target.value)} style={{ color: '#000', caretColor: '#000', background: '#fff' }} />
-          <select value={filtro} onChange={e => setFiltro(e.target.value)}>
+          <input
+            placeholder="Buscar jogo..."
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            style={{
+              color: '#000',
+              WebkitTextFillColor: '#000',
+              caretColor: '#000',
+              background: '#fff',
+              opacity: 1,
+            }}
+          />
+          <select
+            value={filtro}
+            onChange={e => setFiltro(e.target.value)}
+            style={{
+              color: '#000',
+              WebkitTextFillColor: '#000',
+              caretColor: '#000',
+              background: '#fff',
+              opacity: 1,
+            }}
+          >
             {phases.map(p => <option key={p}>{p}</option>)}
           </select>
         </div>

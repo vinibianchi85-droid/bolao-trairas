@@ -2208,61 +2208,114 @@ function App() {
       </div>
     </section>}
 
-    {tab === 'mata' && <section className="card mataMataPage">
+    {tab === 'mata' && <section className="card mataMataPage mataBracketPage">
       <style>{`
-        .mataMataPage .mataIntro{margin-bottom:16px}
-        .mataMataPage .mataPhaseBox{margin:22px 0 26px;border:1px solid rgba(255,255,255,.10);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.035)}
-        .mataMataPage .mataPhaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(185,28,28,.95),rgba(12,18,30,.95));border-bottom:1px solid rgba(255,255,255,.12)}
-        .mataMataPage .mataPhaseHeader strong{font-size:18px;text-transform:uppercase;letter-spacing:.4px}
-        .mataMataPage .mataPhaseHeader span{font-size:12px;font-weight:900;background:#facc15;color:#111827;padding:6px 10px;border-radius:999px;white-space:nowrap}
-        .mataMataPage .bracket{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px}
-        .mataMataPage .bracketGame{border-radius:16px;background:rgba(7,18,27,.92);border:1px solid rgba(255,255,255,.10);padding:12px;box-shadow:0 8px 18px rgba(0,0,0,.18)}
-        .mataMataPage .bracketGame small{display:block;font-weight:900;opacity:.86;margin-bottom:3px}
-        .mataMataPage .bracketGame em{display:block;font-size:12px;opacity:.72;margin-bottom:10px}
-        .mataMataPage .bracketTeams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-        .mataMataPage .bracketTeams b{min-width:0}
-        .mataMataPage .bracketTeams .versus{font-weight:900;opacity:.8}
-        .mataMataPage .teamNameFlag{display:inline-flex;align-items:center;gap:6px;white-space:normal;max-width:100%}
-        .mataMataPage .teamNameFlag.right{justify-content:flex-end;text-align:right}
-        .mataMataPage .teamNameFlag .teamText{white-space:normal;overflow:visible;text-overflow:clip;font-size:13px;line-height:1.15}
-        .mataMataPage .placeholderFlag{font-size:16px;flex:0 0 auto}
+        .mataBracketPage{position:relative;overflow:hidden;background:
+          radial-gradient(circle at 50% 18%,rgba(251,191,36,.12),transparent 28%),
+          linear-gradient(135deg,rgba(7,18,27,.98),rgba(10,21,36,.98) 50%,rgba(32,8,18,.94));
+          border:1px solid rgba(250,204,21,.18)}
+        .mataBracketPage:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 10%,rgba(220,38,38,.16),transparent 30%),radial-gradient(circle at 92% 18%,rgba(14,165,233,.13),transparent 30%);pointer-events:none}
+        .mataBracketPage > *{position:relative;z-index:1}
+        .mataHero{text-align:center;margin:4px 0 18px}
+        .mataHeroBadge{display:inline-flex;align-items:center;gap:10px;color:#facc15;font-weight:1000;text-transform:uppercase;letter-spacing:.6px;font-size:13px;margin-bottom:6px}
+        .mataHero h2{font-size:clamp(30px,6vw,58px);line-height:.95;margin:0;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.5)}
+        .mataHero h2 span{display:block;color:#facc15;font-size:.56em;margin-top:6px}
+        .mataHero p{margin:10px auto 0;max-width:680px;color:rgba(255,255,255,.72)}
+        .mataLegend{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0 0}
+        .mataLegend span{border:1px solid rgba(250,204,21,.22);background:rgba(0,0,0,.18);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;color:#f8fafc}
+        .mataScroll{overflow-x:auto;padding:8px 2px 14px;-webkit-overflow-scrolling:touch}
+        .mataBoard{min-width:1180px;display:grid;grid-template-columns:1.12fr .9fr .78fr .62fr 300px .62fr .78fr .9fr 1.12fr;gap:18px;align-items:center}
+        .mataColumn{display:flex;flex-direction:column;gap:14px;justify-content:center;min-height:100%}
+        .mataColumn.r16{gap:54px}.mataColumn.qf{gap:140px}.mataColumn.sf{gap:330px}
+        .roundTitle{text-align:center;color:#facc15;font-weight:1000;text-transform:uppercase;font-size:12px;letter-spacing:.7px;margin-bottom:-4px;text-shadow:0 0 12px rgba(250,204,21,.25)}
+        .bracketMatch{position:relative;border-radius:14px;border:1px solid rgba(255,255,255,.13);background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(2,6,23,.92));box-shadow:0 10px 22px rgba(0,0,0,.26);overflow:hidden}
+        .bracketMatch:after{content:'';position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(250,204,21,.04);pointer-events:none}
+        .bracketMatchHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:linear-gradient(90deg,rgba(185,28,28,.92),rgba(12,45,68,.78));font-size:10px;font-weight:1000;color:#fff;text-transform:uppercase;letter-spacing:.25px}
+        .bracketMatchHeader em{font-style:normal;color:#facc15;white-space:nowrap}
+        .bracketTeam{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:8px 9px;border-top:1px solid rgba(255,255,255,.08);min-height:38px}
+        .bracketTeam .teamNameFlag{display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:100%}
+        .bracketTeam .teamText{font-size:12px;font-weight:950;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px}
+        .bracketTeam .flagImg{width:24px;height:24px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.16)}
+        .bracketTeam .placeholderFlag{font-size:16px}
+        .scorePill{min-width:24px;text-align:center;border-radius:8px;padding:4px 6px;font-weight:1000;background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.24);color:#facc15}
+        .winnerDot{width:42px;height:42px;border-radius:50%;margin:auto;background:radial-gradient(circle at 30% 30%,#fde68a,#facc15 55%,#ca8a04);box-shadow:0 0 0 7px rgba(250,204,21,.08),0 0 28px rgba(250,204,21,.35)}
+        .advancedBox{min-height:88px;display:flex;align-items:center;justify-content:center;padding:8px}
+        .advancedBox .bracketMatchHeader{position:absolute;top:0;left:0;right:0}
+        .advancedBox .winnerDot{margin-top:18px}
+        .finalColumn{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0 4px}
+        .finalCup{width:118px;height:118px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 25%,#fef3c7,#facc15 52%,#b45309);box-shadow:0 0 0 12px rgba(250,204,21,.08),0 0 46px rgba(250,204,21,.42);font-size:48px}
+        .finalTitle{text-align:center;font-weight:1000;color:#fff;font-size:18px;text-transform:uppercase;text-shadow:0 3px 14px rgba(0,0,0,.45)}
+        .championBox{width:100%;border-radius:18px;padding:14px;background:linear-gradient(180deg,rgba(250,204,21,.14),rgba(255,255,255,.045));border:1px solid rgba(250,204,21,.22);text-align:center}
+        .championBox small{display:block;color:rgba(255,255,255,.65);font-weight:800;margin-bottom:4px}.championBox strong{display:block;font-size:22px;color:#facc15}
+        .mataInfo{margin-top:10px;border-radius:18px;border:1px solid rgba(250,204,21,.18);background:rgba(0,0,0,.18);padding:14px 16px;color:rgba(255,255,255,.76)}
+        .mataInfo strong{display:block;color:#facc15;margin-bottom:5px;text-transform:uppercase}.mataInfo p{margin:0;font-size:13px;line-height:1.45}
         @media (max-width:720px){
-          .mataMataPage .mataPhaseBox{margin:18px 0 24px;border-radius:18px}
-          .mataMataPage .mataPhaseHeader{align-items:flex-start;flex-direction:column}
-          .mataMataPage .bracket{grid-template-columns:1fr;padding:10px;gap:10px}
-          .mataMataPage .bracketTeams{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)}
-          .mataMataPage .teamNameFlag .teamText{font-size:12px}
+          .mataHero{text-align:left}.mataHero h2{font-size:34px}.mataHero p{font-size:13px}.mataScroll{margin-left:-8px;margin-right:-8px;padding-left:8px}.mataBoard{min-width:1120px;gap:14px}.bracketTeam .teamText{max-width:106px}.mataInfo{font-size:12px}
         }
       `}</style>
-      <h2>Mata-mata visual</h2>
-      <p className="muted mataIntro">Chaveamento automático separado por fases: 1/16 avos, oitavas, quartas, semifinais, 3º lugar e final.</p>
-      <div className="mataPhases">
-        {Object.entries(groupedTableGames)
-          .filter(([phaseName]) => !phaseName.startsWith('Grupo'))
-          .map(([phaseName, phaseGames]) => (
-            <div className="mataPhaseBox" key={phaseName}>
-              <div className="mataPhaseHeader">
-                <strong>🏆 {phaseShortLabel(phaseName)}</strong>
-                <span>{phaseGames.length} jogos</span>
-              </div>
-              <div className="bracket">
-                {phaseGames.map(g => (
-                  <div className="bracketGame" key={g.id}>
-                    <small>Jogo {g.game_no}</small>
-                    <em>{formatDate(g.starts_at)}</em>
-                    <div className="bracketTeams">
-                      <b><TeamNameFlag team={displayHomeTeam(g, games)} side="right" /></b>
-                      <span className="versus">x</span>
-                      <b><TeamNameFlag team={displayAwayTeam(g, games)} /></b>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <div className="mataHero">
+        <div className="mataHeroBadge">🏆 Traíras F.C. · Copa da Galera</div>
+        <h2>MATA-MATA <span>CAMINHO ATÉ A FINAL</span></h2>
+        <p>Chaveamento visual com as cores do bolão. As fases seguintes seguem puxando os vencedores conforme os resultados forem lançados.</p>
+        <div className="mataLegend"><span>🟡 Vaga a definir</span><span>🔴 16 avos</span><span>🔵 caminho até a final</span></div>
+      </div>
+
+      {(() => {
+        const byNo = new Map((games || []).filter(g => !String(g.phase || '').startsWith('Grupo')).map(g => [Number(g.game_no), g]))
+        const makeMatch = (no, compact = false) => {
+          const g = byNo.get(Number(no))
+          if (!g) return <div className="bracketMatch advancedBox"><div className="winnerDot" /></div>
+          const home = displayHomeTeam(g, games)
+          const away = displayAwayTeam(g, games)
+          const hs = g.home_score !== null && g.home_score !== undefined && g.home_score !== '' ? g.home_score : ''
+          const as = g.away_score !== null && g.away_score !== undefined && g.away_score !== '' ? g.away_score : ''
+          if (compact) return (
+            <div className="bracketMatch advancedBox" key={no}>
+              <div className="bracketMatchHeader"><span>Jogo {g.game_no}</span><em>{phaseShortLabel(g.phase)}</em></div>
+              <div className="winnerDot" title={`${home} x ${away}`} />
             </div>
-          ))}
+          )
+          return (
+            <div className="bracketMatch" key={no}>
+              <div className="bracketMatchHeader"><span>Jogo {g.game_no}</span><em>{formatDate(g.starts_at)}</em></div>
+              <div className="bracketTeam"><TeamNameFlag team={home} /><span className="scorePill">{hs}</span></div>
+              <div className="bracketTeam"><TeamNameFlag team={away} /><span className="scorePill">{as}</span></div>
+            </div>
+          )
+        }
+        const column = (title, nums, cls = '', compact = false) => (
+          <div className={`mataColumn ${cls}`}>
+            <div className="roundTitle">{title}</div>
+            {nums.map(no => makeMatch(no, compact))}
+          </div>
+        )
+        return (
+          <div className="mataScroll">
+            <div className="mataBoard">
+              {column('1/16 avos', [74,77,73,75,83,84,81,82])}
+              {column('Oitavas', [89,90,93,94], 'r16', true)}
+              {column('Quartas', [97,98], 'qf', true)}
+              {column('Semifinal', [101], 'sf', true)}
+              <div className="finalColumn">
+                <div className="finalTitle">Final</div>
+                {makeMatch(104, true)}
+                <div className="finalCup">🏆</div>
+                <div className="championBox"><small>Grande campeão</small><strong>A definir</strong></div>
+              </div>
+              {column('Semifinal', [102], 'sf', true)}
+              {column('Quartas', [99,100], 'qf', true)}
+              {column('Oitavas', [91,92,95,96], 'r16', true)}
+              {column('1/16 avos', [76,78,79,80,86,88,85,87])}
+            </div>
+          </div>
+        )
+      })()}
+
+      <div className="mataInfo">
+        <strong>Como funciona</strong>
+        <p>Os 16 avos mostram os confrontos completos. O restante da chave aparece como caminho visual até a final e será definido conforme os vencedores forem lançados no app.</p>
       </div>
     </section>}
-
 
     {tab === 'regras' && <section className="regulamentoImagem">
       <img

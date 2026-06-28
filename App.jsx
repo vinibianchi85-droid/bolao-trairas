@@ -811,6 +811,8 @@ function App() {
   const [palpitesGaleraSearch, setPalpitesGaleraSearch] = useState('')
   const [filtro, setFiltro] = useState('Todos')
   const [palpitesSubtab, setPalpitesSubtab] = useState(null)
+  const [resultadosSubtab, setResultadosSubtab] = useState(null)
+  const [galeraSubtab, setGaleraSubtab] = useState(null)
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
@@ -1376,11 +1378,19 @@ function App() {
     })
   }, [filteredGames, palpitesSubtab])
   const groupedPalpitesGames = useMemo(() => groupGamesByPhase(filteredPalpitesGames), [filteredPalpitesGames])
+
+  const filteredResultadosGames = useMemo(() => {
+    if (!resultadosSubtab) return []
+    return filteredGames.filter(g => {
+      const isGroupPhase = String(g.phase || '').startsWith('Grupo')
+      return resultadosSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
+    })
+  }, [filteredGames, resultadosSubtab])
+  const groupedResultadosGames = useMemo(() => groupGamesByPhase(filteredResultadosGames), [filteredResultadosGames])
+
   const palpitesGaleraGames = useMemo(() => {
     const term = palpitesGaleraSearch.trim().toLowerCase()
-    if (!term) return games
-
-    return games.filter(game => {
+    const base = !term ? games : games.filter(game => {
       const searchable = [
         game.game_no,
         game.phase,
@@ -1393,7 +1403,13 @@ function App() {
 
       return searchable.includes(term)
     })
-  }, [games, palpitesGaleraSearch])
+
+    if (!galeraSubtab) return []
+    return base.filter(g => {
+      const isGroupPhase = String(g.phase || '').startsWith('Grupo')
+      return galeraSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
+    })
+  }, [games, palpitesGaleraSearch, galeraSubtab])
   const groupedPalpitesGaleraGames = useMemo(() => groupGamesByPhase(palpitesGaleraGames), [palpitesGaleraGames])
   const proximosBloqueios = useMemo(() => nextLockGames(), [games, guesses, tab])
 
@@ -2241,6 +2257,15 @@ function App() {
 
     {tab === 'resultados' && <section className="card resultadosBox">
       <style>{`
+        .palpitesSubtabs{display:flex;flex-direction:column;gap:10px;margin:12px 0 16px;padding:10px;border:1px solid rgba(255,255,255,.10);background:rgba(2,8,23,.55);border-radius:16px}
+        .palpitesSubtabBtn{border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.78);color:#e5e7eb;border-radius:14px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:none;transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease}
+        .palpitesSubtabBtn:hover{transform:translateY(-1px)}
+        .palpitesSubtabBtn.mataPrincipal{min-height:72px;padding:16px 18px;font-size:18px;letter-spacing:.3px;background:linear-gradient(135deg,rgba(14,165,233,.35),rgba(30,64,175,.85));border-color:rgba(125,211,252,.40);box-shadow:0 12px 28px rgba(14,165,233,.16)}
+        .palpitesSubtabBtn.historicoPequeno{align-self:center;min-height:38px;padding:8px 12px;font-size:12px;opacity:.86;border-radius:999px;background:rgba(15,23,42,.62)}
+        .palpitesSubtabBtn.active{color:#fff;border-color:rgba(255,255,255,.35);box-shadow:0 10px 26px rgba(14,165,233,.22)}
+        .palpitesIntroBox{margin:10px 0 16px;padding:14px;border:1px dashed rgba(125,211,252,.28);border-radius:16px;color:#dbeafe;background:rgba(15,23,42,.46);text-align:center;font-size:13px}
+        .palpitesAccordionContent{animation:palpitesDrop .28s ease both}
+        @keyframes palpitesDrop{from{opacity:0;transform:translateY(-10px);max-height:0}to{opacity:1;transform:translateY(0);max-height:9999px}}
         @media (max-width: 700px) {
           .resultadosBox .resultadoPhase { overflow: hidden !important; }
           .resultadosBox .resultadoList { overflow: visible !important; }
@@ -2286,8 +2311,29 @@ function App() {
         Aqui todos conferem os placares oficiais lançados pela organização. Esta aba é somente leitura e ajuda a conferir o ranking.
       </p>
 
-      <div className="resultadosGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
+      <div className="palpitesSubtabs resultadosSubtabs" role="tablist" aria-label="Fases dos resultados oficiais">
+        <button
+          type="button"
+          className={`palpitesSubtabBtn mataPrincipal ${resultadosSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setResultadosSubtab(resultadosSubtab === 'mata' ? null : 'mata'); setFiltro('Todos') }}
+        >
+          🏆 Resultados do Mata-mata
+        </button>
+        <button
+          type="button"
+          className={`palpitesSubtabBtn historicoPequeno ${resultadosSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setResultadosSubtab(resultadosSubtab === 'grupos' ? null : 'grupos'); setFiltro('Todos') }}
+        >
+          📜 Histórico resultados primeira fase
+        </button>
+      </div>
+
+      {!resultadosSubtab && (
+        <div className="palpitesIntroBox">Escolha uma sub aba acima para abrir os resultados oficiais.</div>
+      )}
+
+      {resultadosSubtab && <div className="resultadosGrid palpitesAccordionContent">
+        {Object.entries(groupedResultadosGames).map(([phaseName, phaseGames]) => (
           <div className={`resultadoPhase ${phaseName.startsWith('Grupo') ? 'isGroupResult' : 'isKnockoutResult'}`} key={phaseName}>
             <div className="resultadoPhaseTitle">
               <strong>{phaseName}</strong>
@@ -2319,12 +2365,21 @@ function App() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </section>}
 
 
     {tab === 'palpitesRegistrados' && <section className="card palpitesRegistradosBox palpitesGaleraNova">
       <style>{`
+        .palpitesSubtabs{display:flex;flex-direction:column;gap:10px;margin:12px 0 16px;padding:10px;border:1px solid rgba(255,255,255,.10);background:rgba(2,8,23,.55);border-radius:16px}
+        .palpitesSubtabBtn{border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.78);color:#e5e7eb;border-radius:14px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:none;transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease}
+        .palpitesSubtabBtn:hover{transform:translateY(-1px)}
+        .palpitesSubtabBtn.mataPrincipal{min-height:72px;padding:16px 18px;font-size:18px;letter-spacing:.3px;background:linear-gradient(135deg,rgba(14,165,233,.35),rgba(30,64,175,.85));border-color:rgba(125,211,252,.40);box-shadow:0 12px 28px rgba(14,165,233,.16)}
+        .palpitesSubtabBtn.historicoPequeno{align-self:center;min-height:38px;padding:8px 12px;font-size:12px;opacity:.86;border-radius:999px;background:rgba(15,23,42,.62)}
+        .palpitesSubtabBtn.active{color:#fff;border-color:rgba(255,255,255,.35);box-shadow:0 10px 26px rgba(14,165,233,.22)}
+        .palpitesIntroBox{margin:10px 0 16px;padding:14px;border:1px dashed rgba(125,211,252,.28);border-radius:16px;color:#dbeafe;background:rgba(15,23,42,.46);text-align:center;font-size:13px}
+        .palpitesAccordionContent{animation:palpitesDrop .28s ease both}
+        @keyframes palpitesDrop{from{opacity:0;transform:translateY(-10px);max-height:0}to{opacity:1;transform:translateY(0);max-height:9999px}}
         .palpitesGaleraNova .palpitesGaleraSearchBox{display:flex;align-items:center;gap:10px;margin:14px 0 10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
         .palpitesGaleraNova .palpitesGaleraSearchBox svg{opacity:.9;flex-shrink:0}
         .palpitesGaleraNova .palpitesGaleraSearchBox input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:15px;font-weight:700}
@@ -2359,31 +2414,53 @@ function App() {
       </div>
 
       <p className="muted palpitesRegistradosHint">
-        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. Agora os jogos estão separados por grupos e fases para ficar mais fácil de localizar.
+        Para não ter cópia de palpite, os palpites da galera só aparecem depois que o jogo estiver fechado. Agora os jogos estão separados por fases para ficar mais fácil de localizar.
       </p>
 
-      <div className="palpitesGaleraSearchBox">
-        <Search size={18} />
-        <input
-          type="text"
-          placeholder="Pesquisar seleção, jogo, grupo ou fase..."
-          value={palpitesGaleraSearch}
-          onChange={(e) => setPalpitesGaleraSearch(e.target.value)}
-        />
+      <div className="palpitesSubtabs galeraSubtabs" role="tablist" aria-label="Fases dos palpites da galera">
+        <button
+          type="button"
+          className={`palpitesSubtabBtn mataPrincipal ${galeraSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setGaleraSubtab(galeraSubtab === 'mata' ? null : 'mata'); setPalpitesGaleraSearch('') }}
+        >
+          🏆 Palpites da Galera - Mata-mata
+        </button>
+        <button
+          type="button"
+          className={`palpitesSubtabBtn historicoPequeno ${galeraSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setGaleraSubtab(galeraSubtab === 'grupos' ? null : 'grupos'); setPalpitesGaleraSearch('') }}
+        >
+          📜 Histórico palpites primeira fase
+        </button>
       </div>
 
-      <div className="palpitesGaleraSearchCount">
-        Mostrando {palpitesGaleraGames.length} de {games.length} jogos
-      </div>
+      {!galeraSubtab && (
+        <div className="palpitesIntroBox">Escolha uma sub aba acima para abrir os palpites da galera.</div>
+      )}
 
-      <div className="phaseQuickNav">
-        {Object.entries(groupedPalpitesGaleraGames).map(([phaseName]) => {
-          const isGroup = phaseName.startsWith('Grupo')
-          return <a className={isGroup ? 'groupLink' : 'knockLink'} href={`#${phaseAnchor(phaseName)}`} key={`nav-${phaseName}`}>{phaseShortLabel(phaseName)}</a>
-        })}
-      </div>
+      {galeraSubtab && <div className="palpitesAccordionContent">
+        <div className="palpitesGaleraSearchBox">
+          <Search size={18} />
+          <input
+            type="text"
+            placeholder="Pesquisar seleção, jogo, grupo ou fase..."
+            value={palpitesGaleraSearch}
+            onChange={(e) => setPalpitesGaleraSearch(e.target.value)}
+          />
+        </div>
 
-      <div className="palpitesRegistradosGrid">
+        <div className="palpitesGaleraSearchCount">
+          Mostrando {palpitesGaleraGames.length} jogos nesta sub aba
+        </div>
+
+        <div className="phaseQuickNav">
+          {Object.entries(groupedPalpitesGaleraGames).map(([phaseName]) => {
+            const isGroup = phaseName.startsWith('Grupo')
+            return <a className={isGroup ? 'groupLink' : 'knockLink'} href={`#${phaseAnchor(phaseName)}`} key={`nav-${phaseName}`}>{phaseShortLabel(phaseName)}</a>
+          })}
+        </div>
+
+        <div className="palpitesRegistradosGrid">
         {palpitesGaleraGames.length === 0 && (
           <div className="palpiteHidden">Nenhum jogo encontrado para essa pesquisa.</div>
         )}
@@ -2453,7 +2530,8 @@ function App() {
             </div>
           )
         })}
-      </div>
+        </div>
+      </div>}
     </section>}
 
     {tab === 'grupos' && <section className="card">

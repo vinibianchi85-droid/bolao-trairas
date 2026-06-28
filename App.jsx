@@ -1878,7 +1878,7 @@ function App() {
         <div className="posterControls">
           <div className="filters">
             <Search size={18}/>
-            <input placeholder="Buscar jogo, grupo ou seleção..." value={busca} onChange={e => setBusca(e.target.value)} />
+            <input placeholder="Buscar jogo, grupo ou seleção..." value={busca} onChange={e => setBusca(e.target.value)} style={{ color: '#000', caretColor: '#000', background: '#fff' }} />
             <select value={filtro} onChange={e => setFiltro(e.target.value)}>
               {phases.map(p => <option key={p}>{p}</option>)}
             </select>
@@ -2600,7 +2600,7 @@ function App() {
       <div className="posterControls">
         <div className="filters">
           <Search size={18}/>
-          <input placeholder="Buscar jogo..." value={busca} onChange={e => setBusca(e.target.value)} />
+          <input placeholder="Buscar jogo..." value={busca} onChange={e => setBusca(e.target.value)} style={{ color: '#000', caretColor: '#000', background: '#fff' }} />
           <select value={filtro} onChange={e => setFiltro(e.target.value)}>
             {phases.map(p => <option key={p}>{p}</option>)}
           </select>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, LOCK_AT } from './supabase'
 import {
@@ -816,6 +816,8 @@ function App() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState(null)
   const [showSavePopup, setShowSavePopup] = useState(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState('')
+  const autoSaveTimerRef = useRef(null)
   const [chaveamentoGame, setChaveamentoGame] = useState(null)
 
   useEffect(() => {
@@ -835,6 +837,13 @@ function App() {
     if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
   }, [tab, session])
+
+
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    }
+  }, [])
 
 
   useEffect(() => {
@@ -1076,6 +1085,18 @@ function App() {
     setRanking(rows)
   }
 
+  function scheduleAutoSave(nextGuesses) {
+    if (!session?.user?.id) return
+
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+
+    setAutoSaveStatus('⏳ Salvamento automático aguardando você terminar de digitar...')
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveGuesses({ silent: true, guessesOverride: nextGuesses })
+    }, 1500)
+  }
+
   function setGuess(game, field, value) {
     if (bettingLocked(game, games)) return
 
@@ -1083,15 +1104,31 @@ function App() {
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
 
     setHasUnsavedChanges(true)
-    setGuesses(old => ({ ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }))
+    setGuesses(old => {
+      const next = { ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }
+      scheduleAutoSave(next)
+      return next
+    })
   }
 
-  async function saveGuesses() {
+  async function saveGuesses(options = {}) {
+    const { silent = false, guessesOverride = null } = options
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current)
+      autoSaveTimerRef.current = null
+    }
+
     await ensureProfileForCurrentUser()
-    if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
+    if (locked()) {
+      if (silent) setAutoSaveStatus('🔒 Palpites bloqueados. Não foi possível salvar automaticamente.')
+      else setMsg('Palpites bloqueados. O prazo geral já encerrou.')
+      return
+    }
 
     const uid = session.user.id
-    const rows = Object.entries(guesses)
+    const sourceGuesses = guessesOverride || guesses
+    const rows = Object.entries(sourceGuesses)
       .filter(([game_id]) => {
         const game = games.find(g => String(g.id) === String(game_id))
         return game && !bettingLocked(game, games)
@@ -1099,14 +1136,22 @@ function App() {
       .map(([game_id, g]) => ({
         user_id: uid,
         game_id,
-        guess_home: g.guess_home === '' ? null : Number(g.guess_home),
-        guess_away: g.guess_away === '' ? null : Number(g.guess_away)
+        guess_home: g.guess_home === '' || g.guess_home === undefined ? null : Number(g.guess_home),
+        guess_away: g.guess_away === '' || g.guess_away === undefined ? null : Number(g.guess_away)
       }))
+
+    if (!rows.length) return
+
+    if (silent) setAutoSaveStatus('⏳ Salvando automaticamente...')
 
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
 
     if (error) {
-      setMsg(error.message)
+      if (silent) {
+        setAutoSaveStatus('⚠️ Erro ao salvar automaticamente. Use o botão SALVAR PALPITES para garantir.')
+      } else {
+        setMsg(error.message)
+      }
       return
     }
 
@@ -1114,17 +1159,23 @@ function App() {
 
     setHasUnsavedChanges(false)
     setLastSavedAt(savedAt)
-    setShowSavePopup(true)
-
-    setTimeout(() => {
-      setShowSavePopup(false)
-    }, 6000)
 
     try {
       await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid)
     } catch (e) {
       // Se a coluna last_saved_at ainda não existir, os palpites continuam salvos.
     }
+
+    if (silent) {
+      setAutoSaveStatus(`✅ Salvo automaticamente em ${formatSaveDate(savedAt)}`)
+      return
+    }
+
+    setShowSavePopup(true)
+
+    setTimeout(() => {
+      setShowSavePopup(false)
+    }, 6000)
 
     setMsg(`Palpites salvos com sucesso em ${formatSaveDate(savedAt)}!`)
 
@@ -1819,6 +1870,7 @@ function App() {
               ? `Último salvamento: ${formatSaveDate(lastSavedAt)}`
               : 'Último salvamento: ainda não registrado'}
           </span>
+          {autoSaveStatus && <small>{autoSaveStatus}</small>}
         </div>
         <button
           disabled={locked()}

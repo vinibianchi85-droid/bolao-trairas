@@ -810,7 +810,7 @@ function App() {
   const [busca, setBusca] = useState('')
   const [palpitesGaleraSearch, setPalpitesGaleraSearch] = useState('')
   const [filtro, setFiltro] = useState('Todos')
-  const [palpitesSubtab, setPalpitesSubtab] = useState('mata')
+  const [palpitesSubtab, setPalpitesSubtab] = useState(null)
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
@@ -1369,6 +1369,7 @@ function App() {
 
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
   const filteredPalpitesGames = useMemo(() => {
+    if (!palpitesSubtab) return []
     return filteredGames.filter(g => {
       const isGroupPhase = String(g.phase || '').startsWith('Grupo')
       return palpitesSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
@@ -1544,21 +1545,19 @@ function App() {
       <style>{`
         .palpitesSubtabs{
           display:flex;
+          flex-direction:column;
           gap:10px;
-          flex-wrap:wrap;
           margin:12px 0 16px;
-          padding:8px;
+          padding:10px;
           border:1px solid rgba(255,255,255,.10);
           background:rgba(2,8,23,.55);
           border-radius:16px;
         }
         .palpitesSubtabBtn{
-          flex:1 1 180px;
           border:1px solid rgba(255,255,255,.14);
           background:rgba(15,23,42,.78);
           color:#e5e7eb;
           border-radius:14px;
-          padding:12px 14px;
           font-weight:900;
           display:flex;
           align-items:center;
@@ -1566,18 +1565,57 @@ function App() {
           gap:8px;
           cursor:pointer;
           box-shadow:none;
+          transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+        }
+        .palpitesSubtabBtn:hover{ transform:translateY(-1px); }
+        .palpitesSubtabBtn.mataPrincipal{
+          min-height:72px;
+          padding:16px 18px;
+          font-size:18px;
+          letter-spacing:.3px;
+          background:linear-gradient(135deg,rgba(14,165,233,.35),rgba(30,64,175,.85));
+          border-color:rgba(125,211,252,.40);
+          box-shadow:0 12px 28px rgba(14,165,233,.16);
+        }
+        .palpitesSubtabBtn.historicoPequeno{
+          align-self:center;
+          min-height:38px;
+          padding:8px 12px;
+          font-size:12px;
+          opacity:.86;
+          border-radius:999px;
+          background:rgba(15,23,42,.62);
         }
         .palpitesSubtabBtn.active{
-          background:linear-gradient(90deg,#ef4444,#0ea5e9);
           color:#fff;
-          border-color:rgba(255,255,255,.25);
-          box-shadow:0 8px 22px rgba(14,165,233,.18);
+          border-color:rgba(255,255,255,.35);
+          box-shadow:0 10px 26px rgba(14,165,233,.22);
+        }
+        .palpitesSubtabBtn.historicoPequeno.active{
+          background:rgba(30,64,175,.65);
         }
         .palpitesSubtabHint{
           margin:-4px 2px 14px;
           color:#cbd5e1;
           font-size:13px;
           opacity:.9;
+        }
+        .palpitesIntroBox{
+          margin:10px 0 16px;
+          padding:14px;
+          border:1px dashed rgba(125,211,252,.28);
+          border-radius:16px;
+          color:#dbeafe;
+          background:rgba(15,23,42,.46);
+          text-align:center;
+          font-size:13px;
+        }
+        .palpitesAccordionContent{
+          animation:palpitesDrop .28s ease both;
+        }
+        @keyframes palpitesDrop{
+          from{opacity:0; transform:translateY(-10px); max-height:0;}
+          to{opacity:1; transform:translateY(0); max-height:9999px;}
         }
         .palpitesEmptySubtab{
           padding:18px;
@@ -1807,44 +1845,52 @@ function App() {
         </div>
       </div>
 
-      <div className="posterControls">
-        <div className="filters">
-          <Search size={18}/>
-          <input placeholder="Buscar jogo, grupo ou seleção..." value={busca} onChange={e => setBusca(e.target.value)} />
-          <select value={filtro} onChange={e => setFiltro(e.target.value)}>
-            {phases.map(p => <option key={p}>{p}</option>)}
-          </select>
-        </div>
-        <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar palpites</button>
-      </div>
-
       <div className="palpitesSubtabs" role="tablist" aria-label="Fases dos palpites">
         <button
           type="button"
-          className={`palpitesSubtabBtn ${palpitesSubtab === 'mata' ? 'active' : ''}`}
-          onClick={() => { setPalpitesSubtab('mata'); setFiltro('Todos') }}
+          className={`palpitesSubtabBtn mataPrincipal ${palpitesSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setPalpitesSubtab(palpitesSubtab === 'mata' ? null : 'mata'); setFiltro('Todos') }}
         >
-          🏆 Mata-mata
+          🏆 PALPITES DO MATA-MATA
         </button>
         <button
           type="button"
-          className={`palpitesSubtabBtn ${palpitesSubtab === 'grupos' ? 'active' : ''}`}
-          onClick={() => { setPalpitesSubtab('grupos'); setFiltro('Todos') }}
+          className={`palpitesSubtabBtn historicoPequeno ${palpitesSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setPalpitesSubtab(palpitesSubtab === 'grupos' ? null : 'grupos'); setFiltro('Todos') }}
         >
-          📜 Primeira fase
+          📜 Histórico palpites primeira fase
         </button>
       </div>
-      <p className="palpitesSubtabHint">
-        {palpitesSubtab === 'mata'
-          ? 'Aparecem somente os jogos do mata-mata para facilitar os palpites desta fase.'
-          : 'Histórico dos jogos da primeira fase separado para consulta.'}
-      </p>
 
-      <div className="posterGrid palpitesPosterGrid">
-        {Object.keys(groupedPalpitesGames).length === 0 && (
-          <div className="palpitesEmptySubtab">Nenhum jogo encontrado nesta sub aba com o filtro atual.</div>
-        )}
-        {Object.entries(groupedPalpitesGames).map(([phaseName, phaseGames]) => (
+      {!palpitesSubtab && (
+        <div className="palpitesIntroBox">
+          Toque em <strong>PALPITES DO MATA-MATA</strong> para abrir os jogos desta fase.
+        </div>
+      )}
+
+      {palpitesSubtab && <div className="palpitesAccordionContent">
+        <p className="palpitesSubtabHint">
+          {palpitesSubtab === 'mata'
+            ? 'Aparecem somente os jogos do mata-mata para facilitar os palpites desta fase.'
+            : 'Histórico dos jogos da primeira fase separado para consulta.'}
+        </p>
+
+        <div className="posterControls">
+          <div className="filters">
+            <Search size={18}/>
+            <input placeholder="Buscar jogo, grupo ou seleção..." value={busca} onChange={e => setBusca(e.target.value)} />
+            <select value={filtro} onChange={e => setFiltro(e.target.value)}>
+              {phases.map(p => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          {palpitesSubtab === 'mata' && <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar palpites</button>}
+        </div>
+
+        <div className="posterGrid palpitesPosterGrid">
+          {Object.keys(groupedPalpitesGames).length === 0 && (
+            <div className="palpitesEmptySubtab">Nenhum jogo encontrado nesta sub aba com o filtro atual.</div>
+          )}
+          {Object.entries(groupedPalpitesGames).map(([phaseName, phaseGames]) => (
           <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
             <div className="posterGroupTitle">
               <strong>{phaseName}</strong>
@@ -1887,10 +1933,11 @@ function App() {
               })}
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </div>}
 
-      <div className="saveFloating">
+      {palpitesSubtab === 'mata' && <div className="saveFloating">
         <div className={`saveStatusBox ${hasUnsavedChanges ? 'unsaved' : 'saved'}`}>
           <strong>{hasUnsavedChanges ? '🔴 Existem alterações não salvas' : '🟢 Palpites salvos'}</strong>
           <span>
@@ -1906,7 +1953,7 @@ function App() {
         >
           <Save/> {hasUnsavedChanges ? 'SALVAR PALPITES' : 'PALPITES SALVOS ✓'}
         </button>
-      </div>
+      </div>}
     </section>}
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, LOCK_AT } from './supabase'
 import {
@@ -810,14 +810,13 @@ function App() {
   const [busca, setBusca] = useState('')
   const [palpitesGaleraSearch, setPalpitesGaleraSearch] = useState('')
   const [filtro, setFiltro] = useState('Todos')
+  const [palpitesSubtab, setPalpitesSubtab] = useState('mata')
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState(null)
   const [showSavePopup, setShowSavePopup] = useState(false)
-  const [autoSaveStatus, setAutoSaveStatus] = useState('')
-  const autoSaveTimerRef = useRef(null)
   const [chaveamentoGame, setChaveamentoGame] = useState(null)
 
   useEffect(() => {
@@ -837,13 +836,6 @@ function App() {
     if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
   }, [tab, session])
-
-
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
-    }
-  }, [])
 
 
   useEffect(() => {
@@ -1085,18 +1077,6 @@ function App() {
     setRanking(rows)
   }
 
-  function scheduleAutoSave(nextGuesses) {
-    if (!session?.user?.id) return
-
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
-
-    setAutoSaveStatus('⏳ Salvamento automático aguardando você terminar de digitar...')
-
-    autoSaveTimerRef.current = setTimeout(() => {
-      saveGuesses({ silent: true, guessesOverride: nextGuesses })
-    }, 1500)
-  }
-
   function setGuess(game, field, value) {
     if (bettingLocked(game, games)) return
 
@@ -1104,31 +1084,15 @@ function App() {
     if (numericFields.includes(field) && value !== '' && (Number(value) < 0 || Number(value) > 30)) return
 
     setHasUnsavedChanges(true)
-    setGuesses(old => {
-      const next = { ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }
-      scheduleAutoSave(next)
-      return next
-    })
+    setGuesses(old => ({ ...old, [game.id]: { ...(old[game.id] || {}), [field]: value } }))
   }
 
-  async function saveGuesses(options = {}) {
-    const { silent = false, guessesOverride = null } = options
-
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current)
-      autoSaveTimerRef.current = null
-    }
-
+  async function saveGuesses() {
     await ensureProfileForCurrentUser()
-    if (locked()) {
-      if (silent) setAutoSaveStatus('🔒 Palpites bloqueados. Não foi possível salvar automaticamente.')
-      else setMsg('Palpites bloqueados. O prazo geral já encerrou.')
-      return
-    }
+    if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
 
     const uid = session.user.id
-    const sourceGuesses = guessesOverride || guesses
-    const rows = Object.entries(sourceGuesses)
+    const rows = Object.entries(guesses)
       .filter(([game_id]) => {
         const game = games.find(g => String(g.id) === String(game_id))
         return game && !bettingLocked(game, games)
@@ -1136,22 +1100,14 @@ function App() {
       .map(([game_id, g]) => ({
         user_id: uid,
         game_id,
-        guess_home: g.guess_home === '' || g.guess_home === undefined ? null : Number(g.guess_home),
-        guess_away: g.guess_away === '' || g.guess_away === undefined ? null : Number(g.guess_away)
+        guess_home: g.guess_home === '' ? null : Number(g.guess_home),
+        guess_away: g.guess_away === '' ? null : Number(g.guess_away)
       }))
-
-    if (!rows.length) return
-
-    if (silent) setAutoSaveStatus('⏳ Salvando automaticamente...')
 
     const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
 
     if (error) {
-      if (silent) {
-        setAutoSaveStatus('⚠️ Erro ao salvar automaticamente. Use o botão SALVAR PALPITES para garantir.')
-      } else {
-        setMsg(error.message)
-      }
+      setMsg(error.message)
       return
     }
 
@@ -1159,23 +1115,17 @@ function App() {
 
     setHasUnsavedChanges(false)
     setLastSavedAt(savedAt)
+    setShowSavePopup(true)
+
+    setTimeout(() => {
+      setShowSavePopup(false)
+    }, 6000)
 
     try {
       await supabase.from('profiles').update({ last_saved_at: savedAt }).eq('id', uid)
     } catch (e) {
       // Se a coluna last_saved_at ainda não existir, os palpites continuam salvos.
     }
-
-    if (silent) {
-      setAutoSaveStatus(`✅ Salvo automaticamente em ${formatSaveDate(savedAt)}`)
-      return
-    }
-
-    setShowSavePopup(true)
-
-    setTimeout(() => {
-      setShowSavePopup(false)
-    }, 6000)
 
     setMsg(`Palpites salvos com sucesso em ${formatSaveDate(savedAt)}!`)
 
@@ -1418,6 +1368,13 @@ function App() {
   })
 
   const groupedTableGames = useMemo(() => groupGamesByPhase(filteredGames), [filteredGames])
+  const filteredPalpitesGames = useMemo(() => {
+    return filteredGames.filter(g => {
+      const isGroupPhase = String(g.phase || '').startsWith('Grupo')
+      return palpitesSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
+    })
+  }, [filteredGames, palpitesSubtab])
+  const groupedPalpitesGames = useMemo(() => groupGamesByPhase(filteredPalpitesGames), [filteredPalpitesGames])
   const palpitesGaleraGames = useMemo(() => {
     const term = palpitesGaleraSearch.trim().toLowerCase()
     if (!term) return games
@@ -1585,6 +1542,52 @@ function App() {
 
     {tab === 'palpites' && <section className="palpitesPoster">
       <style>{`
+        .palpitesSubtabs{
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          margin:12px 0 16px;
+          padding:8px;
+          border:1px solid rgba(255,255,255,.10);
+          background:rgba(2,8,23,.55);
+          border-radius:16px;
+        }
+        .palpitesSubtabBtn{
+          flex:1 1 180px;
+          border:1px solid rgba(255,255,255,.14);
+          background:rgba(15,23,42,.78);
+          color:#e5e7eb;
+          border-radius:14px;
+          padding:12px 14px;
+          font-weight:900;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:8px;
+          cursor:pointer;
+          box-shadow:none;
+        }
+        .palpitesSubtabBtn.active{
+          background:linear-gradient(90deg,#ef4444,#0ea5e9);
+          color:#fff;
+          border-color:rgba(255,255,255,.25);
+          box-shadow:0 8px 22px rgba(14,165,233,.18);
+        }
+        .palpitesSubtabHint{
+          margin:-4px 2px 14px;
+          color:#cbd5e1;
+          font-size:13px;
+          opacity:.9;
+        }
+        .palpitesEmptySubtab{
+          padding:18px;
+          border:1px dashed rgba(255,255,255,.20);
+          border-radius:16px;
+          color:#e5e7eb;
+          background:rgba(15,23,42,.55);
+          text-align:center;
+          font-weight:800;
+        }
         @media (max-width: 700px) {
           .palpitesPoster .posterGroup,
           .resultadosBox .resultadoPhase {
@@ -1815,8 +1818,33 @@ function App() {
         <button disabled={locked()} onClick={saveGuesses}><Save/> Salvar palpites</button>
       </div>
 
+      <div className="palpitesSubtabs" role="tablist" aria-label="Fases dos palpites">
+        <button
+          type="button"
+          className={`palpitesSubtabBtn ${palpitesSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setPalpitesSubtab('mata'); setFiltro('Todos') }}
+        >
+          🏆 Mata-mata
+        </button>
+        <button
+          type="button"
+          className={`palpitesSubtabBtn ${palpitesSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setPalpitesSubtab('grupos'); setFiltro('Todos') }}
+        >
+          📜 Primeira fase
+        </button>
+      </div>
+      <p className="palpitesSubtabHint">
+        {palpitesSubtab === 'mata'
+          ? 'Aparecem somente os jogos do mata-mata para facilitar os palpites desta fase.'
+          : 'Histórico dos jogos da primeira fase separado para consulta.'}
+      </p>
+
       <div className="posterGrid palpitesPosterGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => (
+        {Object.keys(groupedPalpitesGames).length === 0 && (
+          <div className="palpitesEmptySubtab">Nenhum jogo encontrado nesta sub aba com o filtro atual.</div>
+        )}
+        {Object.entries(groupedPalpitesGames).map(([phaseName, phaseGames]) => (
           <div className={`posterGroup ${phaseName.startsWith('Grupo') ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
             <div className="posterGroupTitle">
               <strong>{phaseName}</strong>
@@ -1870,7 +1898,6 @@ function App() {
               ? `Último salvamento: ${formatSaveDate(lastSavedAt)}`
               : 'Último salvamento: ainda não registrado'}
           </span>
-          {autoSaveStatus && <small>{autoSaveStatus}</small>}
         </div>
         <button
           disabled={locked()}

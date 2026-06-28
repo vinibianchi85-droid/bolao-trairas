@@ -2001,9 +2001,11 @@ function App() {
       const shortCode = (team) => teamCode(team)
       const OverlayMatch = ({ gameNo, className = '' }) => {
         const { home, away, game } = matchTeams(gameNo)
+        // Área clicável invisível. Não desenha caixa por cima da arte.
+        // Quando a arte tiver espaços vazios das fases seguintes, mostra só texto pequeno, sem fundo.
         if (!home && !away) return <button className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
-          <button className={`chaveOverlayBox ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
+          <button className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <span>{home && <><FlagImg team={home} className="chaveFlag"/> {shortCode(home)}</>}</span>
             <b>x</b>
             <span>{away && <><FlagImg team={away} className="chaveFlag"/> {shortCode(away)}</>}</span>
@@ -2015,7 +2017,7 @@ function App() {
         const game = byNo.get(Number(gameNo))
         if (!team) return <button className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
-          <button className={`chaveOverlayBox chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
+          <button className={`chaveTapZone chaveTextOnly chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <span><FlagImg team={team} className="chaveFlag"/> {shortCode(team)}</span>
           </button>
         )
@@ -2070,12 +2072,13 @@ function App() {
           .chavePosterViewport { overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; border-radius:18px; border:1px solid rgba(125,211,252,.15); background:#02070d; }
           .chavePosterStage { position:relative; width:1536px; height:885px; transform-origin: top left; }
           .chavePosterBg { position:absolute; inset:0; width:1536px; height:885px; display:block; user-select:none; pointer-events:none; }
-          .chaveOverlayBox, .chaveTapZone { position:absolute; border:0; background:transparent; cursor:pointer; padding:0; }
-          .chaveOverlayBox { display:flex; align-items:center; justify-content:center; gap:7px; color:#fff; font-weight:900; font-size:18px; letter-spacing:.5px; text-shadow:0 2px 7px #000; white-space:nowrap; }
-          .chaveOverlayBox span { display:inline-flex; align-items:center; gap:5px; min-width:0; }
-          .chaveOverlayBox b { color:#dbeafe; font-size:14px; opacity:.9; }
-          .chaveOverlayBox .chaveFlag { width:23px; height:16px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:22px; color:#0b2545; text-shadow:0 1px 0 rgba(255,255,255,.35); }
+          .chaveTapZone { position:absolute; border:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; cursor:pointer; padding:0; appearance:none; -webkit-appearance:none; }
+          .chaveTapZone:hover, .chaveTapZone:focus, .chaveTapZone:active { background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; }
+          .chaveTextOnly { display:flex; align-items:center; justify-content:center; gap:7px; color:#fff; font-weight:900; font-size:18px; letter-spacing:.5px; text-shadow:0 2px 7px #000; white-space:nowrap; }
+          .chaveTextOnly span { display:inline-flex; align-items:center; gap:5px; min-width:0; }
+          .chaveTextOnly b { color:#dbeafe; font-size:14px; opacity:.9; }
+          .chaveTextOnly .chaveFlag { width:23px; height:16px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
+          .chaveChampion { font-size:22px; color:#fff; text-shadow:0 2px 7px #000; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2083,7 +2086,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveOverlayBox{font-size:16px}.chaveOverlayBox .chaveFlag{width:21px;height:14px}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:16px}.chaveTextOnly .chaveFlag{width:21px;height:14px}}
         `}</style>
       </section>
     })()}

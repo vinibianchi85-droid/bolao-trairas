@@ -551,6 +551,36 @@ const ROUND_32_FIXED_SLOTS = {
   88: ['Austrália', 'Egito']
 }
 
+// Mapeamento oficial do chaveamento.
+// IMPORTANTE: não usar a ordem simples dos jogos para montar as oitavas,
+// porque a chave cruza blocos específicos. Ex.: Canadá não cruza com Brasil;
+// Canadá entra no ramo de Holanda x Marrocos, enquanto Brasil entra no ramo de Costa do Marfim x Noruega.
+const KNOCKOUT_WINNER_SOURCES = {
+  89: [73, 75],
+  90: [74, 77],
+  91: [76, 78],
+  92: [79, 80],
+  93: [83, 84],
+  94: [81, 82],
+  95: [86, 88],
+  96: [85, 87],
+  97: [89, 90],
+  98: [93, 94],
+  99: [91, 92],
+  100: [95, 96],
+  101: [97, 98],
+  102: [99, 100],
+  104: [101, 102]
+}
+
+const KNOCKOUT_LOSER_SOURCES = {
+  103: [101, 102]
+}
+
+function gameByNumber(allGames = [], gameNo) {
+  return allGames.find(g => Number(g.game_no) === Number(gameNo)) || null
+}
+
 function isRound32Game(game) {
   const no = Number(game?.game_no)
   return no >= 73 && no <= 88
@@ -651,11 +681,11 @@ function resolveRound32SlotForGame(targetGameNo, targetSide, allGames = []) {
 }
 
 function autoKnockoutTeams(game, allGames = []) {
-  if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
+  if (!isKnockoutPhase(game?.phase)) return { home: cleanTeamName(game?.home_team), away: cleanTeamName(game?.away_team) }
 
-  const p = normalizedPhase(game.phase)
-  const fallbackHome = cleanTeamName(game.home_team)
-  const fallbackAway = cleanTeamName(game.away_team)
+  const gameNo = Number(game?.game_no)
+  const fallbackHome = cleanTeamName(game?.home_team)
+  const fallbackAway = cleanTeamName(game?.away_team)
 
   if (isRound32Game(game)) {
     const fixed = fixedRound32Teams(game)
@@ -667,30 +697,31 @@ function autoKnockoutTeams(game, allGames = []) {
     }
   }
 
-  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
-    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const loserSources = KNOCKOUT_LOSER_SOURCES[gameNo]
+  if (loserSources) {
+    const [homeSourceNo, awaySourceNo] = loserSources
+    const homeSource = gameByNumber(allGames, homeSourceNo)
+    const awaySource = gameByNumber(allGames, awaySourceNo)
     return {
-      home: gameWinnerTeamResolved(semis[0], allGames) || fallbackHome || 'Vencedor semifinal 1',
-      away: gameWinnerTeamResolved(semis[1], allGames) || fallbackAway || 'Vencedor semifinal 2'
+      home: gameLoserTeamResolved(homeSource, allGames) || fallbackHome || `Perdedor jogo ${homeSourceNo}`,
+      away: gameLoserTeamResolved(awaySource, allGames) || fallbackAway || `Perdedor jogo ${awaySourceNo}`
     }
   }
 
-  if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
-    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const winnerSources = KNOCKOUT_WINNER_SOURCES[gameNo]
+  if (winnerSources) {
+    const [homeSourceNo, awaySourceNo] = winnerSources
+    const homeSource = gameByNumber(allGames, homeSourceNo)
+    const awaySource = gameByNumber(allGames, awaySourceNo)
     return {
-      home: gameLoserTeamResolved(semis[0], allGames) || fallbackHome || 'Perdedor semifinal 1',
-      away: gameLoserTeamResolved(semis[1], allGames) || fallbackAway || 'Perdedor semifinal 2'
+      home: gameWinnerTeamResolved(homeSource, allGames) || fallbackHome || `Vencedor jogo ${homeSourceNo}`,
+      away: gameWinnerTeamResolved(awaySource, allGames) || fallbackAway || `Vencedor jogo ${awaySourceNo}`
     }
   }
-
-  const order = phaseOrderValue(game.phase)
-  const prev = allGames.filter(g => phaseOrderValue(g.phase) === order - 1 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-  const same = allGames.filter(g => phaseOrderValue(g.phase) === order).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-  const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
 
   return {
-    home: gameWinnerTeamResolved(prev[idxGame * 2], allGames) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-    away: gameWinnerTeamResolved(prev[idxGame * 2 + 1], allGames) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+    home: fallbackHome || 'Aguardando classificado',
+    away: fallbackAway || 'Aguardando classificado'
   }
 }
 function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
@@ -2209,9 +2240,11 @@ function App() {
         if (!home && !away) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
           <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
-            <span>{home && <><FlagImg team={home} className="chaveFlag"/> {shortCode(home)}</>}</span>
-            <b>x</b>
-            <span>{away && <><FlagImg team={away} className="chaveFlag"/> {shortCode(away)}</>}</span>
+            <div className="chaveOverlayInner">
+              <span className="chaveTeamLine">{home && <><FlagImg team={home} className="chaveFlag"/> <em>{shortCode(home)}</em></>}</span>
+              <b className="chaveVersusMini">x</b>
+              <span className="chaveTeamLine">{away && <><FlagImg team={away} className="chaveFlag"/> <em>{shortCode(away)}</em></>}</span>
+            </div>
           </div>
         )
       }
@@ -2221,7 +2254,9 @@ function App() {
         if (!team) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
           <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
-            <span><FlagImg team={team} className="chaveFlag"/> {shortCode(team)}</span>
+            <div className="chaveOverlayInner">
+              <span className="chaveTeamLine"><FlagImg team={team} className="chaveFlag"/> <em>{shortCode(team)}</em></span>
+            </div>
           </div>
         )
       }
@@ -2235,8 +2270,8 @@ function App() {
           <div className="chavePosterStage">
             <img className="chavePosterBg" src={CHAVEAMENTO_TRAIRAS_BG} alt="Chaveamento Traíras F.C." />
             {firstRoundZones.map(([n,c]) => <div key={n} role="button" tabIndex={0} className={`chaveTapZone ${c}`} onClick={() => setChaveamentoGame(byNo.get(Number(n)))} aria-label={`Jogo ${n}`} />)}
-            <OverlayMatch gameNo={89} className="m89" />
-            <OverlayMatch gameNo={90} className="m90" />
+            <OverlayMatch gameNo={90} className="m89" />
+            <OverlayMatch gameNo={89} className="m90" />
             <OverlayMatch gameNo={93} className="m93" />
             <OverlayMatch gameNo={94} className="m94" />
             <OverlayMatch gameNo={91} className="m91" />
@@ -2278,11 +2313,67 @@ function App() {
           .chaveTapZone { position:absolute; display:block; border:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; cursor:pointer; padding:0; margin:0; appearance:none; -webkit-appearance:none; -webkit-tap-highlight-color:transparent; }
           .chaveTapZone::before, .chaveTapZone::after { content:none !important; display:none !important; background:transparent !important; box-shadow:none !important; }
           .chaveTapZone:hover, .chaveTapZone:focus, .chaveTapZone:active { background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; }
-          .chaveTextOnly { display:flex; align-items:center; justify-content:center; gap:7px; color:#fff; font-weight:900; font-size:18px; letter-spacing:.5px; text-shadow:0 2px 7px #000; white-space:nowrap; }
-          .chaveTextOnly span { display:inline-flex; align-items:center; gap:5px; min-width:0; }
-          .chaveTextOnly b { color:#dbeafe; font-size:14px; opacity:.9; }
-          .chaveTextOnly .chaveFlag { width:23px; height:16px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:22px; color:#fff; text-shadow:0 2px 7px #000; }
+          .chaveTextOnly {
+            display:block !important;
+            color:#fff;
+            font-weight:900;
+            font-size:8px !important;
+            line-height:1 !important;
+            letter-spacing:0 !important;
+            text-shadow:0 1px 3px #000, 0 0 2px #000;
+            white-space:normal !important;
+            overflow:hidden !important;
+            padding:0 !important;
+            box-sizing:border-box !important;
+            text-align:center !important;
+          }
+          .chaveOverlayInner {
+            position:absolute !important;
+            inset:5px 6px !important;
+            display:grid !important;
+            grid-template-rows:minmax(0,1fr) 7px minmax(0,1fr) !important;
+            align-items:center !important;
+            justify-items:center !important;
+            overflow:hidden !important;
+            box-sizing:border-box !important;
+            pointer-events:none !important;
+          }
+          .chaveTextOnly .chaveTeamLine {
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            gap:2px !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            overflow:hidden !important;
+            white-space:nowrap !important;
+            line-height:1 !important;
+          }
+          .chaveTextOnly .chaveTeamLine em {
+            font-style:normal !important;
+            display:block !important;
+            min-width:0 !important;
+            max-width:calc(100% - 13px) !important;
+            overflow:hidden !important;
+            text-overflow:ellipsis !important;
+            white-space:nowrap !important;
+            text-align:left !important;
+          }
+          .chaveTextOnly .chaveVersusMini,
+          .chaveTextOnly b {
+            color:#dbeafe;
+            font-size:6px !important;
+            line-height:7px !important;
+            opacity:.75;
+            display:block !important;
+            width:100%;
+            text-align:center;
+            margin:0 !important;
+          }
+          .chaveTextOnly .chaveFlag { width:11px !important; height:8px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
+          .chaveChampion { font-size:8px !important; color:#fff; text-shadow:0 1px 3px #000; }
+          .chaveChampion .chaveOverlayInner { grid-template-rows:1fr !important; inset:6px 8px !important; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2290,7 +2381,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:16px}.chaveTextOnly .chaveFlag{width:21px;height:14px}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:7px !important}.chaveOverlayInner{inset:5px 6px !important}.chaveTextOnly .chaveFlag{width:10px !important;height:7px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 12px) !important}}
         `}</style>
       </section>
     })()}

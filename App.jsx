@@ -1016,7 +1016,19 @@ function App() {
       .sort((a, b) => b.getTime() - a.getTime())
 
     const bancoLastSavedAt = prof?.last_saved_at || (guessSaveDates[0] ? guessSaveDates[0].toISOString() : null)
-    setLastSavedAt(prev => bancoLastSavedAt || prev || null)
+
+    // Não deixa o horário voltar para uma data antiga depois de salvar.
+    // Ex.: usuário salva hoje, o app atualiza na tela, mas o loadAll pode voltar com
+    // profiles.last_saved_at antigo por cache/RLS/trigger. Nesse caso mantemos o mais recente.
+    setLastSavedAt(prev => {
+      const candidates = [prev, bancoLastSavedAt]
+        .filter(Boolean)
+        .map(value => ({ value, time: new Date(value).getTime() }))
+        .filter(item => !Number.isNaN(item.time))
+
+      if (!candidates.length) return null
+      return candidates.sort((a, b) => b.time - a.time)[0].value
+    })
 
     await loadRanking()
   }

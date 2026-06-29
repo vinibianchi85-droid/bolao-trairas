@@ -551,6 +551,36 @@ const ROUND_32_FIXED_SLOTS = {
   88: ['Austrália', 'Egito']
 }
 
+// Mapeamento oficial do chaveamento.
+// IMPORTANTE: não usar a ordem simples dos jogos para montar as oitavas,
+// porque a chave cruza blocos específicos. Ex.: Canadá não cruza com Brasil;
+// Canadá entra no ramo de Holanda x Marrocos, enquanto Brasil entra no ramo de Costa do Marfim x Noruega.
+const KNOCKOUT_WINNER_SOURCES = {
+  89: [73, 75],
+  90: [74, 77],
+  91: [76, 78],
+  92: [79, 80],
+  93: [83, 84],
+  94: [81, 82],
+  95: [86, 88],
+  96: [85, 87],
+  97: [89, 90],
+  98: [93, 94],
+  99: [91, 92],
+  100: [95, 96],
+  101: [97, 98],
+  102: [99, 100],
+  104: [101, 102]
+}
+
+const KNOCKOUT_LOSER_SOURCES = {
+  103: [101, 102]
+}
+
+function gameByNumber(allGames = [], gameNo) {
+  return allGames.find(g => Number(g.game_no) === Number(gameNo)) || null
+}
+
 function isRound32Game(game) {
   const no = Number(game?.game_no)
   return no >= 73 && no <= 88
@@ -651,11 +681,11 @@ function resolveRound32SlotForGame(targetGameNo, targetSide, allGames = []) {
 }
 
 function autoKnockoutTeams(game, allGames = []) {
-  if (!isKnockoutPhase(game.phase)) return { home: cleanTeamName(game.home_team), away: cleanTeamName(game.away_team) }
+  if (!isKnockoutPhase(game?.phase)) return { home: cleanTeamName(game?.home_team), away: cleanTeamName(game?.away_team) }
 
-  const p = normalizedPhase(game.phase)
-  const fallbackHome = cleanTeamName(game.home_team)
-  const fallbackAway = cleanTeamName(game.away_team)
+  const gameNo = Number(game?.game_no)
+  const fallbackHome = cleanTeamName(game?.home_team)
+  const fallbackAway = cleanTeamName(game?.away_team)
 
   if (isRound32Game(game)) {
     const fixed = fixedRound32Teams(game)
@@ -667,30 +697,31 @@ function autoKnockoutTeams(game, allGames = []) {
     }
   }
 
-  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) {
-    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const loserSources = KNOCKOUT_LOSER_SOURCES[gameNo]
+  if (loserSources) {
+    const [homeSourceNo, awaySourceNo] = loserSources
+    const homeSource = gameByNumber(allGames, homeSourceNo)
+    const awaySource = gameByNumber(allGames, awaySourceNo)
     return {
-      home: gameWinnerTeamResolved(semis[0], allGames) || fallbackHome || 'Vencedor semifinal 1',
-      away: gameWinnerTeamResolved(semis[1], allGames) || fallbackAway || 'Vencedor semifinal 2'
+      home: gameLoserTeamResolved(homeSource, allGames) || fallbackHome || `Perdedor jogo ${homeSourceNo}`,
+      away: gameLoserTeamResolved(awaySource, allGames) || fallbackAway || `Perdedor jogo ${awaySourceNo}`
     }
   }
 
-  if (p.includes('terceiro') || p.includes('disputa') || p.includes('3')) {
-    const semis = allGames.filter(g => phaseOrderValue(g.phase) === 5 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
+  const winnerSources = KNOCKOUT_WINNER_SOURCES[gameNo]
+  if (winnerSources) {
+    const [homeSourceNo, awaySourceNo] = winnerSources
+    const homeSource = gameByNumber(allGames, homeSourceNo)
+    const awaySource = gameByNumber(allGames, awaySourceNo)
     return {
-      home: gameLoserTeamResolved(semis[0], allGames) || fallbackHome || 'Perdedor semifinal 1',
-      away: gameLoserTeamResolved(semis[1], allGames) || fallbackAway || 'Perdedor semifinal 2'
+      home: gameWinnerTeamResolved(homeSource, allGames) || fallbackHome || `Vencedor jogo ${homeSourceNo}`,
+      away: gameWinnerTeamResolved(awaySource, allGames) || fallbackAway || `Vencedor jogo ${awaySourceNo}`
     }
   }
-
-  const order = phaseOrderValue(game.phase)
-  const prev = allGames.filter(g => phaseOrderValue(g.phase) === order - 1 && isGameFinished(g)).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-  const same = allGames.filter(g => phaseOrderValue(g.phase) === order).sort((a,b) => Number(a.game_no||0)-Number(b.game_no||0))
-  const idxGame = Math.max(0, same.findIndex(g => g.id === game.id))
 
   return {
-    home: gameWinnerTeamResolved(prev[idxGame * 2], allGames) || fallbackHome || `Vencedor jogo ${idxGame * 2 + 1}`,
-    away: gameWinnerTeamResolved(prev[idxGame * 2 + 1], allGames) || fallbackAway || `Vencedor jogo ${idxGame * 2 + 2}`
+    home: fallbackHome || 'Aguardando classificado',
+    away: fallbackAway || 'Aguardando classificado'
   }
 }
 function displayHomeTeam(game, allGames = []) { return autoKnockoutTeams(game, allGames).home }
@@ -2235,8 +2266,8 @@ function App() {
           <div className="chavePosterStage">
             <img className="chavePosterBg" src={CHAVEAMENTO_TRAIRAS_BG} alt="Chaveamento Traíras F.C." />
             {firstRoundZones.map(([n,c]) => <div key={n} role="button" tabIndex={0} className={`chaveTapZone ${c}`} onClick={() => setChaveamentoGame(byNo.get(Number(n)))} aria-label={`Jogo ${n}`} />)}
-            <OverlayMatch gameNo={89} className="m89" />
-            <OverlayMatch gameNo={90} className="m90" />
+            <OverlayMatch gameNo={90} className="m89" />
+            <OverlayMatch gameNo={89} className="m90" />
             <OverlayMatch gameNo={93} className="m93" />
             <OverlayMatch gameNo={94} className="m94" />
             <OverlayMatch gameNo={91} className="m91" />

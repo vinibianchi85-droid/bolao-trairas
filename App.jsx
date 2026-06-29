@@ -2241,7 +2241,7 @@ function App() {
         return (
           <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <span className="chaveTeamLine">{home && <><FlagImg team={home} className="chaveFlag"/> <em>{shortCode(home)}</em></>}</span>
-            <b className="chaveVs">x</b>
+            <b className="chaveVersusMini">x</b>
             <span className="chaveTeamLine">{away && <><FlagImg team={away} className="chaveFlag"/> <em>{shortCode(away)}</em></>}</span>
           </div>
         )
@@ -2252,7 +2252,7 @@ function App() {
         if (!team) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
           <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly chaveChampion ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
-            <span><FlagImg team={team} className="chaveFlag"/> {shortCode(team)}</span>
+            <span className="chaveTeamLine"><FlagImg team={team} className="chaveFlag"/> <em>{shortCode(team)}</em></span>
           </div>
         )
       }
@@ -2310,44 +2310,55 @@ function App() {
           .chaveTapZone::before, .chaveTapZone::after { content:none !important; display:none !important; background:transparent !important; box-shadow:none !important; }
           .chaveTapZone:hover, .chaveTapZone:focus, .chaveTapZone:active { background:transparent !important; background-color:transparent !important; box-shadow:none !important; outline:0 !important; }
           .chaveTextOnly {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            gap:0;
+            display:grid !important;
+            grid-template-rows:1fr auto 1fr;
+            align-items:center !important;
+            justify-items:center !important;
+            gap:0 !important;
             color:#fff;
             font-weight:900;
-            font-size:14px;
-            line-height:1.05;
-            letter-spacing:.2px;
-            text-shadow:0 2px 7px #000;
-            white-space:normal;
-            overflow:hidden;
-            text-align:center;
+            font-size:10px !important;
+            line-height:1 !important;
+            letter-spacing:.15px !important;
+            text-shadow:0 1px 4px #000, 0 0 3px #000;
+            white-space:normal !important;
+            overflow:hidden !important;
+            padding:3px 5px !important;
+            box-sizing:border-box !important;
+            text-align:center !important;
           }
           .chaveTextOnly .chaveTeamLine {
-            width:100%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:4px;
-            min-width:0;
-            max-width:100%;
-            overflow:hidden;
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            gap:3px !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            overflow:hidden !important;
+            white-space:nowrap !important;
           }
           .chaveTextOnly .chaveTeamLine em {
-            font-style:normal;
-            display:block;
-            max-width:calc(100% - 22px);
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
+            font-style:normal !important;
+            display:block !important;
+            max-width:calc(100% - 16px) !important;
+            overflow:hidden !important;
+            text-overflow:ellipsis !important;
+            white-space:nowrap !important;
           }
-          .chaveTextOnly .chaveVs,
-          .chaveTextOnly b { color:#dbeafe; font-size:10px; line-height:1; opacity:.9; margin:0; }
-          .chaveTextOnly .chaveFlag { width:18px; height:12px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:18px; color:#fff; text-shadow:0 2px 7px #000; }
-          .chaveChampion .chaveTeamLine em { max-width:calc(100% - 24px); }
+          .chaveTextOnly .chaveVersusMini,
+          .chaveTextOnly b {
+            color:#dbeafe;
+            font-size:7px !important;
+            line-height:1 !important;
+            opacity:.8;
+            display:block !important;
+            width:100%;
+            text-align:center;
+            margin:0 !important;
+          }
+          .chaveTextOnly .chaveFlag { width:13px !important; height:9px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
+          .chaveChampion { font-size:11px !important; color:#fff; text-shadow:0 1px 4px #000; grid-template-rows:1fr !important; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2355,7 +2366,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:13px}.chaveTextOnly .chaveFlag{width:17px;height:12px}.chaveTextOnly .chaveVs{font-size:9px}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:9px !important}.chaveTextOnly .chaveFlag{width:12px !important;height:8px !important}}
         `}</style>
       </section>
     })()}

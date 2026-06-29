@@ -995,7 +995,6 @@ function App() {
     }
 
     setProfile(prof)
-    setLastSavedAt(prof?.last_saved_at || null)
 
     const { data: gameData } = await supabase.from('games').select('*').order('game_no')
     setGames(gameData || [])
@@ -1004,6 +1003,20 @@ function App() {
     const map = {}
     ;(guessData || []).forEach(g => { map[g.game_id] = g })
     setGuesses(map)
+
+    // Mantém o horário do último salvamento confiável.
+    // 1) Usa profiles.last_saved_at quando existir.
+    // 2) Se ainda não existir essa coluna/valor, tenta pegar o maior updated_at/created_at dos palpites.
+    // 3) Se nada vier do banco, preserva o horário recém salvo no estado para não voltar para "ainda não registrado".
+    const guessSaveDates = (guessData || [])
+      .map(g => g.updated_at || g.created_at || g.inserted_at)
+      .filter(Boolean)
+      .map(d => new Date(d))
+      .filter(d => !Number.isNaN(d.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime())
+
+    const bancoLastSavedAt = prof?.last_saved_at || (guessSaveDates[0] ? guessSaveDates[0].toISOString() : null)
+    setLastSavedAt(prev => bancoLastSavedAt || prev || null)
 
     await loadRanking()
   }

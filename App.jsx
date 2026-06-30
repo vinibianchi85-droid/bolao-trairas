@@ -910,6 +910,7 @@ function App() {
   const [palpitesSubtab, setPalpitesSubtab] = useState(null)
   const [resultadosSubtab, setResultadosSubtab] = useState(null)
   const [galeraSubtab, setGaleraSubtab] = useState(null)
+  const [adminSubtab, setAdminSubtab] = useState(null)
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
@@ -1563,6 +1564,15 @@ function App() {
     })
   }, [filteredGames, resultadosSubtab])
   const groupedResultadosGames = useMemo(() => groupGamesByPhase(filteredResultadosGames), [filteredResultadosGames])
+
+  const filteredAdminGames = useMemo(() => {
+    if (!adminSubtab) return []
+    return filteredGames.filter(g => {
+      const isGroupPhase = String(g.phase || '').startsWith('Grupo')
+      return adminSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
+    })
+  }, [filteredGames, adminSubtab])
+  const groupedAdminGames = useMemo(() => groupGamesByPhase(filteredAdminGames), [filteredAdminGames])
 
   const palpitesGaleraGames = useMemo(() => {
     const term = palpitesGaleraSearch.trim().toLowerCase()
@@ -2994,8 +3004,31 @@ function App() {
         <button type="button" onClick={refreshAll}><RefreshCw/> Atualizar ranking</button>
       </div>
 
-      <div className="posterGrid palpitesPosterGrid adminPosterGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => {
+      <div className="palpitesSubtabs" role="tablist" aria-label="Fases do painel admin">
+        <button
+          type="button"
+          className={`palpitesSubtabBtn ${adminSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setAdminSubtab(adminSubtab === 'grupos' ? null : 'grupos'); setFiltro('Todos') }}
+        >
+          Primeira fase
+        </button>
+        <button
+          type="button"
+          className={`palpitesSubtabBtn mataPrincipal ${adminSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setAdminSubtab(adminSubtab === 'mata' ? null : 'mata'); setFiltro('Todos') }}
+        >
+          Mata-mata
+        </button>
+      </div>
+
+      {!adminSubtab && (
+        <div className="palpitesEmptySubtab">
+          Escolha uma sub aba acima para editar os jogos da primeira fase ou do mata-mata.
+        </div>
+      )}
+
+      {adminSubtab && <div className="posterGrid palpitesPosterGrid adminPosterGrid">
+        {Object.entries(groupedAdminGames).map(([phaseName, phaseGames]) => {
           const isGroup = phaseName.startsWith('Grupo')
           return (
             <div className={`adminPhaseBox ${isGroup ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
@@ -3062,7 +3095,7 @@ function App() {
             </div>
           )
         })}
-      </div>
+      </div>}
     </section>}
   </main>
 }

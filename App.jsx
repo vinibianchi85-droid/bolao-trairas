@@ -1102,10 +1102,9 @@ function App() {
     ;(guessData || []).forEach(g => { map[g.game_id] = g })
     setGuesses(map)
 
-    // Mantém o horário do último salvamento confiável.
-    // 1) Usa profiles.last_saved_at quando existir.
-    // 2) Se ainda não existir essa coluna/valor, tenta pegar o maior updated_at/created_at dos palpites.
-    // 3) Se nada vier do banco, preserva o horário recém salvo no estado para não voltar para "ainda não registrado".
+    // Último salvamento confiável: pega a data mais recente dos palpites salvos.
+    // Não usa profiles.last_saved_at como fonte principal, porque essa coluna pode ficar antiga
+    // por cache/RLS/trigger e mostrar 28/06 mesmo depois de salvar hoje.
     const guessSaveDates = (guessData || [])
       .map(g => g.updated_at || g.created_at || g.inserted_at)
       .filter(Boolean)
@@ -1113,11 +1112,8 @@ function App() {
       .filter(d => !Number.isNaN(d.getTime()))
       .sort((a, b) => b.getTime() - a.getTime())
 
-    const bancoLastSavedAt = prof?.last_saved_at || (guessSaveDates[0] ? guessSaveDates[0].toISOString() : null)
+    const bancoLastSavedAt = guessSaveDates[0] ? guessSaveDates[0].toISOString() : null
 
-    // Não deixa o horário voltar para uma data antiga depois de salvar.
-    // Ex.: usuário salva hoje, o app atualiza na tela, mas o loadAll pode voltar com
-    // profiles.last_saved_at antigo por cache/RLS/trigger. Nesse caso mantemos o mais recente.
     setLastSavedAt(prev => {
       const candidates = [prev, bancoLastSavedAt]
         .filter(Boolean)

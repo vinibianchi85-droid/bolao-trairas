@@ -894,13 +894,13 @@ function App() {
   const [session, setSession] = useState(null)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [novaSenha, setNovaSenha] = useState('')
-  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('')
-  const [modoRecuperacaoSenha, setModoRecuperacaoSenha] = useState(false)
   const [nome, setNome] = useState('')
   const [whats, setWhats] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [modo, setModo] = useState('login')
+  const [modoRecuperacaoSenha, setModoRecuperacaoSenha] = useState(false)
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmaNovaSenha, setConfirmaNovaSenha] = useState('')
   const [profile, setProfile] = useState(null)
   const [games, setGames] = useState([])
   const [guesses, setGuesses] = useState({})
@@ -923,22 +923,36 @@ function App() {
   const [chaveamentoGame, setChaveamentoGame] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const urlParams = new URLSearchParams(window.location.search)
+    const isResetPasswordPage = urlParams.get('reset-password') === '1' || window.location.hash.includes('type=recovery')
+
+    if (isResetPasswordPage) {
+      setModoRecuperacaoSenha(true)
+      setModo('novaSenha')
+      setMsg('Digite uma nova senha para concluir a recuperação.')
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+    })
+
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      if (event === 'PASSWORD_RECOVERY') {
+
+      if (event === 'PASSWORD_RECOVERY' || isResetPasswordPage) {
         setModoRecuperacaoSenha(true)
         setModo('novaSenha')
         setMsg('Digite uma nova senha para concluir a recuperação.')
       }
     })
+
     return () => listener.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    if (!session) return
+    if (!session || modoRecuperacaoSenha) return
     loadAll()
-  }, [session])
+  }, [session, modoRecuperacaoSenha])
 
   useEffect(() => {
     if (!session) return
@@ -1085,7 +1099,7 @@ function App() {
     if (!authEmail) return setMsg('Digite o e-mail cadastrado para recuperar a senha.')
 
     const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
-      redirectTo: window.location.origin
+      redirectTo: `${window.location.origin}/?reset-password=1`
     })
 
     if (error) return setMsg(error.message)
@@ -1094,18 +1108,32 @@ function App() {
 
   async function salvarNovaSenha() {
     setMsg('')
-    if (!novaSenha || !confirmarNovaSenha) return setMsg('Digite e confirme a nova senha.')
-    if (novaSenha.length < 6) return setMsg('A nova senha precisa ter pelo menos 6 caracteres.')
-    if (novaSenha !== confirmarNovaSenha) return setMsg('As senhas não conferem.')
+
+    if (!novaSenha || !confirmaNovaSenha) {
+      return setMsg('Preencha a nova senha e a confirmação.')
+    }
+
+    if (novaSenha.length < 6) {
+      return setMsg('A nova senha precisa ter pelo menos 6 caracteres.')
+    }
+
+    if (novaSenha !== confirmaNovaSenha) {
+      return setMsg('As senhas não conferem.')
+    }
 
     const { error } = await supabase.auth.updateUser({ password: novaSenha })
+
     if (error) return setMsg(error.message)
 
     setNovaSenha('')
-    setConfirmarNovaSenha('')
+    setConfirmaNovaSenha('')
     setModoRecuperacaoSenha(false)
     setModo('login')
-    setMsg('Senha alterada com sucesso. Você já pode usar a nova senha.')
+    setMsg('Senha alterada com sucesso! Entre novamente com a nova senha.')
+
+    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname)
+    await supabase.auth.signOut()
+    setSession(null)
   }
 
   async function logout() {
@@ -1644,7 +1672,7 @@ function App() {
           <div className="fishMark"><LogoTrairas className="fishLogo" /></div>
           <span>Traíras F.C.</span>
         </div>
-        <div className="badge"><Trophy/> Recuperação de senha</div>
+        <div className="badge"><Lock/> Recuperação de senha</div>
         <h1>Nova senha</h1>
         <p>Digite uma nova senha para voltar a acessar o bolão.</p>
       </section>
@@ -1657,7 +1685,7 @@ function App() {
           <input placeholder="Nova senha" type={showPass ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
           <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
         </div>
-        <input placeholder="Confirmar nova senha" type={showPass ? 'text' : 'password'} value={confirmarNovaSenha} onChange={e => setConfirmarNovaSenha(e.target.value)} />
+        <input placeholder="Confirmar nova senha" type={showPass ? 'text' : 'password'} value={confirmaNovaSenha} onChange={e => setConfirmaNovaSenha(e.target.value)} />
         <button onClick={salvarNovaSenha}>Salvar nova senha</button>
         {msg && <p className="msg">{msg}</p>}
       </section>
@@ -1706,7 +1734,7 @@ function App() {
 
         {modo === 'recuperar' && <>
           <h2>Recuperar senha</h2>
-          <p className="loginHint">Digite o e-mail cadastrado. O sistema vai enviar um link para criar uma nova senha.</p>
+          <p className="loginHint">Digite o e-mail cadastrado. Você receberá um link para criar uma nova senha.</p>
           <input placeholder="E-mail cadastrado" value={email} onChange={e => setEmail(e.target.value)} />
           <button onClick={recuperarSenha}>Enviar link de recuperação</button>
           <button className="secondary" type="button" onClick={() => setModo('login')}>Voltar para o login</button>

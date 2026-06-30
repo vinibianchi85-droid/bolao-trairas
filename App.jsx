@@ -1102,27 +1102,25 @@ function App() {
     ;(guessData || []).forEach(g => { map[g.game_id] = g })
     setGuesses(map)
 
-    // Último salvamento confiável: pega a data mais recente dos palpites salvos.
-    // Não usa profiles.last_saved_at como fonte principal, porque essa coluna pode ficar antiga
-    // por cache/RLS/trigger e mostrar 28/06 mesmo depois de salvar hoje.
+    // Último salvamento confiável.
+    // Antes estava ficando preso em 28/06 porque, ao reabrir o app, só os palpites antigos
+    // eram encontrados no banco. Agora usamos 3 fontes e escolhemos sempre a mais recente:
+    // 1) horário salvo neste aparelho/navegador; 2) profiles.last_saved_at; 3) guesses.updated_at.
+    const localLastSavedAt = (() => {
+      try { return localStorage.getItem(`trairas_last_saved_at_${uid}`) } catch (e) { return null }
+    })()
+
     const guessSaveDates = (guessData || [])
       .map(g => g.updated_at || g.created_at || g.inserted_at)
       .filter(Boolean)
-      .map(d => new Date(d))
-      .filter(d => !Number.isNaN(d.getTime()))
-      .sort((a, b) => b.getTime() - a.getTime())
 
-    const bancoLastSavedAt = guessSaveDates[0] ? guessSaveDates[0].toISOString() : null
+    const candidates = [localLastSavedAt, prof?.last_saved_at, ...guessSaveDates]
+      .filter(Boolean)
+      .map(value => ({ value, time: new Date(value).getTime() }))
+      .filter(item => !Number.isNaN(item.time))
+      .sort((a, b) => b.time - a.time)
 
-    setLastSavedAt(prev => {
-      const candidates = [prev, bancoLastSavedAt]
-        .filter(Boolean)
-        .map(value => ({ value, time: new Date(value).getTime() }))
-        .filter(item => !Number.isNaN(item.time))
-
-      if (!candidates.length) return null
-      return candidates.sort((a, b) => b.time - a.time)[0].value
-    })
+    setLastSavedAt(candidates[0]?.value || null)
 
     await loadRanking()
   }
@@ -1213,6 +1211,8 @@ function App() {
     if (locked()) return setMsg('Palpites bloqueados. O prazo geral já encerrou.')
 
     const uid = session.user.id
+    const savedAt = new Date().toISOString()
+
     const rows = Object.entries(guesses)
       .filter(([game_id]) => {
         const game = games.find(g => String(g.id) === String(game_id))
@@ -1222,20 +1222,22 @@ function App() {
         user_id: uid,
         game_id,
         guess_home: g.guess_home === '' ? null : Number(g.guess_home),
-        guess_away: g.guess_away === '' ? null : Number(g.guess_away)
+        guess_away: g.guess_away === '' ? null : Number(g.guess_away),
+        updated_at: savedAt
       }))
 
-    const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
+    if (rows.length) {
+      const { error } = await supabase.from('guesses').upsert(rows, { onConflict: 'user_id,game_id' })
 
-    if (error) {
-      setMsg(error.message)
-      return
+      if (error) {
+        setMsg(error.message)
+        return
+      }
     }
-
-    const savedAt = new Date().toISOString()
 
     setHasUnsavedChanges(false)
     setLastSavedAt(savedAt)
+    try { localStorage.setItem(`trairas_last_saved_at_${uid}`, savedAt) } catch (e) {}
     setShowSavePopup(true)
 
     setTimeout(() => {

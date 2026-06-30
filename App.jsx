@@ -513,22 +513,88 @@ function gameLoserTeam(game) {
   return h > a ? game.away_team : game.home_team
 }
 
+function cleanTeamName(value) {
+  return String(value || '').trim()
+}
+
+function downstreamWinnerSlot(game, allGames = []) {
+  const sourceNo = Number(game?.game_no)
+  if (!sourceNo) return null
+
+  for (const [targetNoText, sources] of Object.entries(KNOCKOUT_WINNER_SOURCES)) {
+    const idx = sources.map(Number).indexOf(sourceNo)
+    if (idx >= 0) {
+      const targetGame = gameByNumber(allGames, Number(targetNoText))
+      return { game: targetGame, side: idx === 0 ? 'home' : 'away', targetNo: Number(targetNoText) }
+    }
+  }
+
+  return null
+}
+
+function downstreamLoserSlot(game, allGames = []) {
+  const sourceNo = Number(game?.game_no)
+  if (!sourceNo) return null
+
+  for (const [targetNoText, sources] of Object.entries(KNOCKOUT_LOSER_SOURCES)) {
+    const idx = sources.map(Number).indexOf(sourceNo)
+    if (idx >= 0) {
+      const targetGame = gameByNumber(allGames, Number(targetNoText))
+      return { game: targetGame, side: idx === 0 ? 'home' : 'away', targetNo: Number(targetNoText) }
+    }
+  }
+
+  return null
+}
+
+function explicitQualifiedTeam(game, allGames = []) {
+  const saved = cleanTeamName(
+    game?.qualified_team ||
+    game?.classificado ||
+    game?.classified_team ||
+    game?.winner_team ||
+    game?.advancing_team ||
+    ''
+  )
+  if (saved) return saved
+
+  const teams = autoKnockoutTeams(game, allGames)
+  const slot = downstreamWinnerSlot(game, allGames)
+  const nextTeam = slot?.game ? cleanTeamName(slot.side === 'home' ? slot.game.home_team : slot.game.away_team) : ''
+
+  if (nextTeam && (nextTeam === teams.home || nextTeam === teams.away)) return nextTeam
+  return ''
+}
+
 function gameWinnerTeamResolved(game, allGames = []) {
   if (!isGameFinished(game)) return ''
   const h = Number(game.home_score), a = Number(game.away_score)
-  if (h === a) return ''
   const teams = autoKnockoutTeams(game, allGames)
+
+  if (h === a) {
+    // No bolão a pontuação continua pelo placar dos 90 minutos.
+    // Para o chaveamento, quando empatar no mata-mata, usa o classificado escolhido no Admin.
+    const q = explicitQualifiedTeam(game, allGames)
+    if (q) return q
+    return ''
+  }
+
   return h > a ? teams.home : teams.away
 }
 function gameLoserTeamResolved(game, allGames = []) {
   if (!isGameFinished(game)) return ''
   const h = Number(game.home_score), a = Number(game.away_score)
-  if (h === a) return ''
   const teams = autoKnockoutTeams(game, allGames)
+
+  if (h === a) {
+    const q = explicitQualifiedTeam(game, allGames)
+    if (!q) return ''
+    if (q === teams.home) return teams.away
+    if (q === teams.away) return teams.home
+    return ''
+  }
+
   return h > a ? teams.away : teams.home
-}
-function cleanTeamName(value) {
-  return String(value || '').trim()
 }
 
 
@@ -844,6 +910,7 @@ function App() {
   const [palpitesSubtab, setPalpitesSubtab] = useState(null)
   const [resultadosSubtab, setResultadosSubtab] = useState(null)
   const [galeraSubtab, setGaleraSubtab] = useState(null)
+  const [adminSubtab, setAdminSubtab] = useState(null)
   const [usersList, setUsersList] = useState([])
   const [allGuessesPublic, setAllGuessesPublic] = useState([])
   const [allProfilesPublic, setAllProfilesPublic] = useState([])
@@ -1204,6 +1271,60 @@ function App() {
     setMsg('Resultado salvo e ranking recalculado!')
   }
 
+  async function updateQualifiedTeam(game, value) {
+    if (!profile?.is_admin) return
+
+    const selectedTeam = value || ''
+    const teams = autoKnockoutTeams(game, games)
+    const winnerSlot = downstreamWinnerSlot(game, games)
+    const loserSlot = downstreamLoserSlot(game, games)
+
+    if (!winnerSlot?.game?.id) {
+      setMsg('Classificado escolhido apenas nesta tela. Este jogo não alimenta outra fase do chaveamento.')
+      setGames(prev => prev.map(g => String(g.id) === String(game.id) ? { ...g, qualified_team: selectedTeam || null } : g))
+      return
+    }
+
+    const winnerPayload = winnerSlot.side === 'home'
+      ? { home_team: selectedTeam || '' }
+      : { away_team: selectedTeam || '' }
+
+    const { error } = await supabase.from('games').update(winnerPayload).eq('id', winnerSlot.game.id)
+    if (error) {
+      setMsg(`Não consegui salvar o classificado no próximo jogo. Erro: ${error.message}`)
+      return
+    }
+
+    let loserTeam = ''
+    if (selectedTeam) {
+      loserTeam = selectedTeam === teams.home ? teams.away : selectedTeam === teams.away ? teams.home : ''
+    }
+
+    if (loserSlot?.game?.id) {
+      const loserPayload = loserSlot.side === 'home'
+        ? { home_team: loserTeam || '' }
+        : { away_team: loserTeam || '' }
+      const loserUpdate = await supabase.from('games').update(loserPayload).eq('id', loserSlot.game.id)
+      if (loserUpdate.error) {
+        setMsg(`Classificado salvo, mas não consegui atualizar o 3º lugar. Erro: ${loserUpdate.error.message}`)
+      }
+    }
+
+    setGames(prev => prev.map(g => {
+      if (String(g.id) === String(game.id)) return { ...g, qualified_team: selectedTeam || null }
+      if (String(g.id) === String(winnerSlot.game.id)) return { ...g, ...winnerPayload }
+      if (loserSlot?.game?.id && String(g.id) === String(loserSlot.game.id)) {
+        const loserPayload = loserSlot.side === 'home' ? { home_team: loserTeam || '' } : { away_team: loserTeam || '' }
+        return { ...g, ...loserPayload }
+      }
+      return g
+    }))
+
+    await loadAll()
+    await loadRanking()
+    setMsg(selectedTeam ? `Classificado salvo no próximo jogo: ${selectedTeam}` : 'Classificado removido do próximo jogo.')
+  }
+
 
   async function updateGameTime(game, value) {
     if (!profile?.is_admin) return
@@ -1443,6 +1564,15 @@ function App() {
     })
   }, [filteredGames, resultadosSubtab])
   const groupedResultadosGames = useMemo(() => groupGamesByPhase(filteredResultadosGames), [filteredResultadosGames])
+
+  const filteredAdminGames = useMemo(() => {
+    if (!adminSubtab) return []
+    return filteredGames.filter(g => {
+      const isGroupPhase = String(g.phase || '').startsWith('Grupo')
+      return adminSubtab === 'grupos' ? isGroupPhase : !isGroupPhase
+    })
+  }, [filteredGames, adminSubtab])
+  const groupedAdminGames = useMemo(() => groupGamesByPhase(filteredAdminGames), [filteredAdminGames])
 
   const palpitesGaleraGames = useMemo(() => {
     const term = palpitesGaleraSearch.trim().toLowerCase()
@@ -2235,15 +2365,23 @@ function App() {
       const shortCode = (team) => teamCode(team)
       const OverlayMatch = ({ gameNo, className = '' }) => {
         const { home, away, game } = matchTeams(gameNo)
+        const onlyOneTeam = (home && !away) || (!home && away)
+        const singleTeam = home || away
         // Área clicável invisível. Não desenha caixa por cima da arte.
-        // Quando a arte tiver espaços vazios das fases seguintes, mostra só texto pequeno, sem fundo.
+        // Se só existe um classificado ainda, ele fica centralizado dentro do quadrado.
         if (!home && !away) return <div role="button" tabIndex={0} className={`chaveTapZone ${className}`} onClick={() => game && setChaveamentoGame(game)} aria-label={`Jogo ${gameNo}`} />
         return (
-          <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
+          <div role="button" tabIndex={0} className={`chaveTapZone chaveTextOnly ${onlyOneTeam ? 'chaveSingleTeam' : ''} ${className}`} onClick={() => game && setChaveamentoGame(game)} title={`Jogo ${gameNo}`}>
             <div className="chaveOverlayInner">
-              <span className="chaveTeamLine">{home && <><FlagImg team={home} className="chaveFlag"/> <em>{shortCode(home)}</em></>}</span>
-              <b className="chaveVersusMini">x</b>
-              <span className="chaveTeamLine">{away && <><FlagImg team={away} className="chaveFlag"/> <em>{shortCode(away)}</em></>}</span>
+              {onlyOneTeam ? (
+                <span className="chaveTeamLine"><FlagImg team={singleTeam} className="chaveFlag"/> <em>{shortCode(singleTeam)}</em></span>
+              ) : (
+                <>
+                  <span className="chaveTeamLine">{home && <><FlagImg team={home} className="chaveFlag"/> <em>{shortCode(home)}</em></>}</span>
+                  <b className="chaveVersusMini">x</b>
+                  <span className="chaveTeamLine">{away && <><FlagImg team={away} className="chaveFlag"/> <em>{shortCode(away)}</em></>}</span>
+                </>
+              )}
             </div>
           </div>
         )
@@ -2317,7 +2455,7 @@ function App() {
             display:block !important;
             color:#fff;
             font-weight:900;
-            font-size:8px !important;
+            font-size:11px !important;
             line-height:1 !important;
             letter-spacing:0 !important;
             text-shadow:0 1px 3px #000, 0 0 2px #000;
@@ -2329,9 +2467,9 @@ function App() {
           }
           .chaveOverlayInner {
             position:absolute !important;
-            inset:5px 6px !important;
+            inset:5px 8px !important;
             display:grid !important;
-            grid-template-rows:minmax(0,1fr) 7px minmax(0,1fr) !important;
+            grid-template-rows:minmax(0,1fr) 8px minmax(0,1fr) !important;
             align-items:center !important;
             justify-items:center !important;
             overflow:hidden !important;
@@ -2342,7 +2480,7 @@ function App() {
             display:flex !important;
             align-items:center !important;
             justify-content:center !important;
-            gap:2px !important;
+            gap:1px !important;
             width:100% !important;
             max-width:100% !important;
             min-width:0 !important;
@@ -2354,26 +2492,29 @@ function App() {
             font-style:normal !important;
             display:block !important;
             min-width:0 !important;
-            max-width:calc(100% - 13px) !important;
+            max-width:calc(100% - 10px) !important;
             overflow:hidden !important;
             text-overflow:ellipsis !important;
             white-space:nowrap !important;
-            text-align:left !important;
+            text-align:center !important;
           }
           .chaveTextOnly .chaveVersusMini,
           .chaveTextOnly b {
             color:#dbeafe;
-            font-size:6px !important;
-            line-height:7px !important;
+            font-size:7px !important;
+            line-height:8px !important;
             opacity:.75;
             display:block !important;
             width:100%;
             text-align:center;
             margin:0 !important;
           }
-          .chaveTextOnly .chaveFlag { width:11px !important; height:8px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:8px !important; color:#fff; text-shadow:0 1px 3px #000; }
-          .chaveChampion .chaveOverlayInner { grid-template-rows:1fr !important; inset:6px 8px !important; }
+          .chaveTextOnly .chaveFlag { width:14px !important; height:10px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
+          .chaveChampion { font-size:15px !important; color:#fff; text-shadow:0 1px 3px #000; }
+          .chaveSingleTeam { font-size:18px !important; }
+          .chaveSingleTeam .chaveFlag { width:24px !important; height:16px !important; }
+          .chaveSingleTeam .chaveTeamLine { gap:4px !important; }
+          .chaveChampion .chaveOverlayInner, .chaveSingleTeam .chaveOverlayInner { grid-template-rows:1fr !important; inset:4px 6px !important; align-items:center !important; justify-items:center !important; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2381,7 +2522,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:7px !important}.chaveOverlayInner{inset:5px 6px !important}.chaveTextOnly .chaveFlag{width:10px !important;height:7px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 12px) !important}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:12px !important}.chaveOverlayInner{inset:5px 8px !important}.chaveTextOnly .chaveFlag{width:15px !important;height:10px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 18px) !important}.chaveSingleTeam{font-size:18px !important}.chaveSingleTeam .chaveFlag{width:24px !important;height:16px !important}.chaveSingleTeam .chaveOverlayInner{inset:4px 6px !important}}
         `}</style>
       </section>
     })()}
@@ -2804,6 +2945,10 @@ function App() {
         .adminPoster .placeholderFlag{font-size:16px;flex:0 0 auto}
         .adminPoster .adminScoreInput{width:42px !important;max-width:42px;text-align:center}
         .adminPoster .posterPts{display:block;margin-top:10px;width:100%;text-align:center}
+        .adminPoster .adminQualifiedBox{margin-top:10px;padding:10px;border-radius:12px;background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.28);display:grid;gap:6px;color:#dcfce7}
+        .adminPoster .adminQualifiedBox label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}
+        .adminPoster .adminQualifiedBox select{width:100%;color:#000 !important;-webkit-text-fill-color:#000 !important;background:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.25);padding:8px;font-weight:800}
+        .adminPoster .adminQualifiedBox small{font-size:11px;color:#bbf7d0;opacity:.92}
         @media (max-width:720px){
           .adminPoster .adminPhaseBox{margin:18px 0 24px;border-radius:18px}
           .adminPoster .adminPhaseHeader{align-items:flex-start;flex-direction:column}
@@ -2859,8 +3004,31 @@ function App() {
         <button type="button" onClick={refreshAll}><RefreshCw/> Atualizar ranking</button>
       </div>
 
-      <div className="posterGrid palpitesPosterGrid adminPosterGrid">
-        {Object.entries(groupedTableGames).map(([phaseName, phaseGames]) => {
+      <div className="palpitesSubtabs" role="tablist" aria-label="Fases do painel admin">
+        <button
+          type="button"
+          className={`palpitesSubtabBtn ${adminSubtab === 'grupos' ? 'active' : ''}`}
+          onClick={() => { setAdminSubtab(adminSubtab === 'grupos' ? null : 'grupos'); setFiltro('Todos') }}
+        >
+          Primeira fase
+        </button>
+        <button
+          type="button"
+          className={`palpitesSubtabBtn mataPrincipal ${adminSubtab === 'mata' ? 'active' : ''}`}
+          onClick={() => { setAdminSubtab(adminSubtab === 'mata' ? null : 'mata'); setFiltro('Todos') }}
+        >
+          Mata-mata
+        </button>
+      </div>
+
+      {!adminSubtab && (
+        <div className="palpitesEmptySubtab">
+          Escolha uma sub aba acima para editar os jogos da primeira fase ou do mata-mata.
+        </div>
+      )}
+
+      {adminSubtab && <div className="posterGrid palpitesPosterGrid adminPosterGrid">
+        {Object.entries(groupedAdminGames).map(([phaseName, phaseGames]) => {
           const isGroup = phaseName.startsWith('Grupo')
           return (
             <div className={`adminPhaseBox ${isGroup ? 'isGroup' : 'isKnockout'}`} key={phaseName}>
@@ -2903,13 +3071,31 @@ function App() {
                     </div>
 
                     <span className="posterPts">Oficial</span>
+
+                    {isKnockoutPhase(game.phase) && isGameFinished(game) && Number(game.home_score) === Number(game.away_score) && (() => {
+                      const teams = autoKnockoutTeams(game, games)
+                      return (
+                        <div className="adminQualifiedBox">
+                          <label>Classificado no mata-mata:</label>
+                          <select
+                            value={explicitQualifiedTeam(game, games)}
+                            onChange={e => updateQualifiedTeam(game, e.target.value)}
+                          >
+                            <option value="">Selecionar classificado</option>
+                            <option value={teams.home}>{teamCode(teams.home)} - {teams.home}</option>
+                            <option value={teams.away}>{teamCode(teams.away)} - {teams.away}</option>
+                          </select>
+                          <small>O placar dos 90 minutos segue valendo para a pontuação.</small>
+                        </div>
+                      )
+                    })()}
                   </div>
                 })}
               </div>
             </div>
           )
         })}
-      </div>
+      </div>}
     </section>}
   </main>
 }

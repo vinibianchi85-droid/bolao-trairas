@@ -513,22 +513,50 @@ function gameLoserTeam(game) {
   return h > a ? game.away_team : game.home_team
 }
 
+function cleanTeamName(value) {
+  return String(value || '').trim()
+}
+
+function explicitQualifiedTeam(game) {
+  return cleanTeamName(
+    game?.qualified_team ||
+    game?.classificado ||
+    game?.classified_team ||
+    game?.winner_team ||
+    game?.advancing_team ||
+    ''
+  )
+}
+
 function gameWinnerTeamResolved(game, allGames = []) {
   if (!isGameFinished(game)) return ''
   const h = Number(game.home_score), a = Number(game.away_score)
-  if (h === a) return ''
   const teams = autoKnockoutTeams(game, allGames)
+
+  if (h === a) {
+    // No bolão a pontuação continua pelo placar dos 90 minutos.
+    // Para o chaveamento, quando empatar no mata-mata, usa o classificado escolhido no Admin.
+    const q = explicitQualifiedTeam(game)
+    if (q) return q
+    return ''
+  }
+
   return h > a ? teams.home : teams.away
 }
 function gameLoserTeamResolved(game, allGames = []) {
   if (!isGameFinished(game)) return ''
   const h = Number(game.home_score), a = Number(game.away_score)
-  if (h === a) return ''
   const teams = autoKnockoutTeams(game, allGames)
+
+  if (h === a) {
+    const q = explicitQualifiedTeam(game)
+    if (!q) return ''
+    if (q === teams.home) return teams.away
+    if (q === teams.away) return teams.home
+    return ''
+  }
+
   return h > a ? teams.away : teams.home
-}
-function cleanTeamName(value) {
-  return String(value || '').trim()
 }
 
 
@@ -1202,6 +1230,22 @@ function App() {
     await loadAll()
     await loadRanking()
     setMsg('Resultado salvo e ranking recalculado!')
+  }
+
+  async function updateQualifiedTeam(game, value) {
+    if (!profile?.is_admin) return
+
+    const qualified_team = value || null
+    const { error } = await supabase.from('games').update({ qualified_team }).eq('id', game.id)
+
+    if (error) {
+      setMsg('Não consegui salvar o classificado. Confere se existe a coluna qualified_team na tabela games do Supabase.')
+      return
+    }
+
+    await loadAll()
+    await loadRanking()
+    setMsg(qualified_team ? `Classificado salvo: ${qualified_team}` : 'Classificado removido.')
   }
 
 
@@ -2317,7 +2361,7 @@ function App() {
             display:block !important;
             color:#fff;
             font-weight:900;
-            font-size:8px !important;
+            font-size:6px !important;
             line-height:1 !important;
             letter-spacing:0 !important;
             text-shadow:0 1px 3px #000, 0 0 2px #000;
@@ -2329,9 +2373,9 @@ function App() {
           }
           .chaveOverlayInner {
             position:absolute !important;
-            inset:5px 6px !important;
+            inset:7px 10px !important;
             display:grid !important;
-            grid-template-rows:minmax(0,1fr) 7px minmax(0,1fr) !important;
+            grid-template-rows:minmax(0,1fr) 5px minmax(0,1fr) !important;
             align-items:center !important;
             justify-items:center !important;
             overflow:hidden !important;
@@ -2342,7 +2386,7 @@ function App() {
             display:flex !important;
             align-items:center !important;
             justify-content:center !important;
-            gap:2px !important;
+            gap:1px !important;
             width:100% !important;
             max-width:100% !important;
             min-width:0 !important;
@@ -2354,26 +2398,26 @@ function App() {
             font-style:normal !important;
             display:block !important;
             min-width:0 !important;
-            max-width:calc(100% - 13px) !important;
+            max-width:calc(100% - 10px) !important;
             overflow:hidden !important;
             text-overflow:ellipsis !important;
             white-space:nowrap !important;
-            text-align:left !important;
+            text-align:center !important;
           }
           .chaveTextOnly .chaveVersusMini,
           .chaveTextOnly b {
             color:#dbeafe;
-            font-size:6px !important;
-            line-height:7px !important;
+            font-size:5px !important;
+            line-height:5px !important;
             opacity:.75;
             display:block !important;
             width:100%;
             text-align:center;
             margin:0 !important;
           }
-          .chaveTextOnly .chaveFlag { width:11px !important; height:8px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:8px !important; color:#fff; text-shadow:0 1px 3px #000; }
-          .chaveChampion .chaveOverlayInner { grid-template-rows:1fr !important; inset:6px 8px !important; }
+          .chaveTextOnly .chaveFlag { width:8px !important; height:6px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
+          .chaveChampion { font-size:6px !important; color:#fff; text-shadow:0 1px 3px #000; }
+          .chaveChampion .chaveOverlayInner { grid-template-rows:1fr !important; inset:8px 12px !important; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2381,7 +2425,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:7px !important}.chaveOverlayInner{inset:5px 6px !important}.chaveTextOnly .chaveFlag{width:10px !important;height:7px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 12px) !important}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:5px !important}.chaveOverlayInner{inset:8px 11px !important}.chaveTextOnly .chaveFlag{width:7px !important;height:5px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 9px) !important}}
         `}</style>
       </section>
     })()}
@@ -2804,6 +2848,10 @@ function App() {
         .adminPoster .placeholderFlag{font-size:16px;flex:0 0 auto}
         .adminPoster .adminScoreInput{width:42px !important;max-width:42px;text-align:center}
         .adminPoster .posterPts{display:block;margin-top:10px;width:100%;text-align:center}
+        .adminPoster .adminQualifiedBox{margin-top:10px;padding:10px;border-radius:12px;background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.28);display:grid;gap:6px;color:#dcfce7}
+        .adminPoster .adminQualifiedBox label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}
+        .adminPoster .adminQualifiedBox select{width:100%;color:#000 !important;-webkit-text-fill-color:#000 !important;background:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.25);padding:8px;font-weight:800}
+        .adminPoster .adminQualifiedBox small{font-size:11px;color:#bbf7d0;opacity:.92}
         @media (max-width:720px){
           .adminPoster .adminPhaseBox{margin:18px 0 24px;border-radius:18px}
           .adminPoster .adminPhaseHeader{align-items:flex-start;flex-direction:column}
@@ -2903,6 +2951,24 @@ function App() {
                     </div>
 
                     <span className="posterPts">Oficial</span>
+
+                    {isKnockoutPhase(game.phase) && isGameFinished(game) && Number(game.home_score) === Number(game.away_score) && (() => {
+                      const teams = autoKnockoutTeams(game, games)
+                      return (
+                        <div className="adminQualifiedBox">
+                          <label>Classificado no mata-mata:</label>
+                          <select
+                            value={explicitQualifiedTeam(game)}
+                            onChange={e => updateQualifiedTeam(game, e.target.value)}
+                          >
+                            <option value="">Selecionar classificado</option>
+                            <option value={teams.home}>{teamCode(teams.home)} - {teams.home}</option>
+                            <option value={teams.away}>{teamCode(teams.away)} - {teams.away}</option>
+                          </select>
+                          <small>O placar dos 90 minutos segue valendo para a pontuação.</small>
+                        </div>
+                      )
+                    })()}
                   </div>
                 })}
               </div>

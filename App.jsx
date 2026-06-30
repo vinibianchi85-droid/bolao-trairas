@@ -517,8 +517,38 @@ function cleanTeamName(value) {
   return String(value || '').trim()
 }
 
-function explicitQualifiedTeam(game) {
-  return cleanTeamName(
+function downstreamWinnerSlot(game, allGames = []) {
+  const sourceNo = Number(game?.game_no)
+  if (!sourceNo) return null
+
+  for (const [targetNoText, sources] of Object.entries(KNOCKOUT_WINNER_SOURCES)) {
+    const idx = sources.map(Number).indexOf(sourceNo)
+    if (idx >= 0) {
+      const targetGame = gameByNumber(allGames, Number(targetNoText))
+      return { game: targetGame, side: idx === 0 ? 'home' : 'away', targetNo: Number(targetNoText) }
+    }
+  }
+
+  return null
+}
+
+function downstreamLoserSlot(game, allGames = []) {
+  const sourceNo = Number(game?.game_no)
+  if (!sourceNo) return null
+
+  for (const [targetNoText, sources] of Object.entries(KNOCKOUT_LOSER_SOURCES)) {
+    const idx = sources.map(Number).indexOf(sourceNo)
+    if (idx >= 0) {
+      const targetGame = gameByNumber(allGames, Number(targetNoText))
+      return { game: targetGame, side: idx === 0 ? 'home' : 'away', targetNo: Number(targetNoText) }
+    }
+  }
+
+  return null
+}
+
+function explicitQualifiedTeam(game, allGames = []) {
+  const saved = cleanTeamName(
     game?.qualified_team ||
     game?.classificado ||
     game?.classified_team ||
@@ -526,6 +556,14 @@ function explicitQualifiedTeam(game) {
     game?.advancing_team ||
     ''
   )
+  if (saved) return saved
+
+  const teams = autoKnockoutTeams(game, allGames)
+  const slot = downstreamWinnerSlot(game, allGames)
+  const nextTeam = slot?.game ? cleanTeamName(slot.side === 'home' ? slot.game.home_team : slot.game.away_team) : ''
+
+  if (nextTeam && (nextTeam === teams.home || nextTeam === teams.away)) return nextTeam
+  return ''
 }
 
 function gameWinnerTeamResolved(game, allGames = []) {
@@ -536,7 +574,7 @@ function gameWinnerTeamResolved(game, allGames = []) {
   if (h === a) {
     // No bolão a pontuação continua pelo placar dos 90 minutos.
     // Para o chaveamento, quando empatar no mata-mata, usa o classificado escolhido no Admin.
-    const q = explicitQualifiedTeam(game)
+    const q = explicitQualifiedTeam(game, allGames)
     if (q) return q
     return ''
   }
@@ -549,7 +587,7 @@ function gameLoserTeamResolved(game, allGames = []) {
   const teams = autoKnockoutTeams(game, allGames)
 
   if (h === a) {
-    const q = explicitQualifiedTeam(game)
+    const q = explicitQualifiedTeam(game, allGames)
     if (!q) return ''
     if (q === teams.home) return teams.away
     if (q === teams.away) return teams.home
@@ -1235,40 +1273,55 @@ function App() {
   async function updateQualifiedTeam(game, value) {
     if (!profile?.is_admin) return
 
-    const selectedTeam = value || null
+    const selectedTeam = value || ''
+    const teams = autoKnockoutTeams(game, games)
+    const winnerSlot = downstreamWinnerSlot(game, games)
+    const loserSlot = downstreamLoserSlot(game, games)
 
-    // Algumas versões antigas do app/banco usaram nomes diferentes para a coluna
-    // do classificado. Tenta salvar na coluna nova e, se ela não existir, tenta
-    // as colunas alternativas que o próprio app já sabe ler.
-    const candidateColumns = [
-      'qualified_team',
-      'classificado',
-      'classified_team',
-      'winner_team',
-      'advancing_team'
-    ]
-
-    let saved = false
-    let lastError = null
-
-    for (const column of candidateColumns) {
-      const { error } = await supabase.from('games').update({ [column]: selectedTeam }).eq('id', game.id)
-      if (!error) {
-        saved = true
-        break
-      }
-      lastError = error
-    }
-
-    if (!saved) {
-      setMsg(`Não consegui salvar o classificado. Crie uma coluna chamada qualified_team na tabela games do Supabase. Erro: ${lastError?.message || 'coluna não encontrada'}`)
+    if (!winnerSlot?.game?.id) {
+      setMsg('Classificado escolhido apenas nesta tela. Este jogo não alimenta outra fase do chaveamento.')
+      setGames(prev => prev.map(g => String(g.id) === String(game.id) ? { ...g, qualified_team: selectedTeam || null } : g))
       return
     }
 
-    setGames(prev => prev.map(g => String(g.id) === String(game.id) ? { ...g, qualified_team: selectedTeam } : g))
+    const winnerPayload = winnerSlot.side === 'home'
+      ? { home_team: selectedTeam || '' }
+      : { away_team: selectedTeam || '' }
+
+    const { error } = await supabase.from('games').update(winnerPayload).eq('id', winnerSlot.game.id)
+    if (error) {
+      setMsg(`Não consegui salvar o classificado no próximo jogo. Erro: ${error.message}`)
+      return
+    }
+
+    let loserTeam = ''
+    if (selectedTeam) {
+      loserTeam = selectedTeam === teams.home ? teams.away : selectedTeam === teams.away ? teams.home : ''
+    }
+
+    if (loserSlot?.game?.id) {
+      const loserPayload = loserSlot.side === 'home'
+        ? { home_team: loserTeam || '' }
+        : { away_team: loserTeam || '' }
+      const loserUpdate = await supabase.from('games').update(loserPayload).eq('id', loserSlot.game.id)
+      if (loserUpdate.error) {
+        setMsg(`Classificado salvo, mas não consegui atualizar o 3º lugar. Erro: ${loserUpdate.error.message}`)
+      }
+    }
+
+    setGames(prev => prev.map(g => {
+      if (String(g.id) === String(game.id)) return { ...g, qualified_team: selectedTeam || null }
+      if (String(g.id) === String(winnerSlot.game.id)) return { ...g, ...winnerPayload }
+      if (loserSlot?.game?.id && String(g.id) === String(loserSlot.game.id)) {
+        const loserPayload = loserSlot.side === 'home' ? { home_team: loserTeam || '' } : { away_team: loserTeam || '' }
+        return { ...g, ...loserPayload }
+      }
+      return g
+    }))
+
     await loadAll()
     await loadRanking()
-    setMsg(selectedTeam ? `Classificado salvo: ${selectedTeam}` : 'Classificado removido.')
+    setMsg(selectedTeam ? `Classificado salvo no próximo jogo: ${selectedTeam}` : 'Classificado removido do próximo jogo.')
   }
 
 
@@ -2447,8 +2500,11 @@ function App() {
             margin:0 !important;
           }
           .chaveTextOnly .chaveFlag { width:14px !important; height:10px !important; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.22); flex:0 0 auto; }
-          .chaveChampion { font-size:11px !important; color:#fff; text-shadow:0 1px 3px #000; }
-          .chaveChampion .chaveOverlayInner, .chaveSingleTeam .chaveOverlayInner { grid-template-rows:1fr !important; inset:4px 8px !important; align-items:center !important; justify-items:center !important; }
+          .chaveChampion { font-size:15px !important; color:#fff; text-shadow:0 1px 3px #000; }
+          .chaveSingleTeam { font-size:18px !important; }
+          .chaveSingleTeam .chaveFlag { width:24px !important; height:16px !important; }
+          .chaveSingleTeam .chaveTeamLine { gap:4px !important; }
+          .chaveChampion .chaveOverlayInner, .chaveSingleTeam .chaveOverlayInner { grid-template-rows:1fr !important; inset:4px 6px !important; align-items:center !important; justify-items:center !important; }
           .m89{left:280px;top:239px;width:118px;height:48px}.m90{left:280px;top:382px;width:118px;height:48px}.m93{left:280px;top:575px;width:118px;height:48px}.m94{left:280px;top:716px;width:118px;height:48px}
           .m91{left:1138px;top:239px;width:118px;height:48px}.m92{left:1138px;top:382px;width:118px;height:48px}.m95{left:1138px;top:575px;width:118px;height:48px}.m96{left:1138px;top:716px;width:118px;height:48px}
           .m97{left:462px;top:335px;width:120px;height:50px}.m98{left:462px;top:621px;width:120px;height:50px}.m99{left:954px;top:335px;width:120px;height:50px}.m100{left:954px;top:621px;width:120px;height:50px}
@@ -2456,7 +2512,7 @@ function App() {
           .fr74{left:44px;top:205px;width:134px;height:78px}.fr77{left:44px;top:291px;width:134px;height:78px}.fr73{left:44px;top:376px;width:134px;height:78px}.fr75{left:44px;top:462px;width:134px;height:78px}.fr83{left:44px;top:548px;width:134px;height:78px}.fr84{left:44px;top:634px;width:134px;height:78px}.fr81{left:44px;top:718px;width:134px;height:70px}.fr82{left:44px;top:788px;width:134px;height:70px}
           .fr76{left:1352px;top:205px;width:134px;height:78px}.fr78{left:1352px;top:291px;width:134px;height:78px}.fr79{left:1352px;top:376px;width:134px;height:78px}.fr80{left:1352px;top:462px;width:134px;height:78px}.fr86{left:1352px;top:548px;width:134px;height:78px}.fr88{left:1352px;top:634px;width:134px;height:78px}.fr85{left:1352px;top:718px;width:134px;height:70px}.fr87{left:1352px;top:788px;width:134px;height:70px}
           .chaveModalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.chaveModal{position:relative;max-width:440px;width:100%;border:1px solid rgba(56,189,248,.35);background:#06111f;color:#fff;border-radius:18px;padding:18px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.chaveModalClose{position:absolute;right:12px;top:10px;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;width:30px;height:30px}.chaveModal h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.chaveModal small{color:#7dd3fc;font-weight:800}.chaveModal p{margin:8px 0;color:#e5e7eb}.chaveModalScore b{color:#facc15}
-          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:11px !important}.chaveOverlayInner{inset:5px 8px !important}.chaveTextOnly .chaveFlag{width:14px !important;height:10px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 16px) !important}.chaveSingleTeam .chaveOverlayInner{inset:4px 8px !important}}
+          @media (max-width: 720px){.chavePosterStage{transform:scale(.72);width:1536px;height:637px}.chavePosterViewport{height:637px}.chaveScrollHint{font-size:11px}.chaveTextOnly{font-size:12px !important}.chaveOverlayInner{inset:5px 8px !important}.chaveTextOnly .chaveFlag{width:15px !important;height:10px !important}.chaveTextOnly .chaveTeamLine em{max-width:calc(100% - 18px) !important}.chaveSingleTeam{font-size:18px !important}.chaveSingleTeam .chaveFlag{width:24px !important;height:16px !important}.chaveSingleTeam .chaveOverlayInner{inset:4px 6px !important}}
         `}</style>
       </section>
     })()}
@@ -2989,7 +3045,7 @@ function App() {
                         <div className="adminQualifiedBox">
                           <label>Classificado no mata-mata:</label>
                           <select
-                            value={explicitQualifiedTeam(game)}
+                            value={explicitQualifiedTeam(game, games)}
                             onChange={e => updateQualifiedTeam(game, e.target.value)}
                           >
                             <option value="">Selecionar classificado</option>

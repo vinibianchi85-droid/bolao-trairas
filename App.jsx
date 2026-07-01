@@ -894,13 +894,12 @@ function App() {
   const [session, setSession] = useState(null)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [novaSenhaConta, setNovaSenhaConta] = useState('')
+  const [confirmarSenhaConta, setConfirmarSenhaConta] = useState('')
   const [nome, setNome] = useState('')
   const [whats, setWhats] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [modo, setModo] = useState('login')
-  const [modoRecuperacaoSenha, setModoRecuperacaoSenha] = useState(false)
-  const [novaSenha, setNovaSenha] = useState('')
-  const [confirmaNovaSenha, setConfirmaNovaSenha] = useState('')
   const [profile, setProfile] = useState(null)
   const [games, setGames] = useState([])
   const [guesses, setGuesses] = useState({})
@@ -923,36 +922,15 @@ function App() {
   const [chaveamentoGame, setChaveamentoGame] = useState(null)
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const isResetPasswordPage = urlParams.get('reset-password') === '1' || window.location.hash.includes('type=recovery')
-
-    if (isResetPasswordPage) {
-      setModoRecuperacaoSenha(true)
-      setModo('novaSenha')
-      setMsg('Digite uma nova senha para concluir a recuperação.')
-    }
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-    })
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-
-      if (event === 'PASSWORD_RECOVERY' || isResetPasswordPage) {
-        setModoRecuperacaoSenha(true)
-        setModo('novaSenha')
-        setMsg('Digite uma nova senha para concluir a recuperação.')
-      }
-    })
-
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
     return () => listener.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    if (!session || modoRecuperacaoSenha) return
+    if (!session) return
     loadAll()
-  }, [session, modoRecuperacaoSenha])
+  }, [session])
 
   useEffect(() => {
     if (!session) return
@@ -1093,52 +1071,42 @@ function App() {
     if (error) setMsg('E-mail ou senha incorretos.')
   }
 
-  async function recuperarSenha() {
-    setMsg('')
-    const authEmail = email.trim().toLowerCase()
-    if (!authEmail) return setMsg('Digite o e-mail cadastrado para recuperar a senha.')
-
-    const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
-      redirectTo: `${window.location.origin}/?reset-password=1`
-    })
-
-    if (error) return setMsg(error.message)
-    setMsg('Enviamos um link de recuperação para o seu e-mail. Confira também a caixa de spam/lixo eletrônico.')
-  }
-
-  async function salvarNovaSenha() {
-    setMsg('')
-
-    if (!novaSenha || !confirmaNovaSenha) {
-      return setMsg('Preencha a nova senha e a confirmação.')
-    }
-
-    if (novaSenha.length < 6) {
-      return setMsg('A nova senha precisa ter pelo menos 6 caracteres.')
-    }
-
-    if (novaSenha !== confirmaNovaSenha) {
-      return setMsg('As senhas não conferem.')
-    }
-
-    const { error } = await supabase.auth.updateUser({ password: novaSenha })
-
-    if (error) return setMsg(error.message)
-
-    setNovaSenha('')
-    setConfirmaNovaSenha('')
-    setModoRecuperacaoSenha(false)
-    setModo('login')
-    setMsg('Senha alterada com sucesso! Entre novamente com a nova senha.')
-
-    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname)
-    await supabase.auth.signOut()
-    setSession(null)
-  }
-
   async function logout() {
     await supabase.auth.signOut()
     setSession(null)
+  }
+
+  async function alterarSenhaConta() {
+    setMsg('')
+
+    const nova = String(novaSenhaConta || '').trim()
+    const confirma = String(confirmarSenhaConta || '').trim()
+
+    if (!nova || !confirma) {
+      setMsg('Informe a nova senha e confirme a senha.')
+      return
+    }
+
+    if (nova.length < 6) {
+      setMsg('A nova senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+
+    if (nova !== confirma) {
+      setMsg('As senhas não coincidem. Digite novamente.')
+      return
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: nova })
+
+    if (error) {
+      setMsg('Não consegui alterar a senha: ' + error.message)
+      return
+    }
+
+    setNovaSenhaConta('')
+    setConfirmarSenhaConta('')
+    setMsg('Senha alterada com sucesso! Use essa nova senha no próximo login.')
   }
 
   async function refreshAll() {
@@ -1664,34 +1632,6 @@ function App() {
   const groupedPalpitesGaleraGames = useMemo(() => groupGamesByPhase(palpitesGaleraGames), [palpitesGaleraGames])
   const proximosBloqueios = useMemo(() => nextLockGames(), [games, guesses, tab])
 
-  if (modoRecuperacaoSenha) {
-    return <main className="page login">
-      <section className="hero">
-        <div className="shine"></div>
-        <div className="crestCard">
-          <div className="fishMark"><LogoTrairas className="fishLogo" /></div>
-          <span>Traíras F.C.</span>
-        </div>
-        <div className="badge"><Lock/> Recuperação de senha</div>
-        <h1>Nova senha</h1>
-        <p>Digite uma nova senha para voltar a acessar o bolão.</p>
-      </section>
-
-      <section className="card form authCardSplit">
-        <div className="loginLogoWrap"><LogoTrairas className="loginLogoTrairas" /></div>
-        <h2>Criar nova senha</h2>
-        <p className="loginHint">Use no mínimo 6 caracteres.</p>
-        <div className="passBox">
-          <input placeholder="Nova senha" type={showPass ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
-          <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
-        </div>
-        <input placeholder="Confirmar nova senha" type={showPass ? 'text' : 'password'} value={confirmaNovaSenha} onChange={e => setConfirmaNovaSenha(e.target.value)} />
-        <button onClick={salvarNovaSenha}>Salvar nova senha</button>
-        {msg && <p className="msg">{msg}</p>}
-      </section>
-    </main>
-  }
-
   if (!session) {
     return <main className="page login">
       <section className="hero">
@@ -1728,16 +1668,7 @@ function App() {
             <button type="button" className="iconBtn" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff/> : <Eye/>}</button>
           </div>
           <button onClick={login}>Entrar</button>
-          <button className="secondary" type="button" onClick={() => setModo('recuperar')}>Esqueci minha senha</button>
           <button className="secondary" type="button" onClick={() => setModo('cadastro')}>Ainda não tenho cadastro</button>
-        </>}
-
-        {modo === 'recuperar' && <>
-          <h2>Recuperar senha</h2>
-          <p className="loginHint">Digite o e-mail cadastrado. Você receberá um link para criar uma nova senha.</p>
-          <input placeholder="E-mail cadastrado" value={email} onChange={e => setEmail(e.target.value)} />
-          <button onClick={recuperarSenha}>Enviar link de recuperação</button>
-          <button className="secondary" type="button" onClick={() => setModo('login')}>Voltar para o login</button>
         </>}
 
         {modo === 'cadastro' && <>
@@ -1839,11 +1770,35 @@ function App() {
       <button onClick={() => setTab('grupos')} className={tab==='grupos'?'active':''}><CalendarDays/> Grupos</button>
       <button onClick={() => setTab('mata')} className={tab==='mata'?'active':''}><Crown/> Mata-mata</button>
       <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
+      <button onClick={() => setTab('conta')} className={tab==='conta'?'active':''}><Users/> Minha Conta</button>
       {profile?.is_admin && <button onClick={() => setTab('admin')} className={tab==='admin'?'active':''}><Shield/> Admin</button>}
       {profile?.is_admin && <button onClick={() => setTab('usuarios')} className={tab==='usuarios'?'active':''}><Users/> Usuários</button>}
     </nav>
 
     {msg && <p className="msg">{msg}</p>}
+
+    {tab === 'conta' && <section className="card form">
+      <h2>Minha Conta</h2>
+      <p className="loginHint">Altere sua senha de acesso ao Bolão Traíras F.C.</p>
+      <div style={{display:'grid', gap:12, maxWidth:520}}>
+        <input
+          placeholder="Nova senha"
+          type="password"
+          value={novaSenhaConta}
+          onChange={e => setNovaSenhaConta(e.target.value)}
+        />
+        <input
+          placeholder="Confirmar nova senha"
+          type="password"
+          value={confirmarSenhaConta}
+          onChange={e => setConfirmarSenhaConta(e.target.value)}
+        />
+        <button type="button" onClick={alterarSenhaConta}>Alterar minha senha</button>
+      </div>
+      <p className="loginHint" style={{marginTop:12}}>
+        Quem entrou pelo link de recuperação do e-mail pode usar esta tela para definir uma nova senha.
+      </p>
+    </section>}
 
     {tab === 'palpites' && <section className="palpitesPoster">
       <style>{`

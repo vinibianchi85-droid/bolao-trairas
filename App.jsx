@@ -918,6 +918,7 @@ function App() {
   const [lastSavedAt, setLastSavedAt] = useState(null)
   const [showSavePopup, setShowSavePopup] = useState(false)
   const [chaveamentoGame, setChaveamentoGame] = useState(null)
+  const [accessStats, setAccessStats] = useState({ visits: [], loading: false })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -935,7 +936,15 @@ function App() {
     if (tab === 'ranking') loadRanking()
     if (tab === 'palpitesRegistrados') loadPublicGuesses()
     if (tab === 'usuarios') loadUsers()
+    if (tab === 'estatisticas') loadAccessStats()
   }, [tab, session])
+
+
+  useEffect(() => {
+    if (!session || !profile) return
+    logSiteVisit(tab)
+  }, [tab, session, profile])
+
 
 
   useEffect(() => {
@@ -988,6 +997,70 @@ function App() {
       (p?.email ? String(p.email).split('@')[0] : '') ||
       `Jogador ${String(p?.id || '').slice(0, 6)}`
     )
+  }
+
+
+  function tabLabel(tabName) {
+    const labels = {
+      palpites: 'Palpites',
+      ranking: 'Ranking',
+      chaveamento: 'Chaveamento',
+      resultados: 'Resultados Oficiais',
+      palpitesRegistrados: 'Palpites da Galera',
+      grupos: 'Grupos',
+      mata: 'Mata-mata',
+      regras: 'Regulamento',
+      admin: 'Admin',
+      usuarios: 'Usuários',
+      estatisticas: 'Estatísticas'
+    }
+    return labels[tabName] || tabName || 'Página inicial'
+  }
+
+  async function logSiteVisit(tabName = tab) {
+    try {
+      const uid = session?.user?.id
+      if (!uid) return
+
+      await supabase.from('site_visits').insert({
+        user_id: uid,
+        nome: displayPlayerName(profile),
+        email: profile?.email || profile?.username || session?.user?.email || '',
+        tab: tabName,
+        tab_label: tabLabel(tabName),
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        screen_width: typeof window !== 'undefined' ? window.innerWidth : null,
+        screen_height: typeof window !== 'undefined' ? window.innerHeight : null
+      })
+    } catch (e) {
+      // Se a tabela de estatísticas ainda não existir, o app segue funcionando normalmente.
+    }
+  }
+
+  async function loadAccessStats() {
+    if (!profile?.is_admin) return
+
+    setAccessStats(old => ({ ...old, loading: true }))
+
+    const { data, error } = await supabase
+      .from('site_visits')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    if (error) {
+      setAccessStats({ visits: [], loading: false })
+      setMsg(`Não consegui carregar estatísticas. Rode o SQL da tabela site_visits. Erro: ${error.message}`)
+      return
+    }
+
+    setAccessStats({ visits: data || [], loading: false })
+  }
+
+  function deviceFromUserAgent(userAgent = '') {
+    const ua = String(userAgent).toLowerCase()
+    if (/android|iphone|ipad|mobile/.test(ua)) return 'Celular'
+    return 'Computador'
   }
 
   async function ensureProfileForCurrentUser() {
@@ -1737,9 +1810,98 @@ function App() {
       <button onClick={() => setTab('regras')} className={tab==='regras'?'active':''}><Sparkles/> Regulamento</button>
       {profile?.is_admin && <button onClick={() => setTab('admin')} className={tab==='admin'?'active':''}><Shield/> Admin</button>}
       {profile?.is_admin && <button onClick={() => setTab('usuarios')} className={tab==='usuarios'?'active':''}><Users/> Usuários</button>}
+      {profile?.is_admin && <button onClick={() => setTab('estatisticas')} className={tab==='estatisticas'?'active':''}><Eye/> Estatísticas</button>}
     </nav>
 
     {msg && <p className="msg">{msg}</p>}
+
+    {tab === 'estatisticas' && profile?.is_admin && (() => {
+      const visits = accessStats.visits || []
+      const uniqueLatest = new Map()
+      visits.forEach(v => {
+        if (!uniqueLatest.has(v.user_id || v.nome)) uniqueLatest.set(v.user_id || v.nome, v)
+      })
+      const latestUsers = Array.from(uniqueLatest.values()).slice(0, 40)
+      const today = new Date().toLocaleDateString('pt-BR')
+      const visitsToday = visits.filter(v => new Date(v.created_at).toLocaleDateString('pt-BR') === today)
+      const tabCounts = visits.reduce((acc, v) => {
+        const label = v.tab_label || tabLabel(v.tab)
+        acc[label] = (acc[label] || 0) + 1
+        return acc
+      }, {})
+      const topTabs = Object.entries(tabCounts).sort((a, b) => b[1] - a[1]).slice(0, 8)
+      const onlineNow = visits.filter(v => Date.now() - new Date(v.created_at).getTime() < 5 * 60 * 1000)
+
+      return (
+        <section className="card">
+          <div className="sectionTitle">
+            <div>
+              <span className="badge"><Eye/> Estatísticas do site</span>
+              <h2>Quem entrou e quais abas visitou</h2>
+              <p>Registros dos últimos 500 acessos salvos no Supabase.</p>
+            </div>
+            <button className="secondary small" onClick={loadAccessStats}><RefreshCw/> Atualizar</button>
+          </div>
+
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:12, margin:'16px 0'}}>
+            <div className="miniCard"><strong>{visitsToday.length}</strong><span>acessos hoje</span></div>
+            <div className="miniCard"><strong>{uniqueLatest.size}</strong><span>participantes vistos</span></div>
+            <div className="miniCard"><strong>{onlineNow.length}</strong><span>online agora</span></div>
+            <div className="miniCard"><strong>{visits.length}</strong><span>registros carregados</span></div>
+          </div>
+
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))', gap:16}}>
+            <div className="adminPanel">
+              <h3>Último acesso por participante</h3>
+              <div className="usersAdminList">
+                {latestUsers.map(v => (
+                  <div className="userAdminRow" key={`${v.user_id || v.nome}-${v.created_at}`}>
+                    <div>
+                      <strong>{v.nome || 'Usuário'}</strong>
+                      <span>{v.tab_label || tabLabel(v.tab)}</span>
+                      <small>{new Date(v.created_at).toLocaleString('pt-BR')} • {deviceFromUserAgent(v.user_agent)}</small>
+                    </div>
+                  </div>
+                ))}
+                {!latestUsers.length && <div className="emptyUsers">Nenhum acesso registrado ainda.</div>}
+              </div>
+            </div>
+
+            <div className="adminPanel">
+              <h3>Abas mais visitadas</h3>
+              <div className="usersAdminList">
+                {topTabs.map(([label, count]) => (
+                  <div className="userAdminRow" key={label}>
+                    <div>
+                      <strong>{label}</strong>
+                      <small>{count} visitas</small>
+                    </div>
+                  </div>
+                ))}
+                {!topTabs.length && <div className="emptyUsers">Nenhuma aba registrada ainda.</div>}
+              </div>
+            </div>
+          </div>
+
+          <div className="adminPanel" style={{marginTop:16}}>
+            <h3>Histórico recente</h3>
+            <div className="usersAdminList">
+              {visits.slice(0, 80).map(v => (
+                <div className="userAdminRow" key={v.id || `${v.user_id}-${v.created_at}-${v.tab}`}>
+                  <div>
+                    <strong>{v.nome || 'Usuário'}</strong>
+                    <span>{v.tab_label || tabLabel(v.tab)}</span>
+                    <small>{new Date(v.created_at).toLocaleString('pt-BR')} • {deviceFromUserAgent(v.user_agent)}</small>
+                  </div>
+                </div>
+              ))}
+              {accessStats.loading && <div className="emptyUsers">Carregando estatísticas...</div>}
+              {!accessStats.loading && !visits.length && <div className="emptyUsers">Nenhum acesso registrado ainda.</div>}
+            </div>
+          </div>
+        </section>
+      )
+    })()}
 
     {tab === 'palpites' && <section className="palpitesPoster">
       <style>{`

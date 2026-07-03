@@ -391,6 +391,43 @@ function totalPointsForGame(game, guess) {
   return calcPoints(game.home_score, game.away_score, guess.guess_home, guess.guess_away, game.phase) + specialBonusPoints(game, guess)
 }
 
+function guessUpdatedTime(guess = {}) {
+  const candidates = [guess.updated_at, guess.created_at, guess.inserted_at]
+    .filter(Boolean)
+    .map(value => new Date(value).getTime())
+    .filter(value => !Number.isNaN(value))
+
+  return candidates.length ? Math.max(...candidates) : 0
+}
+
+function dedupeLatestGuesses(guessRows = []) {
+  const map = new Map()
+
+  ;(guessRows || []).forEach(guess => {
+    const key = `${String(guess.user_id)}::${String(guess.game_id)}`
+    const current = map.get(key)
+
+    if (!current || guessUpdatedTime(guess) >= guessUpdatedTime(current)) {
+      map.set(key, guess)
+    }
+  })
+
+  return Array.from(map.values())
+}
+
+function pointTypeForGame(game, guess, basePts = 0, bonusPts = 0) {
+  if (!game || !guess) return 'Sem palpite'
+  if ([guess.guess_home, guess.guess_away].some(v => v === null || v === undefined || v === '')) return 'Sem palpite'
+  if (Number(game.home_score) === Number(guess.guess_home) && Number(game.away_score) === Number(guess.guess_away)) return 'Placar exato'
+  if (basePts > 0 || bonusPts > 0) return 'Resultado certo'
+  return 'Errou'
+}
+
+function formatAuditScore(home, away) {
+  if ([home, away].some(v => v === null || v === undefined || v === '')) return '-'
+  return `${home} x ${away}`
+}
+
 
 
 function toDateTimeLocalValue(value) {
@@ -1232,24 +1269,37 @@ function App() {
       }
     })
 
+    const latestGuesses = dedupeLatestGuesses(allGuesses || [])
+    const finishedGamesSorted = [...finishedGames].sort((a, b) => Number(a.game_no || 0) - Number(b.game_no || 0))
+
     const rows = Array.from(playerMap.values()).map(p => {
-      let pontos = 0
-      let exatos = 0
-      let acertos = 0
+      const playerGuesses = latestGuesses.filter(g => String(g.user_id) === String(p.id))
+      const playerGuessByGame = new Map(playerGuesses.map(g => [String(g.game_id), g]))
 
-      ;(allGuesses || []).filter(g => g.user_id === p.id).forEach(g => {
-        const game = (gameData || []).find(x => x.id === g.game_id)
-        if (!game || game.home_score === null || game.away_score === null) return
+      const audit = finishedGamesSorted.map(game => {
+        const g = playerGuessByGame.get(String(game.id))
+        const basePts = g ? calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away, game.phase) : 0
+        const bonusPts = g ? specialBonusPoints(game, g) : 0
+        const pontosJogo = basePts + bonusPts
+        const tipo = pointTypeForGame(game, g, basePts, bonusPts)
 
-        const basePts = calcPoints(game.home_score, game.away_score, g.guess_home, g.guess_away, game.phase)
-        const bonusPts = specialBonusPoints(game, g)
-
-        pontos += basePts + bonusPts
-        if (Number(game.home_score) === Number(g.guess_home) && Number(game.away_score) === Number(g.guess_away)) exatos += 1
-        if (basePts > 0 || bonusPts > 0) acertos += 1
+        return {
+          gameId: game.id,
+          game_no: game.game_no,
+          phase: game.phase,
+          jogo: `${displayHomeTeam(game, gameData)} x ${displayAwayTeam(game, gameData)}`,
+          oficial: formatAuditScore(game.home_score, game.away_score),
+          palpite: g ? formatAuditScore(g.guess_home, g.guess_away) : '-',
+          pontos: pontosJogo,
+          tipo
+        }
       })
 
-      const guessesCount = (allGuesses || []).filter(g => g.user_id === p.id).length
+      const pontos = audit.reduce((sum, item) => sum + (item.pontos || 0), 0)
+      const exatos = audit.filter(item => item.tipo === 'Placar exato').length
+      const acertos = audit.filter(item => item.pontos > 0).length
+      const guessesCount = playerGuesses.length
+      const palpitesDuplicadosIgnorados = Math.max(0, (allGuesses || []).filter(g => String(g.user_id) === String(p.id)).length - guessesCount)
       const aproveitamento = maxPossiblePoints > 0 ? Math.round((pontos / maxPossiblePoints) * 100) : 0
 
       return {
@@ -1260,9 +1310,11 @@ function App() {
         exatos,
         acertos,
         palpites: guessesCount,
+        palpitesDuplicadosIgnorados,
         aproveitamento,
         maxPossiblePoints,
-        jogosEncerrados: finishedGames.length
+        jogosEncerrados: finishedGames.length,
+        audit
       }
     }).sort((a,b) => b.pontos - a.pontos || b.exatos - a.exatos || b.acertos - a.acertos || a.nome.localeCompare(b.nome))
 
@@ -2420,6 +2472,17 @@ function App() {
         .rankingPro .progressOuter{height:7px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:5px}
         .rankingPro .progressInner{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);border-radius:999px}
         .rankingPro .distanceHint{font-size:11px;opacity:.75;margin-top:4px}
+        .rankingPro .auditBox{grid-column:1/-1;margin-top:10px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:10px 12px}
+        .rankingPro .auditBox summary{cursor:pointer;font-weight:800;font-size:13px;opacity:.95}
+        .rankingPro .auditTableWrap{overflow:auto;margin-top:10px}
+        .rankingPro .auditTable{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+        .rankingPro .auditTable th,.rankingPro .auditTable td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.09);text-align:left;white-space:nowrap}
+        .rankingPro .auditTable th{opacity:.75;font-weight:700}
+        .rankingPro .auditTable td.points{text-align:right;font-weight:900}
+        .rankingPro .auditTable .auditExact{color:#facc15;font-weight:800}
+        .rankingPro .auditTable .auditResult{color:#22c55e;font-weight:800}
+        .rankingPro .auditTable .auditWrong{opacity:.75}
+        .rankingPro .auditWarning{display:block;margin-top:6px;color:#facc15;font-size:11px}
         .rankingPro .rankAvatarWrap{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
         .rankingPro .rankAvatar{width:62px;height:62px;border-radius:50%;object-fit:cover;display:block;background:#111827;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.28)}
         .rankingPro .rankAvatar.gold{width:76px;height:76px;border:3px solid #facc15;box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 22px rgba(250,204,21,.38),0 6px 18px rgba(0,0,0,.32);animation:leaderAvatarGlow 2.8s ease-in-out infinite}
@@ -2487,6 +2550,7 @@ function App() {
           <div className="rankMain">
             <span className="rankName">{i===0 ? '👑 ' : ''}{r.nome}</span>
             <small className="rankMeta">{r.exatos} exatos · {r.acertos} acertos · {r.palpites || 0} palpites</small>
+            {r.palpitesDuplicadosIgnorados > 0 && <small className="auditWarning">⚠️ {r.palpitesDuplicadosIgnorados} palpite(s) duplicado(s) ignorado(s) na auditoria</small>}
             <div className="progressOuter">
               <div className="progressInner" style={{ width: `${Math.min(100, Math.max(0, r.aproveitamento || 0))}%` }} />
             </div>
@@ -2498,6 +2562,37 @@ function App() {
             <b>{r.pontos} pts</b>
             <small>{r.aproveitamento || 0}%</small>
           </div>
+          <details className="auditBox">
+            <summary>Ver auditoria de pontos jogo a jogo</summary>
+            <div className="auditTableWrap">
+              <table className="auditTable">
+                <thead>
+                  <tr>
+                    <th>Jogo</th>
+                    <th>Fase</th>
+                    <th>Confronto</th>
+                    <th>Oficial</th>
+                    <th>Palpite</th>
+                    <th>Tipo</th>
+                    <th>Pontos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(r.audit || []).map(item => (
+                    <tr key={`${r.id}-${item.gameId}`}>
+                      <td>{item.game_no}</td>
+                      <td>{item.phase}</td>
+                      <td>{item.jogo}</td>
+                      <td>{item.oficial}</td>
+                      <td>{item.palpite}</td>
+                      <td className={item.tipo === 'Placar exato' ? 'auditExact' : item.tipo === 'Resultado certo' ? 'auditResult' : 'auditWrong'}>{item.tipo}</td>
+                      <td className="points">{item.pontos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         </div>
       })}
     </section>}

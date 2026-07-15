@@ -312,7 +312,7 @@ const SCORE_BY_PHASE = {
 
 function phaseScoreConfig(phase = '') {
   const p = normalizedPhase(phase)
-  if (p.includes('final') && !p.includes('disputa') && !p.includes('3')) return SCORE_BY_PHASE.final
+  if (p === 'final') return SCORE_BY_PHASE.final
   if (p.includes('disputa') || p.includes('terceiro') || p.includes('3')) return SCORE_BY_PHASE.terceiro
   if (p.includes('semi')) return SCORE_BY_PHASE.semi
   if (p.includes('quartas')) return SCORE_BY_PHASE.quartas
